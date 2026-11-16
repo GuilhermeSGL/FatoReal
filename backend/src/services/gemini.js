@@ -90,7 +90,8 @@ export async function sintetizarComIA(pergunta, evidencias) {
 function logarErro(err) {
   if (err instanceof ApiError) {
     if (err.status === 400 || err.status === 403) {
-      console.error(`FatoBot: GEMINI_API_KEY ou modelo inválido (erro ${err.status})`);
+      // A mensagem do Google diz o motivo exato (chave, modelo ou parâmetro). Não contém a chave.
+      console.error(`FatoBot: pedido recusado pelo Gemini (erro ${err.status}): ${String(err.message).slice(0, 300)}`);
     } else if (err.status === 429) {
       console.error('FatoBot: limite de uso da API do Gemini atingido');
     } else if (err.status === 503) {
@@ -154,7 +155,10 @@ export async function classificarComIA(afirmacao, evidencias) {
       },
     });
 
-    if (response.promptFeedback?.blockReason) return null;
+    if (response.promptFeedback?.blockReason) {
+      console.warn('Verificar: o Gemini bloqueou a afirmação', response.promptFeedback.blockReason);
+      return null;
+    }
 
     let r;
     try {
@@ -164,6 +168,7 @@ export async function classificarComIA(afirmacao, evidencias) {
       return null;
     }
     if (!ESTADOS_IA.includes(r?.estado) || typeof r.explicacao !== 'string' || !r.explicacao.trim()) {
+      console.warn('Verificar: resposta do Gemini fora do formato esperado', JSON.stringify(r).slice(0, 200));
       return null;
     }
 

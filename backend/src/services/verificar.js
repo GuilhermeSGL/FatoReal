@@ -50,6 +50,9 @@ export async function verificar({ afirmacao, link = null, anexos = 0 }) {
 
   const { evidencias, fontes } = await evidenciasDosDeputados(deputados);
   const resultado = await classificarComIA(afirmacao, evidencias);
+  if (!resultado && !process.env.GEMINI_API_KEY) {
+    console.warn('Verificar: GEMINI_API_KEY não configurada (confira o arquivo .env)');
+  }
 
   if (!resultado) {
     const fatos = evidencias.map((e) => e.texto).join(' ');
