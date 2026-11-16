@@ -164,6 +164,17 @@
       }
     </section>
 
+    @if (seguidos.lista().length) {
+      <section class="card bloco">
+        <h2><app-icone nome="notifications_active" /> Políticos que você segue</h2>
+        <ul class="meus-senadores">
+          @for (s of seguidos.lista(); track s.casa + s.id) {
+            <li><a [routerLink]="s.casa === 'senado' ? ['/politicos/senado', s.id] : ['/politicos', s.id]"><app-avatar class="avatar-oficial" [nome]="s.nome" [url]="s.foto_url" [tamanho]="30" /><span><strong>{{ s.nome }}</strong><small>{{ s.partido }} · {{ s.uf }}</small></span></a></li>
+          }
+        </ul>
+      </section>
+    }
+
     <!-- Fato do dia -->
     <section class="card bloco fato-dia">
       <p class="sobretitulo"><app-icone nome="lightbulb" /> Fato do dia</p>

@@ -4,6 +4,7 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { AlertaJuridico, Politico, TipoAlerta } from '../../core/modelos';
 import { AuthService } from '../../core/auth.service';
+import { SeguidosService } from '../../core/seguidos.service';
 import { AvisosService } from '../../core/avisos.service';
 import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta } from '../../core/politicos.service';
 import { linkSeguro } from '../../core/util';
@@ -36,6 +37,12 @@ export class PerfilPoliticoPage implements OnInit {
   };
   protected readonly tipos = Object.keys(this.gravidade) as TipoAlerta[];
   protected auth = inject(AuthService);
+  protected seguidos = inject(SeguidosService);
+
+  protected alternarSeguir(p: Politico) {
+    const sigo = this.seguidos.alternar(p);
+    this.avisos.mostrar(sigo ? `Você agora segue ${p.nome}. Ele aparece em "Políticos que você segue", na página inicial.` : `Você deixou de seguir ${p.nome}.`);
+  }
   private avisos = inject(AvisosService);
 
   // Formulário da moderação ("Adicionar registro")

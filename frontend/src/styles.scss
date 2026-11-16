@@ -1303,3 +1303,28 @@ legend { font-weight: 700; padding: 0 6px; }
 }
 .mapa-barra { height: 8px; border-radius: 999px; background: var(--superficie); overflow: hidden; span { display: block; height: 100%; background: var(--primaria); border-radius: inherit; } }
 @media (max-width: 860px) { .mapa-layout { grid-template-columns: 1fr; } .mapa-blocos { max-width: none; } }
+.botao-seguindo-politico { border-color: var(--primaria) !important; color: var(--link) !important; }
+
+/* Comparar políticos */
+.comparar-escolha { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; .campo-form { margin: 0; } }
+.comparar-tabela { padding: 0; overflow: hidden; }
+.cmp-linha { display: grid; grid-template-columns: minmax(150px, 1fr) 1.2fr 1.2fr; align-items: center; border-top: 1px solid var(--borda); &:first-child { border-top: 0; } > span { padding: 14px 18px; } }
+.cmp-cabeca { background: var(--superficie-2); }
+.cmp-pessoa { display: grid; justify-items: center; gap: 4px; text-align: center; small { color: var(--texto-suave); } }
+.cmp-rotulo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.9rem; .icone { color: var(--link); } }
+.cmp-valor { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .comparar-escolha { grid-template-columns: 1fr; } .cmp-linha { grid-template-columns: 1fr 1fr; > span:first-child { grid-column: 1 / -1; padding-bottom: 0; } } .cmp-cabeca > span:first-child { display: none; } }
+
+/* Ranking de gastos */
+.atalhos-candidatos { display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 14px; }
+.gastos-filtros { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; .campo-form { margin: 0; flex: 1 1 260px; } .visoes { margin: 0; } }
+.gastos-progresso { display: grid; gap: 8px; p { margin: 0; font-weight: 600; } }
+.ranking-gastos {
+  list-style: none; padding: 6px 0; margin: 0 0 12px;
+  li { display: grid; grid-template-columns: 36px minmax(180px, 1.2fr) 1fr 120px; align-items: center; gap: 12px; padding: 8px 16px; border-top: 1px solid var(--borda); &:first-child { border-top: 0; } }
+}
+.ranking-pos { font-weight: 800; color: var(--texto-suave); text-align: center; font-variant-numeric: tabular-nums; }
+.ranking-pessoa { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--texto); text-decoration: none; strong { display: block; } small { color: var(--texto-suave); } &:hover strong { text-decoration: underline; } }
+.ranking-barra { height: 10px; border-radius: 999px; background: var(--superficie-2); overflow: hidden; span { display: block; height: 100%; border-radius: inherit; background: var(--primaria); } }
+.ranking-valor { text-align: right; font-variant-numeric: tabular-nums; small { display: block; font-weight: 400; color: var(--texto-suave); font-size: 0.72rem; } }
+@media (max-width: 640px) { .ranking-gastos li { grid-template-columns: 28px 1fr 96px; .ranking-barra { grid-column: 2 / -1; grid-row: 2; } } }

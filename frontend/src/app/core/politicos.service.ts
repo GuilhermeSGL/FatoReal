@@ -171,7 +171,7 @@ export async function detalhesCamara(id: number): Promise<DetalhesPolitico> {
 }
 
 /** Soma da cota parlamentar no ano atual (ou no anterior, se o ano mal começou). Lê no máximo 5 páginas. */
-async function despesasDoAno(id: number): Promise<DetalhesPolitico['despesas']> {
+export async function despesasDoAno(id: number): Promise<DetalhesPolitico['despesas']> {
   const anoAtual = new Date().getFullYear();
   for (const ano of [anoAtual, anoAtual - 1]) {
     const itens: DespesaCamara[] = [];

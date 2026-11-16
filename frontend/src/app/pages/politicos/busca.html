@@ -4,6 +4,11 @@
   <p>Todos os políticos de cada cargo, em ordem alfabética, com partido, estado e a fonte oficial de cada dado.</p>
 </header>
 
+<div class="atalhos-candidatos">
+  <a routerLink="/politicos/comparar" class="botao botao-fantasma"><app-icone nome="compare_arrows" /> Comparar dois deputados</a>
+  <a routerLink="/politicos/gastos" class="botao botao-fantasma"><app-icone nome="leaderboard" /> Ranking de gastos</a>
+</div>
+
 <!-- Cargos -->
 <nav class="cargos" role="tablist" aria-label="Cargo">
   @for (c of cargos; track c.nome) {

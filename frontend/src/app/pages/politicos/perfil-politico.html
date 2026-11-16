@@ -23,6 +23,12 @@
       </div>
       <div class="perfil-acoes">
         <a class="botao botao-verde" [routerLink]="['/fatobot']" [queryParams]="{ p: perguntaIa() }"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</a>
+        <button type="button" class="botao botao-fantasma" [class.botao-seguindo-politico]="seguidos.sigo(p)" (click)="alternarSeguir(p)">
+          <app-icone [nome]="seguidos.sigo(p) ? 'notifications_active' : 'person_add'" /> {{ seguidos.sigo(p) ? 'Seguindo' : 'Seguir político' }}
+        </button>
+        @if (casa() === 'camara') {
+          <a class="botao botao-fantasma" routerLink="/politicos/comparar" [queryParams]="{ a: p.id }"><app-icone nome="compare_arrows" /> Comparar</a>
+        }
         <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ casa() === 'senado' ? 'Página no Senado' : 'Página na Câmara' }}</a>
       </div>
     </header>

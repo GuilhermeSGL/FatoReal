@@ -11,6 +11,7 @@ import { Checagem, ChecagensService } from '../../core/checagens.service';
 import { EstadoVerificacao } from '../../core/fatobot.service';
 import { todosDoCargo } from '../../core/politicos.service';
 import { modoDemo } from '../../core/supabase';
+import { SeguidosService } from '../../core/seguidos.service';
 import { Politico } from '../../core/modelos';
 import { avatarComunidade, capaComunidade, CATEGORIAS, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
@@ -38,6 +39,7 @@ export class InicioPage implements OnInit {
   protected auth = inject(AuthService);
 
   private checagensService = inject(ChecagensService);
+  protected seguidos = inject(SeguidosService);
   protected readonly categorias = CATEGORIAS;
   protected readonly ufs = UFS;
   protected readonly demo = modoDemo;

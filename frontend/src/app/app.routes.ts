@@ -7,6 +7,8 @@ export const routes: Routes = [
 
   // Políticos
   { path: 'politicos', title: 'Buscar políticos · Fato Real', loadComponent: () => import('./pages/politicos/busca').then((m) => m.BuscaPage) },
+  { path: 'politicos/comparar', title: 'Comparar políticos · Fato Real', loadComponent: () => import('./pages/politicos/comparar').then((m) => m.CompararPage) },
+  { path: 'politicos/gastos', title: 'Ranking de gastos · Fato Real', loadComponent: () => import('./pages/politicos/gastos').then((m) => m.GastosPage) },
   { path: 'politicos/senado/:id', title: 'Perfil do senador · Fato Real', data: { casa: 'senado' }, loadComponent: () => import('./pages/politicos/perfil-politico').then((m) => m.PerfilPoliticoPage) },
   { path: 'politicos/:id', title: 'Perfil do político · Fato Real', loadComponent: () => import('./pages/politicos/perfil-politico').then((m) => m.PerfilPoliticoPage) },
 
