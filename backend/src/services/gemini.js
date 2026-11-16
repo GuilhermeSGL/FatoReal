@@ -126,6 +126,60 @@ function logarErro(err) {
 }
 
 // ---------------------------------------------------------------------------
+// Função reutilizável: pede ao Gemini uma resposta em JSON
+// ---------------------------------------------------------------------------
+
+/**
+ * Pede ao Gemini um objeto JSON no formato do `schema` e devolve o objeto, ou null se
+ * não houver chave, o Gemini falhar ou recusar, ou a resposta não for um JSON válido.
+ * Usa o mesmo modelo principal, modelo reserva, limite de tempo e logs do FatoBot.
+ *
+ * @param {object} opcoes
+ * @param {string} opcoes.instrucoes  Regras para o modelo (vai como instrução de sistema).
+ * @param {string} opcoes.mensagem    O conteúdo a analisar. Texto do usuário deve ir delimitado.
+ * @param {object} opcoes.schema      JSON Schema da resposta (type, properties, required...).
+ * @returns {Promise<object|null>}
+ *
+ * Exemplo:
+ *   const r = await gerarJson({
+ *     instrucoes: 'Classifique o sentimento. Responda só com o JSON.',
+ *     mensagem: '<texto>Gostei muito</texto>',
+ *     schema: { type: 'object', properties: { sentimento: { type: 'string' } }, required: ['sentimento'] },
+ *   });
+ *   if (!r) { ... IA indisponível: siga sem ela ... }
+ */
+export async function gerarJson({ instrucoes, mensagem, schema }) {
+  if (!iaConfigurada()) return null;
+
+  try {
+    const { response } = await gerar({
+      contents: mensagem,
+      config: {
+        systemInstruction: instrucoes,
+        responseMimeType: 'application/json',
+        responseJsonSchema: schema,
+        httpOptions: { timeout: TIMEOUT_MS, retryOptions: RETRY },
+      },
+    });
+
+    if (response.promptFeedback?.blockReason) {
+      console.warn('Gemini: pedido bloqueado', response.promptFeedback.blockReason);
+      return null;
+    }
+    try {
+      const objeto = JSON.parse(response.text ?? '');
+      return objeto && typeof objeto === 'object' ? objeto : null;
+    } catch {
+      console.warn('Gemini: resposta não é JSON válido');
+      return null;
+    }
+  } catch (err) {
+    logarErro(err);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Verificação de afirmações (Quadro 3 da documentação)
 // ---------------------------------------------------------------------------
 
@@ -162,44 +216,24 @@ const SCHEMA_VERIFICAR = {
  * válidas, a resposta vira "insuficiente": o sistema não confirma nem nega sem fonte.
  */
 export async function classificarComIA(afirmacao, evidencias) {
-  if (!iaConfigurada() || evidencias.length === 0) return null;
+  if (evidencias.length === 0) return null;
 
-  try {
-    const { response } = await gerar({
-      contents: montarMensagem(afirmacao, evidencias, 'AFIRMAÇÃO', 'afirmacao'),
-      config: {
-        systemInstruction: SYSTEM_VERIFICAR,
-        responseMimeType: 'application/json',
-        responseJsonSchema: SCHEMA_VERIFICAR,
-        httpOptions: { timeout: TIMEOUT_MS, retryOptions: RETRY },
-      },
-    });
+  const r = await gerarJson({
+    instrucoes: SYSTEM_VERIFICAR,
+    mensagem: montarMensagem(afirmacao, evidencias, 'AFIRMAÇÃO', 'afirmacao'),
+    schema: SCHEMA_VERIFICAR,
+  });
+  if (!r) return null;
 
-    if (response.promptFeedback?.blockReason) {
-      console.warn('Verificar: o Gemini bloqueou a afirmação', response.promptFeedback.blockReason);
-      return null;
-    }
-
-    let r;
-    try {
-      r = JSON.parse(response.text ?? '');
-    } catch {
-      console.warn('Verificar: resposta do Gemini não é JSON válido');
-      return null;
-    }
-    if (!ESTADOS_IA.includes(r?.estado) || typeof r.explicacao !== 'string' || !r.explicacao.trim()) {
-      console.warn('Verificar: resposta do Gemini fora do formato esperado', JSON.stringify(r).slice(0, 200));
-      return null;
-    }
-
-    const explicacao = r.explicacao.trim();
-    if (r.estado !== 'insuficiente' && !citacoesValidas(explicacao, evidencias.length)) {
-      console.warn('Verificar: classificação descartada por citações inválidas');
-      return { estado: 'insuficiente', explicacao: null };
-    }
-    return { estado: r.estado, explicacao };
-  } catch (err) {
-    logarErro(err);
+  if (!ESTADOS_IA.includes(r.estado) || typeof r.explicacao !== 'string' || !r.explicacao.trim()) {
+    console.warn('Verificar: resposta do Gemini fora do formato esperado', JSON.stringify(r).slice(0, 200));
     return null;
   }
+
+  const explicacao = r.explicacao.trim();
+  if (r.estado !== 'insuficiente' && !citacoesValidas(explicacao, evidencias.length)) {
+    console.warn('Verificar: classificação descartada por citações inválidas');
+    return { estado: 'insuficiente', explicacao: null };
+  }
+  return { estado: r.estado, explicacao };
 }
