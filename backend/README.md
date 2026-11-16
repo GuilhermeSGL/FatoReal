@@ -191,9 +191,9 @@ Regras que **não dependem da IA**:
 1. Entre em https://aistudio.google.com/apikey com uma conta Google e clique em **Create API key**.
 2. Coloque a chave em `GEMINI_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
    **Nunca** no código nem no Angular.
-3. O modelo padrão é `gemini-3.8-flash`. Para trocar, defina `GEMINI_MODEL`.
+3. O modelo padrão é `gemini-3.5-flash-lite` (testado no plano gratuito). Para trocar, defina `GEMINI_MODEL`.
 4. **Erro 503 (sobrecarregado)** é comum no plano gratuito. Defina `GEMINI_MODEL_RESERVA` com um
-   modelo mais leve (ex.: um "flash-lite"): quando o principal der 503 ou 429, a API tenta o reserva.
+   modelo de outra geração (recomendado: `gemini-2.5-flash-lite`): quando o principal der 503 ou 429, a API tenta o reserva.
 
 Para ver os nomes dos modelos que a sua chave pode usar (PowerShell, na pasta `backend`;
 a chave é lida do `.env` e não aparece na tela):

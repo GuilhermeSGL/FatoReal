@@ -4,7 +4,8 @@
 // Sem chave, esta função devolve null e o FatoBot continua no modo "somente_fontes".
 import { GoogleGenAI, ApiError } from '@google/genai';
 
-export const MODELO_PADRAO = 'gemini-3.8-flash';
+// Testado em 16/11: o gemini-3.8-flash dava 503 (sobrecarga) no plano gratuito; o lite respondeu.
+export const MODELO_PADRAO = 'gemini-3.5-flash-lite';
 const SEM_EVIDENCIA = 'SEM_EVIDENCIA';
 const TIMEOUT_MS = 20_000; // se o Gemini não responder em 20s, o FatoBot responde sem IA
 // Uma nova tentativa quando o Gemini está sobrecarregado (503) ou no limite (429).
