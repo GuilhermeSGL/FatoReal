@@ -123,3 +123,26 @@ test('citacoesValidas', () => {
   assert.equal(citacoesValidas('a [0]', 2), false);
   assert.equal(citacoesValidas('a [3]', 2), false);
 });
+
+test('modelo reserva é usado quando o principal está sobrecarregado (503)', async () => {
+  const { ApiError } = await import('@google/genai');
+  const usados = [];
+  process.env.GEMINI_MODEL_RESERVA = 'modelo-reserva';
+  _setClient({
+    models: {
+      generateContent: async ({ model }) => {
+        usados.push(model);
+        if (usados.length === 1) throw new ApiError({ message: 'overloaded', status: 503 });
+        return texto('Tabata Amaral é deputada federal pelo PSB-SP [1].');
+      },
+    },
+  });
+  try {
+    const body = await perguntar('Qual o partido de Tabata Amaral?');
+    assert.equal(body.modo, 'ia_com_fontes');
+    assert.equal(usados.length, 2);
+    assert.equal(usados[1], 'modelo-reserva');
+  } finally {
+    delete process.env.GEMINI_MODEL_RESERVA;
+  }
+});

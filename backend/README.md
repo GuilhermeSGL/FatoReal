@@ -192,5 +192,18 @@ Regras que **não dependem da IA**:
 2. Coloque a chave em `GEMINI_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
    **Nunca** no código nem no Angular.
 3. O modelo padrão é `gemini-3.8-flash`. Para trocar, defina `GEMINI_MODEL`.
+4. **Erro 503 (sobrecarregado)** é comum no plano gratuito. Defina `GEMINI_MODEL_RESERVA` com um
+   modelo mais leve (ex.: um "flash-lite"): quando o principal der 503 ou 429, a API tenta o reserva.
+
+Para ver os nomes dos modelos que a sua chave pode usar (PowerShell, na pasta `backend`;
+a chave é lida do `.env` e não aparece na tela):
+
+```powershell
+$k = (Select-String -Path .env -Pattern '^GEMINI_API_KEY=(.+)').Matches[0].Groups[1].Value
+(Invoke-RestMethod -Headers @{ 'x-goog-api-key' = $k } "https://generativelanguage.googleapis.com/v1beta/models").models |
+  Where-Object { $_.supportedGenerationMethods -contains 'generateContent' } | Select-Object name
+```
+
+Use o nome **sem** o prefixo `models/` (ex.: `models/abc-flash` → `GEMINI_MODEL_RESERVA=abc-flash`).
 
 Código: `src/services/gemini.js` (chamada ao Gemini) e `src/services/fatobot.js` (pipeline).

@@ -35,6 +35,29 @@ export function iaConfigurada() {
   return Boolean(process.env.GEMINI_API_KEY) || Boolean(client);
 }
 
+// Modelo principal e, se configurado, um reserva para quando o principal estiver
+// sobrecarregado (503) ou no limite (429) — comum no plano gratuito.
+function modelos() {
+  return [process.env.GEMINI_MODEL || MODELO_PADRAO, process.env.GEMINI_MODEL_RESERVA].filter(Boolean);
+}
+
+async function gerar(params) {
+  const lista = modelos();
+  for (let i = 0; i < lista.length; i++) {
+    try {
+      const response = await getClient().models.generateContent({ ...params, model: lista[i] });
+      return { response, modelo: lista[i] };
+    } catch (err) {
+      const temReserva = i < lista.length - 1;
+      if (temReserva && err instanceof ApiError && [429, 500, 503].includes(err.status)) {
+        console.warn(`Gemini: ${lista[i]} indisponível (erro ${err.status}), tentando ${lista[i + 1]}`);
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 function montarMensagem(texto, evidencias, rotulo = 'PERGUNTA DO USUÁRIO', tag = 'pergunta') {
   const lista = evidencias
     .map((e, i) => `[${i + 1}] ${e.texto} (Fonte: ${e.fonte}, consultado em ${e.consultadoEm})`)
@@ -58,11 +81,8 @@ export function citacoesValidas(texto, total) {
 export async function sintetizarComIA(pergunta, evidencias) {
   if (!iaConfigurada() || evidencias.length === 0) return null;
 
-  const modelo = process.env.GEMINI_MODEL || MODELO_PADRAO;
-
   try {
-    const response = await getClient().models.generateContent({
-      model: modelo,
+    const { response, modelo } = await gerar({
       contents: montarMensagem(pergunta, evidencias),
       config: { systemInstruction: SYSTEM, httpOptions: { timeout: TIMEOUT_MS, retryOptions: RETRY } },
     });
@@ -95,7 +115,7 @@ function logarErro(err) {
     } else if (err.status === 429) {
       console.error('FatoBot: limite de uso da API do Gemini atingido');
     } else if (err.status === 503) {
-      console.error('FatoBot: Gemini sobrecarregado (503). Tente de novo ou troque GEMINI_MODEL.');
+      console.error('FatoBot: Gemini sobrecarregado (503). Tente de novo ou configure GEMINI_MODEL_RESERVA no .env.');
     } else {
       console.error(`FatoBot: erro ${err.status} na API do Gemini`);
     }
@@ -144,8 +164,7 @@ export async function classificarComIA(afirmacao, evidencias) {
   if (!iaConfigurada() || evidencias.length === 0) return null;
 
   try {
-    const response = await getClient().models.generateContent({
-      model: process.env.GEMINI_MODEL || MODELO_PADRAO,
+    const { response } = await gerar({
       contents: montarMensagem(afirmacao, evidencias, 'AFIRMAÇÃO', 'afirmacao'),
       config: {
         systemInstruction: SYSTEM_VERIFICAR,
