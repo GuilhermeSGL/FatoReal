@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { HostListener, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -118,6 +118,12 @@ export class InicioPage implements OnInit {
     } catch {
       return '';
     }
+  }
+
+  @HostListener('window:fatoreal-uf', ['$event'])
+  protected aoEscolherUfNaApresentacao(e: Event) {
+    const uf = (e as CustomEvent<string>).detail;
+    if (uf && !this.auth.usuario()?.uf) this.escolherUf(uf);
   }
 
   protected escolherUf(uf: string) {

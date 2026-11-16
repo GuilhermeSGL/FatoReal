@@ -13,7 +13,25 @@
   <form class="busca-topo" role="search" (submit)="$event.preventDefault(); buscar(campoBusca.value)">
     <label for="busca-topo" class="sr-only">Pesquisar</label>
     <app-icone nome="search" />
-    <input id="busca-topo" #campoBusca type="search" placeholder="Pesquisar por candidatos, partidos, estados..." />
+    <input id="busca-topo" #campoBusca type="search" placeholder="Pesquisar políticos, partidos, estados, comunidades..." autocomplete="off"
+      role="combobox" aria-autocomplete="list" aria-controls="sugestoes-busca" [attr.aria-expanded]="sugestoesAbertas()"
+      (input)="digitarBusca(campoBusca.value)" (focus)="sugestoesAbertas.set(sugestoes().length > 0)"
+      (keydown.arrowDown)="$event.preventDefault(); moverSugestao(1)" (keydown.arrowUp)="$event.preventDefault(); moverSugestao(-1)"
+      (keydown.escape)="sugestoesAbertas.set(false)" (keydown.enter)="enterBusca($event, campoBusca)" (blur)="fecharSugestoesDepois()" />
+    @if (sugestoesAbertas() && sugestoes().length) {
+      <ul id="sugestoes-busca" class="sugestoes-busca" role="listbox">
+        @for (r of sugestoes(); track r.tipo + r.titulo; let i = $index) {
+          <li role="option" [attr.aria-selected]="i === sugestaoAtiva()">
+            <button type="button" (mousedown)="$event.preventDefault(); abrirSugestao(r, campoBusca)" [class.ativa]="i === sugestaoAtiva()">
+              @if (r.tipo === 'politico') { <app-avatar class="avatar-oficial" [nome]="r.titulo" [url]="r.foto" [tamanho]="30" /> }
+              @else { <span class="busca-icone"><app-icone [nome]="r.icone" /></span> }
+              <span><strong>{{ r.titulo }}</strong><small>{{ r.detalhe }}</small></span>
+            </button>
+          </li>
+        }
+        <li class="sugestoes-todas"><button type="button" (mousedown)="$event.preventDefault(); buscar(campoBusca.value)">Ver todos os resultados para “{{ campoBusca.value }}”</button></li>
+      </ul>
+    }
   </form>
 
   <div class="topo-acoes">
@@ -126,6 +144,8 @@
 </nav>
 
 <!-- ===== Pop-ups de aviso ===== -->
+<app-boas-vindas />
+
 <div class="avisos" aria-live="polite">
   @for (a of avisos.lista(); track a.id) {
     <div class="aviso" [class.aviso-erro]="a.tipo === 'erro'" role="status">{{ a.texto }}</div>

@@ -7,6 +7,7 @@ import { AvisosService } from '../core/avisos.service';
 import { ComunidadesService } from '../core/comunidades.service';
 import { Comentario, Publicacao } from '../core/modelos';
 import { linkSeguro, tempoAtras } from '../core/util';
+import { EnquetesService } from '../core/enquetes.service';
 import { Avatar, Icone } from './componentes';
 
 /** Card de publicação no estilo da apresentação: autor, comunidade, texto, link, curtir/comentar/compartilhar/denunciar. */
@@ -44,6 +45,20 @@ import { Avatar, Icone } from './componentes';
           <span><strong>{{ dominio(l) }}</strong><small>{{ l }}</small></span>
           <app-icone nome="open_in_new" />
         </a>
+      }
+
+      @if (enquetes.de(p.id); as e) {
+        @let total = soma(e.votos);
+        <div class="enquete" role="group" [attr.aria-label]="'Enquete: ' + total + ' voto(s)'">
+          @for (o of e.opcoes; track $index; let i = $index) {
+            <button type="button" class="enquete-opcao" [class.votada]="e.meuVoto === i" [attr.aria-pressed]="e.meuVoto === i" (click)="enquetes.votar(p.id, i)">
+              @if (e.meuVoto !== undefined) { <span class="enquete-barra" [style.width.%]="pct(e.votos[i], total)"></span> }
+              <span class="enquete-texto">@if (e.meuVoto === i) { <app-icone nome="check_circle" /> } {{ o }}</span>
+              @if (e.meuVoto !== undefined) { <strong>{{ pct(e.votos[i], total) }}%</strong> }
+            </button>
+          }
+          <small class="texto-suave">{{ total }} voto(s) · {{ e.meuVoto === undefined ? 'toque numa opção para votar' : 'toque de novo para desfazer' }}</small>
+        </div>
       }
 
       <div class="post-contagem">
@@ -120,6 +135,9 @@ import { Avatar, Icone } from './componentes';
   `,
 })
 export class PublicacaoCard {
+  protected enquetes = inject(EnquetesService);
+  protected soma = (v: number[]) => v.reduce((a, b) => a + b, 0);
+  protected pct = (n: number, t: number) => (t ? Math.round((n / t) * 100) : 0);
   protected auth = inject(AuthService);
   private service = inject(ComunidadesService);
   private avisos = inject(AvisosService);

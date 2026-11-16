@@ -5,6 +5,7 @@ import { AvisosService } from '../../core/avisos.service';
 import { EstadoVerificacao, FatoBotService, ResultadoVerificacao } from '../../core/fatobot.service';
 import { linkSeguro } from '../../core/util';
 import { ChecagensService } from '../../core/checagens.service';
+import { compartilharCartao } from '../../shared/cartao-compartilhar';
 import { AvisoIa, FonteDado, Icone } from '../../shared/componentes';
 
 type TipoAnexo = 'imagem' | 'video' | 'documento';
@@ -109,7 +110,10 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
             </span>
             <p>{{ it.resultado.explicacao }}</p>
             @for (f of it.resultado.fontes; track f.url) { <app-fonte [fonte]="f" rotulo="data" /> }
-            <small class="texto-suave">Consultado em {{ it.resultado.consultado_em | date: 'dd/MM/yyyy HH:mm' }}</small>
+            <div class="resultado-rodape">
+              <small class="texto-suave">Consultado em {{ it.resultado.consultado_em | date: 'dd/MM/yyyy HH:mm' }}</small>
+              <button type="button" class="botao botao-fantasma botao-p" (click)="compartilhar(it)"><app-icone nome="ios_share" /> Compartilhar card</button>
+            </div>
             <app-aviso-ia />
           </article>
         }
@@ -157,6 +161,25 @@ export class VerificarPage implements OnDestroy {
     ['Evidência insuficiente', 'Não há fontes suficientes para confirmar nem para negar. Ausência de evidência não é prova de falsidade.'],
     ['Em análise', 'Recebida; aguardando busca de fontes ou revisão humana.'],
   ];
+
+  protected async compartilhar(it: Item) {
+    const cores: Record<string, string> = {
+      'Evidências sustentam': '#0e8a5f', 'Evidências contradizem': '#c0262d', 'Fora de contexto': '#b07a00', 'Evidência insuficiente': '#2f6fb0',
+    };
+    try {
+      const r = await compartilharCartao({
+        rotulo: 'Checagem de informação',
+        titulo: it.afirmacao ? `“${it.afirmacao}”` : it.link || 'Conteúdo enviado',
+        selo: { texto: it.resultado.estado, cor: cores[it.resultado.estado] ?? '#0b2a4a' },
+        subtitulo: it.resultado.explicacao,
+        fonte: it.resultado.fontes[0]?.titulo,
+        nomeArquivo: 'fatoreal-checagem',
+      });
+      if (r === 'baixado') this.avisos.mostrar('Card baixado! Compartilhe e ajude a combater fake news.');
+    } catch (e) {
+      this.avisos.erro(e);
+    }
+  }
 
   protected icone(e: EstadoVerificacao): string {
     return {

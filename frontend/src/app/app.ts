@@ -6,16 +6,18 @@ import { AvisosService } from './core/avisos.service';
 import { MensagensService } from './core/mensagens.service';
 import { NotificacoesService } from './core/notificacoes.service';
 import { TemaService } from './core/tema.service';
+import { BuscaGeralService, ResultadoBusca } from './core/busca-geral';
 import { AcessibilidadeService } from './core/acessibilidade.service';
 import { tempoAtras } from './core/util';
 import { Avatar, AvisoDemo, Icone } from './shared/componentes';
+import { BoasVindas } from './shared/boas-vindas';
 
 type Contador = 'comunidades' | 'mensagens';
 
 /** Casca do app, como na apresentação: barra superior escura, menu lateral, painel claro e navegação inferior no celular. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas],
   templateUrl: './app.html',
 })
 export class App {
@@ -93,8 +95,55 @@ export class App {
     this.notificacoes.marcarComoVistas();
   }
 
+  // ---------- Busca do topo com sugestões ----------
+  private buscaGeral = inject(BuscaGeralService);
+  protected readonly sugestoes = signal<ResultadoBusca[]>([]);
+  protected readonly sugestoesAbertas = signal(false);
+  protected readonly sugestaoAtiva = signal(-1);
+  private esperaBusca?: ReturnType<typeof setTimeout>;
+  private pedidoBusca = 0;
+
+  protected digitarBusca(termo: string) {
+    clearTimeout(this.esperaBusca);
+    this.esperaBusca = setTimeout(async () => {
+      const meu = ++this.pedidoBusca;
+      const r = await this.buscaGeral.buscar(termo, 3);
+      if (meu !== this.pedidoBusca) return;
+      this.sugestoes.set(r.slice(0, 8));
+      this.sugestaoAtiva.set(-1);
+      this.sugestoesAbertas.set(r.length > 0);
+    }, 220);
+  }
+
+  protected moverSugestao(passo: number) {
+    const n = this.sugestoes().length;
+    if (!n) return;
+    this.sugestoesAbertas.set(true);
+    this.sugestaoAtiva.update((i) => (i + passo + n) % n);
+  }
+
+  protected enterBusca(e: Event, campo: HTMLInputElement) {
+    const r = this.sugestoes()[this.sugestaoAtiva()];
+    if (this.sugestoesAbertas() && r) {
+      e.preventDefault();
+      this.abrirSugestao(r, campo);
+    }
+  }
+
+  protected abrirSugestao(r: ResultadoBusca, campo: HTMLInputElement) {
+    this.sugestoesAbertas.set(false);
+    campo.blur();
+    if (r.externo) window.open(r.externo, '_blank', 'noopener');
+    else this.router.navigate(r.rota ?? ['/'], { queryParams: r.query });
+  }
+
+  protected fecharSugestoesDepois() {
+    setTimeout(() => this.sugestoesAbertas.set(false), 150);
+  }
+
   protected buscar(termo: string): void {
-    this.router.navigate(['/politicos'], { queryParams: termo.trim() ? { q: termo.trim() } : {} });
+    this.sugestoesAbertas.set(false);
+    if (termo.trim()) this.router.navigate(['/busca'], { queryParams: { q: termo.trim() } });
   }
 
   protected async sair(): Promise<void> {

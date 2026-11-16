@@ -8,6 +8,7 @@ import { SeguidosService } from '../../core/seguidos.service';
 import { AvisosService } from '../../core/avisos.service';
 import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta } from '../../core/politicos.service';
 import { linkSeguro } from '../../core/util';
+import { compartilharCartao } from '../../shared/cartao-compartilhar';
 import { Avatar, Campo, FonteDado, Icone } from '../../shared/componentes';
 
 @Component({
@@ -41,9 +42,31 @@ export class PerfilPoliticoPage implements OnInit {
 
   protected alternarSeguir(p: Politico) {
     const sigo = this.seguidos.alternar(p);
-    this.avisos.mostrar(sigo ? `Você agora segue ${p.nome}. Ele aparece em "Políticos que você segue", na página inicial.` : `Você deixou de seguir ${p.nome}.`);
+    this.avisos.mostrar(sigo ? `Você agora segue ${p.nome}. Agora aparece em "Políticos que você segue", na página inicial.` : `Você deixou de seguir ${p.nome}.`);
   }
   private avisos = inject(AvisosService);
+  protected readonly gerandoCartao = signal(false);
+
+  protected async compartilhar(p: Politico) {
+    this.gerandoCartao.set(true);
+    try {
+      const reg = this.alertas().filter((a) => a.tipo !== 'Absolvição ou arquivamento').length;
+      const r = await compartilharCartao({
+        rotulo: p.cargo ?? (this.casa() === 'senado' ? 'Senador(a)' : 'Deputado(a) Federal'),
+        titulo: p.nome,
+        subtitulo: [p.partido, p.uf].filter(Boolean).join(' · '),
+        linhas: [reg ? `!${reg} registro(s) de polêmica ou na Justiça` : 'Nenhum registro na Justiça cadastrado', 'Veja o perfil completo no Fato Real'],
+        foto: p.foto_url,
+        fonte: this.casa() === 'senado' ? 'Senado Federal (dados abertos)' : 'Câmara dos Deputados (dados abertos)',
+        nomeArquivo: `fatoreal-${p.nome.toLowerCase().replace(/[^a-z0-9]+/gi, '-')}`,
+      });
+      if (r === 'baixado') this.avisos.mostrar('Card baixado! Agora é só postar nas suas redes.');
+    } catch (e) {
+      this.avisos.erro(e);
+    } finally {
+      this.gerandoCartao.set(false);
+    }
+  }
 
   // Formulário da moderação ("Adicionar registro")
   protected readonly adicionando = signal(false);

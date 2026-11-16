@@ -181,13 +181,17 @@ export class ComunidadesService {
     return (data as Linha[]).map((p) => mapPublicacao(p, eu));
   }
 
-  async publicar(comunidadeId: number, texto: string, link: string | null): Promise<void> {
+  /** Publica no mural e devolve o id da nova publicação. */
+  async publicar(comunidadeId: number, texto: string, link: string | null): Promise<number | null> {
     const u = this.exigirUsuario();
     if (!supabase) return this.demo.publicar(comunidadeId, texto, link, u);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('publicacoes')
-      .insert({ comunidade_id: comunidadeId, autor_id: u.id, texto, link_url: link });
+      .insert({ comunidade_id: comunidadeId, autor_id: u.id, texto, link_url: link })
+      .select('id')
+      .single();
     if (error) throw new Error('Não foi possível publicar. Você precisa ser membro da comunidade.');
+    return (data as { id: number } | null)?.id ?? null;
   }
 
   async comentarios(publicacaoId: number): Promise<Comentario[]> {
@@ -589,12 +593,14 @@ class DemoSocial {
     if (!db.membros.some((m) => m.comunidade_id === comunidadeId && m.usuario.id === u.id)) {
       throw new Error('Entre na comunidade para publicar.');
     }
+    const id = proximoId(db.publicacoes);
     db.publicacoes.push({
-      id: proximoId(db.publicacoes), comunidade_id: comunidadeId, texto, link_url: link,
+      id, comunidade_id: comunidadeId, texto, link_url: link,
       autor: { id: u.id, nome: u.nome, foto_url: u.foto_url }, verificada: false, removida: false,
       criado_em: new Date().toISOString(),
     });
     this.salvar(db);
+    return id;
   }
   comentarios(publicacaoId: number): Comentario[] {
     return this.db.comentarios.filter((c) => c.publicacao_id === publicacaoId && !c.removido);

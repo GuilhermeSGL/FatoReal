@@ -29,6 +29,7 @@
         @if (casa() === 'camara') {
           <a class="botao botao-fantasma" routerLink="/politicos/comparar" [queryParams]="{ a: p.id }"><app-icone nome="compare_arrows" /> Comparar</a>
         }
+        <button type="button" class="botao botao-fantasma" (click)="compartilhar(p)" [disabled]="gerandoCartao()"><app-icone nome="ios_share" /> {{ gerandoCartao() ? 'Gerando...' : 'Compartilhar card' }}</button>
         <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ casa() === 'senado' ? 'Página no Senado' : 'Página na Câmara' }}</a>
       </div>
     </header>

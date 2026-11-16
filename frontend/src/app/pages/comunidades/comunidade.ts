@@ -1,3 +1,4 @@
+import { EnquetesService } from '../../core/enquetes.service';
 import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -38,6 +39,10 @@ export class ComunidadePage implements OnInit {
   protected novoTexto = '';
   protected novoLink = '';
   protected mostrarLink = false;
+  protected mostrarEnquete = false;
+  protected opcoesEnquete = ['', ''];
+  private enquetes = inject(EnquetesService);
+  protected trackIndice = (i: number) => i;
 
   async ngOnInit() {
     try {
@@ -97,9 +102,17 @@ export class ComunidadePage implements OnInit {
       return;
     }
     try {
-      await this.service.publicar(c.id, texto, link);
+      const opcoes = this.mostrarEnquete ? this.opcoesEnquete.map((o) => o.trim()).filter(Boolean) : [];
+      if (this.mostrarEnquete && opcoes.length < 2) {
+        this.avisos.mostrar('A enquete precisa de pelo menos 2 opções.', 'erro');
+        return;
+      }
+      const id = await this.service.publicar(c.id, texto, link);
+      if (id !== null && opcoes.length) this.enquetes.criar(id, opcoes);
       this.novoTexto = this.novoLink = '';
       this.mostrarLink = false;
+      this.mostrarEnquete = false;
+      this.opcoesEnquete = ['', ''];
       this.avisos.mostrar('Publicado no mural!');
       this.mural.set(await this.service.publicacoes(c.id));
     } catch (e) {

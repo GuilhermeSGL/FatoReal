@@ -45,8 +45,26 @@
                   <input id="pub-link" name="link" [(ngModel)]="novoLink" type="url" placeholder="https:// link da fonte" />
                 </div>
               }
+              @if (mostrarEnquete) {
+                <fieldset class="composer-enquete">
+                  <legend>Enquete <small class="texto-suave">(2 a 4 opções)</small></legend>
+                  @for (o of opcoesEnquete; track trackIndice($index); let i = $index) {
+                    <div class="enquete-campo">
+                      <label [for]="'opcao-' + i" class="sr-only">Opção {{ i + 1 }}</label>
+                      <input [id]="'opcao-' + i" [name]="'opcao-' + i" [(ngModel)]="opcoesEnquete[i]" maxlength="60" [placeholder]="'Opção ' + (i + 1)" />
+                      @if (opcoesEnquete.length > 2) {
+                        <button type="button" class="botao-icone botao-icone-p" [attr.aria-label]="'Remover opção ' + (i + 1)" (click)="opcoesEnquete.splice(i, 1)"><app-icone nome="close" /></button>
+                      }
+                    </div>
+                  }
+                  @if (opcoesEnquete.length < 4) {
+                    <button type="button" class="link-discreto" (click)="opcoesEnquete.push('')"><app-icone nome="add" /> Adicionar opção</button>
+                  }
+                </fieldset>
+              }
               <div class="composer-acoes">
                 <button type="button" class="acao-composer" (click)="mostrarLink = !mostrarLink"><app-icone nome="link" class="azul" /> Compartilhar link</button>
+                <button type="button" class="acao-composer" (click)="mostrarEnquete = !mostrarEnquete" [attr.aria-pressed]="mostrarEnquete"><app-icone nome="ballot" class="verde" /> Enquete</button>
                 <button class="botao botao-escuro" type="submit" [disabled]="!novoTexto.trim()">Publicar</button>
               </div>
             </form>

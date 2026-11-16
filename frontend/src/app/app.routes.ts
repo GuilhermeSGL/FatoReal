@@ -30,6 +30,7 @@ export const routes: Routes = [
   { path: 'pessoas/:id', title: 'Perfil · Fato Real', loadComponent: () => import('./pages/conta/perfil').then((m) => m.PerfilPage) },
 
   // Novas áreas do menu
+  { path: 'busca', title: 'Busca · Fato Real', loadComponent: () => import('./pages/busca-geral').then((m) => m.BuscaGeralPage) },
   { path: 'noticias', title: 'Notícias · Fato Real', loadComponent: () => import('./pages/noticias/noticias').then((m) => m.NoticiasPage) },
   { path: 'base-da-politica', title: 'Base da Política · Fato Real', loadComponent: () => import('./pages/base-politica/base-politica').then((m) => m.BasePoliticaPage) },
   { path: 'verificar', title: 'Verificar informação · Fato Real', loadComponent: () => import('./pages/verificar/verificar').then((m) => m.VerificarPage) },
