@@ -52,7 +52,8 @@
                 <div class="polemica-linha">
                   <span class="alerta-tipo">{{ a.tipo }}</span>
                   @if (a.data) { <time>{{ a.data | date: 'MM/yyyy' }}</time> }
-                  @if (auth.moderador()) {
+                  @if (a.verificado) { <span class="selo-verificado-equipe" title="Levantado pela equipe em fonte oficial"><app-icone nome="verified" /> Verificado pela equipe</span> }
+                  @if (auth.moderador() && !a.verificado) {
                     <button type="button" class="polemica-remover" (click)="remover(a)" [attr.aria-label]="'Remover ' + a.titulo" title="Remover"><app-icone nome="delete" /></button>
                   }
                 </div>

@@ -46,6 +46,8 @@ export interface AlertaJuridico {
   orgao: string;
   data?: string | null;
   fonte_url: string;
+  /** true = levantado pela equipe e fixo no código (não pode ser apagado pelo site). */
+  verificado?: boolean;
 }
 
 export interface Usuario {

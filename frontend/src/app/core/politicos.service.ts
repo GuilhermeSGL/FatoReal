@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AlertaJuridico, Politico } from './modelos';
 import { lerDemo, proximoId, salvarDemo } from './demo-store';
+import { verificadosDe } from './registros-verificados';
 import { supabase } from './supabase';
 
 const CAMARA_API = 'https://dadosabertos.camara.leg.br/api/v2';
@@ -329,15 +330,16 @@ const lerAlertasDemo = () => lerDemo<BancoAlertas>('alertas-v1', {});
  */
 export async function alertasDe(p: Politico): Promise<AlertaJuridico[]> {
   const ordenarData = (l: AlertaJuridico[]) => [...l].sort((a, b) => (b.data ?? '').localeCompare(a.data ?? ''));
-  if (!supabase) return ordenarData(lerAlertasDemo()[chaveAlerta(p)] ?? []);
+  const verificados = verificadosDe(p);
+  if (!supabase) return ordenarData([...verificados, ...(lerAlertasDemo()[chaveAlerta(p)] ?? [])]);
   const { data, error } = await supabase
     .from('politico_alertas')
     .select('*')
     .eq('politico_id', p.id)
     .eq('casa', p.casa ?? 'camara')
     .order('data', { ascending: false });
-  if (error) return [];
-  return data as AlertaJuridico[];
+  if (error) return ordenarData(verificados);
+  return ordenarData([...verificados, ...(data as AlertaJuridico[])]);
 }
 
 export async function adicionarAlerta(p: Politico, a: Omit<AlertaJuridico, 'id'>): Promise<void> {

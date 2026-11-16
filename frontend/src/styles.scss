@@ -1205,3 +1205,4 @@ legend { font-weight: 700; padding: 0 6px; }
 .etiqueta-polemica { justify-self: start; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: rgba(200, 30, 30, 0.12); color: #c81e1e; .icone { font-size: 0.95rem; } }
 :root[data-tema='escuro'] .etiqueta-polemica { background: rgba(244, 33, 46, 0.16); color: #ff6b6b; }
 .consultas-oficiais { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 8px; a { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border: 1px solid var(--borda); border-radius: 999px; font-size: 0.85rem; text-decoration: none; } }
+.selo-verificado-equipe { display: inline-flex; align-items: center; gap: 3px; font-size: 0.74rem; font-weight: 700; color: var(--link); .icone { font-size: 0.95rem; } }

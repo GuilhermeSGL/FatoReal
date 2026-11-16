@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
 import { CARGOS, chaveAlerta, contagemAlertas, letraDe, todosDoCargo } from '../../core/politicos.service';
+import { verificadosDe } from '../../core/registros-verificados';
 import { modoDemo } from '../../core/supabase';
 import { UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
@@ -37,7 +38,10 @@ export class BuscaPage implements OnInit {
   protected readonly esqueletos = Array.from({ length: 6 });
   /** Quantos registros (polêmicas/Justiça) cada político tem: etiqueta vermelha no card. */
   protected readonly registros = signal<Record<string, number>>({});
-  protected readonly chave = chaveAlerta;
+  /** Total de registros do político: os cadastrados pela moderação + os verificados no código. */
+  protected totalRegistros(p: Politico): number {
+    return (this.registros()[chaveAlerta(p)] ?? 0) + verificadosDe(p).length;
+  }
 
   /** Cargo sem fonte automática no modo demonstração (governador, presidente...). */
   protected readonly semFonte = computed(() => this.demo && !CARGOS.find((c) => c.nome === this.cargo())?.fonte);
