@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AlertaJuridico, Politico } from './modelos';
+import { lerDemo, proximoId, salvarDemo } from './demo-store';
 import { supabase } from './supabase';
 
 const CAMARA_API = 'https://dadosabertos.camara.leg.br/api/v2';
@@ -313,12 +314,22 @@ export async function obterSenador(id: number): Promise<Politico | null> {
   return (await todosDoCargo('Senador(a)')).find((p) => p.id === id) ?? null;
 }
 
+/** Chave de um político nos registros (o mesmo id pode existir na Câmara e no Senado). */
+export function chaveAlerta(p: Pick<Politico, 'id' | 'casa'>): string {
+  return `${p.casa ?? 'camara'}:${p.id}`;
+}
+
+type BancoAlertas = Record<string, AlertaJuridico[]>;
+const lerAlertasDemo = () => lerDemo<BancoAlertas>('alertas-v1', {});
+
 /**
- * Alertas jurídicos de um político. Só existem quando a equipe cadastra, com fonte oficial,
- * na tabela "politico_alertas" do Supabase. Nada é gerado automaticamente.
+ * Polêmicas e registros jurídicos de um político. Só existem quando a moderação cadastra,
+ * sempre com link para a fonte (Supabase: tabela "politico_alertas"; demo: localStorage).
+ * Nada é gerado automaticamente.
  */
 export async function alertasDe(p: Politico): Promise<AlertaJuridico[]> {
-  if (!supabase) return [];
+  const ordenarData = (l: AlertaJuridico[]) => [...l].sort((a, b) => (b.data ?? '').localeCompare(a.data ?? ''));
+  if (!supabase) return ordenarData(lerAlertasDemo()[chaveAlerta(p)] ?? []);
   const { data, error } = await supabase
     .from('politico_alertas')
     .select('*')
@@ -327,6 +338,43 @@ export async function alertasDe(p: Politico): Promise<AlertaJuridico[]> {
     .order('data', { ascending: false });
   if (error) return [];
   return data as AlertaJuridico[];
+}
+
+export async function adicionarAlerta(p: Politico, a: Omit<AlertaJuridico, 'id'>): Promise<void> {
+  if (!supabase) {
+    const db = lerAlertasDemo();
+    const lista = db[chaveAlerta(p)] ?? [];
+    lista.push({ ...a, id: proximoId(lista) });
+    db[chaveAlerta(p)] = lista;
+    salvarDemo('alertas-v1', db);
+    return;
+  }
+  const { error } = await supabase.from('politico_alertas').insert({ ...a, politico_id: p.id, casa: p.casa ?? 'camara' });
+  if (error) throw new Error('Não foi possível salvar o registro. Só moderadores podem cadastrar.');
+}
+
+export async function removerAlerta(p: Politico, id: number): Promise<void> {
+  if (!supabase) {
+    const db = lerAlertasDemo();
+    db[chaveAlerta(p)] = (db[chaveAlerta(p)] ?? []).filter((a) => a.id !== id);
+    salvarDemo('alertas-v1', db);
+    return;
+  }
+  const { error } = await supabase.from('politico_alertas').delete().eq('id', id);
+  if (error) throw new Error('Não foi possível remover o registro.');
+}
+
+/** Quantos registros cada político tem (para a etiqueta vermelha na lista de candidatos). */
+export async function contagemAlertas(): Promise<Record<string, number>> {
+  if (!supabase) {
+    const db = lerAlertasDemo();
+    return Object.fromEntries(Object.entries(db).map(([k, l]) => [k, l.length]).filter(([, n]) => (n as number) > 0));
+  }
+  const { data, error } = await supabase.from('politico_alertas').select('politico_id, casa').limit(5000);
+  if (error) return {};
+  const mapa: Record<string, number> = {};
+  for (const r of data as { politico_id: number; casa: string }[]) mapa[`${r.casa}:${r.politico_id}`] = (mapa[`${r.casa}:${r.politico_id}`] ?? 0) + 1;
+  return mapa;
 }
 
 /** Primeira letra do nome, sem acento (para o índice A–Z). */

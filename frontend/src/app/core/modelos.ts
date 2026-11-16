@@ -26,13 +26,23 @@ export interface Politico {
   casa?: 'camara' | 'senado' | 'outro';
 }
 
-/** Registro jurídico ou administrativo de um político, sempre com fonte oficial. */
+export type TipoAlerta =
+  | 'Condenação'
+  | 'Processo em andamento'
+  | 'Investigação'
+  | 'Inelegibilidade'
+  | 'Cassação'
+  | 'Sanção administrativa'
+  | 'Polêmica'
+  | 'Absolvição ou arquivamento';
+
+/** Polêmica ou registro jurídico/administrativo de um político. Sempre com link para a fonte. */
 export interface AlertaJuridico {
   id: number;
-  tipo: 'Condenação' | 'Processo em andamento' | 'Inelegibilidade' | 'Cassação' | 'Sanção administrativa' | 'Absolvição ou arquivamento';
+  tipo: TipoAlerta;
   titulo: string;
   descricao: string;
-  /** Tribunal ou órgão responsável (STF, TSE, TCU, TJ etc.). */
+  /** Tribunal, órgão ou veículo que publicou (STF, TSE, TCU, Agência Brasil etc.). */
   orgao: string;
   data?: string | null;
   fonte_url: string;

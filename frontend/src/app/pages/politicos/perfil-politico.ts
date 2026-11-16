@@ -1,14 +1,17 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AlertaJuridico, Politico } from '../../core/modelos';
-import { DetalhesPolitico, PoliticosService, alertasDe, detalhesCamara, obterSenador } from '../../core/politicos.service';
+import { AlertaJuridico, Politico, TipoAlerta } from '../../core/modelos';
+import { AuthService } from '../../core/auth.service';
+import { AvisosService } from '../../core/avisos.service';
+import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta } from '../../core/politicos.service';
 import { linkSeguro } from '../../core/util';
 import { Avatar, Campo, FonteDado, Icone } from '../../shared/componentes';
 
 @Component({
   selector: 'app-perfil-politico',
-  imports: [RouterLink, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone],
+  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone],
   templateUrl: './perfil-politico.html',
 })
 export class PerfilPoliticoPage implements OnInit {
@@ -26,10 +29,58 @@ export class PerfilPoliticoPage implements OnInit {
     { nome: 'TSE: candidaturas e certidões', url: 'https://divulgacandcontas.tse.jus.br/' },
     { nome: 'Portal da Transparência: sanções (CEIS/CNEP)', url: 'https://portaldatransparencia.gov.br/sancoes' },
   ];
-  protected readonly gravidade: Record<AlertaJuridico['tipo'], 'alta' | 'media' | 'neutra'> = {
+  protected readonly gravidade: Record<TipoAlerta, 'alta' | 'media' | 'neutra'> = {
     'Condenação': 'alta', 'Inelegibilidade': 'alta', 'Cassação': 'alta',
-    'Processo em andamento': 'media', 'Sanção administrativa': 'media', 'Absolvição ou arquivamento': 'neutra',
+    'Processo em andamento': 'media', 'Investigação': 'media', 'Sanção administrativa': 'media', 'Polêmica': 'media',
+    'Absolvição ou arquivamento': 'neutra',
   };
+  protected readonly tipos = Object.keys(this.gravidade) as TipoAlerta[];
+  protected auth = inject(AuthService);
+  private avisos = inject(AvisosService);
+
+  // Formulário da moderação ("Adicionar registro")
+  protected readonly adicionando = signal(false);
+  protected readonly salvando = signal(false);
+  protected novo = this.registroVazio();
+
+  private registroVazio() {
+    return { tipo: 'Polêmica' as TipoAlerta, titulo: '', descricao: '', orgao: '', data: '', fonte_url: '' };
+  }
+
+  protected fonteValida(): boolean {
+    return /^https:\/\/[^\s]+\.[^\s]+/.test(this.novo.fonte_url.trim());
+  }
+
+  protected async salvarRegistro() {
+    const p = this.politico();
+    if (!p || !this.fonteValida()) return;
+    this.salvando.set(true);
+    try {
+      await adicionarAlerta(p, {
+        tipo: this.novo.tipo, titulo: this.novo.titulo.trim(), descricao: this.novo.descricao.trim(),
+        orgao: this.novo.orgao.trim(), data: this.novo.data || null, fonte_url: this.novo.fonte_url.trim(),
+      });
+      this.alertas.set(await alertasDe(p));
+      this.novo = this.registroVazio();
+      this.adicionando.set(false);
+      this.avisos.mostrar('Registro adicionado.');
+    } catch (e) {
+      this.avisos.erro(e);
+    } finally {
+      this.salvando.set(false);
+    }
+  }
+
+  protected async remover(a: AlertaJuridico) {
+    const p = this.politico();
+    if (!p || !confirm(`Remover o registro "${a.titulo}"?`)) return;
+    try {
+      await removerAlerta(p, a.id);
+      this.alertas.set(await alertasDe(p));
+    } catch (e) {
+      this.avisos.erro(e);
+    }
+  }
 
   protected readonly politico = signal<Politico | null>(null);
   protected readonly carregando = signal(true);

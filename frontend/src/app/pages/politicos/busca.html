@@ -94,6 +94,9 @@
                 <strong>{{ p.nome }}</strong>
                 <span class="card-politico-partido">{{ p.partido || 'Partido n/d' }} · {{ p.uf || 'UF n/d' }}</span>
                 <small>{{ p.cargo || cargo() }}</small>
+                @if (registros()[chave(p)]; as n) {
+                  <span class="etiqueta-polemica"><app-icone nome="report" /> {{ n }} {{ n === 1 ? 'registro' : 'registros' }} na seção de polêmicas</span>
+                }
               </span>
               <app-icone nome="chevron_right" class="card-politico-seta" />
             </a>

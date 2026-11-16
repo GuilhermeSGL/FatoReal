@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Politico } from '../../core/modelos';
-import { CARGOS, letraDe, todosDoCargo } from '../../core/politicos.service';
+import { CARGOS, chaveAlerta, contagemAlertas, letraDe, todosDoCargo } from '../../core/politicos.service';
 import { modoDemo } from '../../core/supabase';
 import { UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
@@ -35,6 +35,9 @@ export class BuscaPage implements OnInit {
   protected readonly erro = signal('');
   protected readonly limite = signal(POR_VEZ);
   protected readonly esqueletos = Array.from({ length: 6 });
+  /** Quantos registros (polêmicas/Justiça) cada político tem: etiqueta vermelha no card. */
+  protected readonly registros = signal<Record<string, number>>({});
+  protected readonly chave = chaveAlerta;
 
   /** Cargo sem fonte automática no modo demonstração (governador, presidente...). */
   protected readonly semFonte = computed(() => this.demo && !CARGOS.find((c) => c.nome === this.cargo())?.fonte);
@@ -77,6 +80,7 @@ export class BuscaPage implements OnInit {
     this.uf.set(q.get('uf') ?? '');
     this.letra.set(q.get('letra') ?? '');
     this.carregar();
+    contagemAlertas().then((m) => this.registros.set(m)).catch(() => {});
   }
 
   protected async carregar() {

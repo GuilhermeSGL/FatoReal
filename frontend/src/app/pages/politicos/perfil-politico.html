@@ -27,37 +27,90 @@
       </div>
     </header>
 
-    <!-- Alertas jurídicos -->
+    <!-- Polêmicas e problemas na Justiça -->
     @if (!carregandoAlertas()) {
-      @if (alertas().length) {
-        <section class="card alertas-juridicos" aria-labelledby="titulo-alertas">
-          <h2 id="titulo-alertas" class="titulo-secao"><app-icone nome="warning" /> Atenção: registros na Justiça e em órgãos de controle</h2>
-          <ul>
+      <section class="card polemicas" [class.com-registros]="alertas().length" aria-labelledby="titulo-polemicas">
+        <header class="polemicas-topo">
+          <span class="polemicas-icone"><app-icone [nome]="alertas().length ? 'report' : 'gpp_maybe'" /></span>
+          <div>
+            <h2 id="titulo-polemicas">Polêmicas e problemas na Justiça</h2>
+            @if (alertas().length) {
+              <p>{{ alertas().length }} {{ alertas().length === 1 ? 'registro' : 'registros' }} com fonte. Leia cada um e abra a fonte antes de tirar conclusões.</p>
+            } @else {
+              <p>Nenhum registro cadastrado pela moderação para {{ p.nome }}. Isso não garante que não existam: confira nas fontes oficiais abaixo.</p>
+            }
+          </div>
+          @if (auth.moderador() && !adicionando()) {
+            <button type="button" class="botao botao-fantasma polemicas-add" (click)="adicionando.set(true)"><app-icone nome="add" /> Adicionar registro</button>
+          }
+        </header>
+
+        @if (alertas().length) {
+          <ol class="polemicas-lista">
             @for (a of alertas(); track a.id) {
               <li [attr.data-gravidade]="gravidade[a.tipo]">
-                <span class="alerta-tipo">{{ a.tipo }}</span>
+                <div class="polemica-linha">
+                  <span class="alerta-tipo">{{ a.tipo }}</span>
+                  @if (a.data) { <time>{{ a.data | date: 'MM/yyyy' }}</time> }
+                  @if (auth.moderador()) {
+                    <button type="button" class="polemica-remover" (click)="remover(a)" [attr.aria-label]="'Remover ' + a.titulo" title="Remover"><app-icone nome="delete" /></button>
+                  }
+                </div>
                 <strong>{{ a.titulo }}</strong>
                 <p>{{ a.descricao }}</p>
-                <small>{{ a.orgao }}@if (a.data) { · {{ a.data | date: 'dd/MM/yyyy' }} } · <a [href]="a.fonte_url" target="_blank" rel="noopener noreferrer">Ver fonte oficial</a></small>
+                <a class="polemica-fonte" [href]="a.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Fonte: {{ a.orgao }}</a>
               </li>
             }
-          </ul>
-          <p class="texto-p">Processo em andamento não é condenação: todos têm direito à presunção de inocência até decisão final. Cada registro tem link para a fonte oficial.</p>
-        </section>
-      } @else {
-        <section class="card alertas-vazio" aria-labelledby="titulo-alertas">
-          <div class="alertas-vazio-topo">
-            <app-icone nome="verified_user" />
-            <div>
-              <h2 id="titulo-alertas" class="titulo-secao">Situação na Justiça</h2>
-              <p>Nenhum alerta jurídico registrado pela equipe do Fato Real para {{ p.nome }}. Isso não garante que não existam processos: confira nas fontes oficiais.</p>
+          </ol>
+          <p class="polemicas-nota"><app-icone nome="balance" /> <span>Processo ou investigação em andamento não é condenação: todos têm direito à presunção de inocência até decisão final. Viu um registro errado? Avise pelo <a routerLink="/contato">contato</a>.</span></p>
+        }
+
+        @if (adicionando()) {
+          <form class="polemicas-form" #f="ngForm" (ngSubmit)="f.valid && fonteValida() && salvarRegistro()">
+            <h3>Novo registro (moderação)</h3>
+            <div class="linha-campos">
+              <div class="campo-form">
+                <label for="pa-tipo">Tipo</label>
+                <select id="pa-tipo" name="tipo" [(ngModel)]="novo.tipo">
+                  @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+                </select>
+              </div>
+              <div class="campo-form">
+                <label for="pa-data">Data do fato</label>
+                <input id="pa-data" name="data" type="date" [(ngModel)]="novo.data" />
+              </div>
             </div>
-          </div>
-          <ul class="consultas-oficiais">
-            @for (c of consultas; track c.url) { <li><a [href]="c.url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ c.nome }}</a></li> }
-          </ul>
-        </section>
-      }
+            <div class="campo-form">
+              <label for="pa-titulo">Título</label>
+              <input id="pa-titulo" name="titulo" [(ngModel)]="novo.titulo" required minlength="5" maxlength="140" placeholder="Resumo em uma linha, sem adjetivos" />
+            </div>
+            <div class="campo-form">
+              <label for="pa-desc">O que aconteceu</label>
+              <textarea id="pa-desc" name="descricao" rows="3" [(ngModel)]="novo.descricao" required minlength="20" maxlength="600" placeholder="Descreva só o que a fonte diz, com fatos e datas."></textarea>
+            </div>
+            <div class="linha-campos">
+              <div class="campo-form">
+                <label for="pa-orgao">Quem publicou</label>
+                <input id="pa-orgao" name="orgao" [(ngModel)]="novo.orgao" required maxlength="80" placeholder="Ex.: STF, TSE, Agência Brasil" />
+              </div>
+              <div class="campo-form campo-largo">
+                <label for="pa-fonte">Link da fonte (obrigatório)</label>
+                <input id="pa-fonte" name="fonte" type="url" [(ngModel)]="novo.fonte_url" required placeholder="https://..." />
+                @if (novo.fonte_url && !fonteValida()) { <small class="erro-campo">Use o endereço completo, começando com https://</small> }
+              </div>
+            </div>
+            <p class="texto-p"><app-icone nome="info" /> Só registre o que estiver publicado em fonte confiável (decisão judicial, órgão oficial ou veículo de imprensa). Sem fonte, não publique.</p>
+            <div class="modal-acoes">
+              <button type="button" class="botao botao-fantasma" (click)="adicionando.set(false)">Cancelar</button>
+              <button type="submit" class="botao botao-perigo" [disabled]="f.invalid || !fonteValida() || salvando()">{{ salvando() ? 'Salvando...' : 'Publicar registro' }}</button>
+            </div>
+          </form>
+        }
+
+        <ul class="consultas-oficiais">
+          @for (c of consultas; track c.url) { <li><a [href]="c.url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ c.nome }}</a></li> }
+        </ul>
+      </section>
     }
 
     <!-- Números principais -->
