@@ -215,7 +215,7 @@ function inicioLegislatura(): string {
 }
 
 async function jsonCamara<T>(caminho: string): Promise<T> {
-  const url = caminho.startsWith('http') ? caminho : CAMARA_API + caminho;
+  const url = (caminho.startsWith('http') ? caminho : CAMARA_API + caminho).replace(/^http:\/\//, 'https://');
   const resp = await buscarCamara(url);
   if (!resp.ok) throw new Error('A API da Câmara não respondeu.');
   return (await resp.json()) as T;
@@ -268,22 +268,60 @@ async function carregarCargo(cargo: string): Promise<Politico[]> {
 }
 
 async function deputadosCamara(): Promise<Politico[]> {
+  // Guardado por 6 horas neste navegador: a lista completa não precisa ser baixada a cada visita.
+  const salvo = lerSessao<Politico[]>('deputados-v1');
+  if (salvo?.length) return salvo;
+
   const agora = new Date().toISOString();
   const lista: Politico[] = [];
-  let url: string | undefined = `${CAMARA_API}/deputados?itens=100&ordem=ASC&ordenarPor=nome`;
-  for (let pagina = 0; url && pagina < 10; pagina++) {
-    const resp = await buscarCamara(url);
-    if (!resp.ok) throw new Error('A API da Câmara não respondeu. Tente de novo em instantes.');
-    const json = (await resp.json()) as { dados: DeputadoResumo[]; links?: { rel: string; href: string }[] };
-    for (const d of json.dados) {
+  const POR_PAGINA = 100;
+  // Monta o endereço de cada página aqui mesmo (sempre https), sem depender do link "next" da API.
+  for (let pagina = 1; pagina <= 10; pagina++) {
+    const url = `${CAMARA_API}/deputados?itens=${POR_PAGINA}&pagina=${pagina}&ordem=ASC&ordenarPor=nome`;
+    const json = (await comTentativas(() => jsonCamara<{ dados: DeputadoResumo[] }>(url))).dados;
+    for (const d of json) {
       lista.push({
         id: d.id, nome: d.nome, partido: d.siglaPartido, uf: d.siglaUf, cargo: 'Deputado(a) Federal', foto_url: d.urlFoto,
         email: d.email, fonte_url: `https://www.camara.leg.br/deputados/${d.id}`, data_coleta: agora, casa: 'camara',
       });
     }
-    url = json.links?.find((l) => l.rel === 'next')?.href;
+    if (json.length < POR_PAGINA) break;
   }
-  return ordenar(lista);
+  if (!lista.length) throw new Error('A API da Câmara não devolveu nenhum deputado. Tente de novo em instantes.');
+  const ordenada = ordenar(lista);
+  salvarSessao('deputados-v1', ordenada);
+  return ordenada;
+}
+
+/** Tenta de novo até 3 vezes (a API às vezes recusa pedidos seguidos), esperando um pouco mais a cada vez. */
+async function comTentativas<T>(fn: () => Promise<T>): Promise<T> {
+  let erro: unknown;
+  for (let i = 0; i < 3; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      erro = e;
+      await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw erro;
+}
+
+const VALIDADE_SESSAO = 6 * 3600_000;
+function lerSessao<T>(chave: string): T | null {
+  try {
+    const bruto = JSON.parse(localStorage.getItem('fatoreal-cache:' + chave) ?? 'null');
+    return bruto && Date.now() - bruto.em < VALIDADE_SESSAO ? (bruto.dados as T) : null;
+  } catch {
+    return null;
+  }
+}
+function salvarSessao(chave: string, dados: unknown) {
+  try {
+    localStorage.setItem('fatoreal-cache:' + chave, JSON.stringify({ em: Date.now(), dados }));
+  } catch {
+    /* sem espaço ou sem localStorage: segue sem guardar */
+  }
 }
 
 async function senadoresSenado(): Promise<Politico[]> {
