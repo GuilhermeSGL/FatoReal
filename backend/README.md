@@ -186,7 +186,35 @@ Regras que **não dependem da IA**:
 - Os **anexos** não são analisados nem guardados (mídia precisa de revisão humana). Na Vercel,
   o pedido inteiro tem limite de ~4,5 MB.
 
+### `GET /api/cep/:cep`
 
+Endereço automático pelo CEP (RF07), usando o **ViaCEP** (gratuito, sem chave), e os
+**deputados federais do estado** (regionalização). Aceita `01310100`, `01310-100` ou `01.310-100`.
+
+```json
+{
+  "endereco": { "cep": "70040-010", "logradouro": "SBN Quadra 1", "complemento": null, "bairro": "Asa Norte",
+                "cidade": "Brasília", "uf": "DF", "estado": "Distrito Federal",
+                "fonte": { "nome": "ViaCEP", "url": "https://viacep.com.br/ws/70040010/json/", "consultadoEm": "..." } },
+  "deputados": { "uf": "DF", "total": 8, "dados": [{ "id": 0, "nome": "...", "partido": "...", "uf": "DF", "foto": "..." }], "fonte": {} }
+}
+```
+
+- `?politicos=0` → só o endereço (bom para preencher formulário de cadastro).
+- Se a Câmara falhar, o endereço volta mesmo assim, com `"deputados": null`.
+- Erros: `400` CEP inválido · `404` CEP não encontrado · `502` ViaCEP não respondeu.
+
+### `POST /api/whatsapp`
+
+Formulário do **botão de WhatsApp** (RF15). Corpo: `{ "nome", "motivo", "link"?, "mensagem"? }`.
+Devolve `{ "url": "https://wa.me/55...?text=..." }`: o front só abre essa URL (`window.open(url)`).
+
+- `GET /api/whatsapp/motivos` → lista de motivos para o `<select>`.
+- O número fica em `WHATSAPP_NUMERO` (no `.env` e na Vercel), com código do país e DDD.
+  Sem ele, a rota responde `503`.
+- **Nada é guardado** (LGPD): os dados só vão na mensagem que a própria pessoa envia.
+
+#### Configurar o Gemini
 
 1. Entre em https://aistudio.google.com/apikey com uma conta Google e clique em **Create API key**.
 2. Coloque a chave em `GEMINI_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
