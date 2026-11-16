@@ -6,6 +6,7 @@ import { AvisosService } from './core/avisos.service';
 import { MensagensService } from './core/mensagens.service';
 import { NotificacoesService } from './core/notificacoes.service';
 import { TemaService } from './core/tema.service';
+import { AcessibilidadeService } from './core/acessibilidade.service';
 import { tempoAtras } from './core/util';
 import { Avatar, AvisoDemo, Icone } from './shared/componentes';
 
@@ -21,6 +22,7 @@ export class App {
   protected auth = inject(AuthService);
   protected avisos = inject(AvisosService);
   protected tema = inject(TemaService);
+  private acessibilidade = inject(AcessibilidadeService);
   protected notificacoes = inject(NotificacoesService);
   protected mensagens = inject(MensagensService);
   private router = inject(Router);

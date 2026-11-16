@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AvisosService } from '../../core/avisos.service';
 import { EstadoVerificacao, FatoBotService, ResultadoVerificacao } from '../../core/fatobot.service';
 import { linkSeguro } from '../../core/util';
+import { ChecagensService } from '../../core/checagens.service';
 import { AvisoIa, FonteDado, Icone } from '../../shared/componentes';
 
 type TipoAnexo = 'imagem' | 'video' | 'documento';
@@ -138,6 +139,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
 export class VerificarPage implements OnDestroy {
   private bot = inject(FatoBotService);
   private avisos = inject(AvisosService);
+  private checagens = inject(ChecagensService);
   protected afirmacao = '';
   protected link = '';
   protected readonly anexos = signal<Anexo[]>([]);
@@ -220,6 +222,11 @@ export class VerificarPage implements OnDestroy {
     this.verificando.set(true);
     try {
       const resultado = await this.bot.verificar({ afirmacao, link, anexos: anexos.map((a) => a.arquivo) });
+      this.checagens.registrar({
+        afirmacao: afirmacao || link || anexos.map((a) => a.arquivo.name).join(', '), estado: resultado.estado,
+        resumo: resultado.explicacao.slice(0, 160), fonte: resultado.fontes[0] ? { titulo: resultado.fontes[0].titulo, url: resultado.fontes[0].url } : null,
+        criado_em: resultado.consultado_em,
+      });
       this.historico.update((h) => [
         { afirmacao, link, anexos: anexos.map((a) => ({ nome: a.arquivo.name, tipo: a.tipo, tamanho: this.tamanho(a.arquivo.size) })), resultado },
         ...h,

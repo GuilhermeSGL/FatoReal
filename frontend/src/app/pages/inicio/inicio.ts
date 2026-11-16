@@ -5,7 +5,13 @@ import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Comunidade, Publicacao } from '../../core/modelos';
-import { linkSeguro } from '../../core/util';
+import { linkSeguro, UFS } from '../../core/util';
+import { termoDoDia } from '../../core/glossario';
+import { Checagem, ChecagensService } from '../../core/checagens.service';
+import { EstadoVerificacao } from '../../core/fatobot.service';
+import { todosDoCargo } from '../../core/politicos.service';
+import { modoDemo } from '../../core/supabase';
+import { Politico } from '../../core/modelos';
 import { avatarComunidade, capaComunidade, CATEGORIAS, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
 import { PublicacaoCard } from '../../shared/publicacao-card';
@@ -31,7 +37,19 @@ export class InicioPage implements OnInit {
   private router = inject(Router);
   protected auth = inject(AuthService);
 
+  private checagensService = inject(ChecagensService);
   protected readonly categorias = CATEGORIAS;
+  protected readonly ufs = UFS;
+  protected readonly demo = modoDemo;
+  protected readonly fatoDoDia = termoDoDia();
+  protected readonly checagens = signal<Checagem[]>([]);
+
+  // "Meus representantes": estado do perfil ou o escolhido aqui (salvo no navegador)
+  protected readonly ufEscolhida = signal<string>(this.ufInicial());
+  protected readonly deputadosUf = signal<Politico[]>([]);
+  protected readonly senadoresUf = signal<Politico[]>([]);
+  protected readonly carregandoRep = signal(false);
+  protected readonly erroRep = signal(false);
   protected readonly iconeTema = ICONE_TEMA;
   protected readonly corTema = COR_TEMA;
   protected readonly avatarComunidade = avatarComunidade;
@@ -85,7 +103,55 @@ export class InicioPage implements OnInit {
   protected readonly publicando = signal(false);
 
   async ngOnInit() {
+    this.checagensService.recentes(4).then((c) => this.checagens.set(c)).catch(() => {});
+    if (this.ufEscolhida()) this.carregarRepresentantes();
     await this.carregar();
+  }
+
+  private ufInicial(): string {
+    const doPerfil = this.auth.usuario()?.uf;
+    if (doPerfil) return doPerfil;
+    try {
+      return localStorage.getItem('fatoreal-uf') ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  protected escolherUf(uf: string) {
+    if (!uf) return;
+    try {
+      localStorage.setItem('fatoreal-uf', uf);
+    } catch {
+      /* sem localStorage */
+    }
+    this.ufEscolhida.set(uf);
+    this.carregarRepresentantes();
+  }
+
+  protected trocarUf() {
+    try {
+      localStorage.removeItem('fatoreal-uf');
+    } catch {
+      /* sem localStorage */
+    }
+    this.ufEscolhida.set('');
+  }
+
+  private async carregarRepresentantes() {
+    const uf = this.ufEscolhida();
+    this.carregandoRep.set(true);
+    this.erroRep.set(false);
+    const [dep, sen] = await Promise.allSettled([todosDoCargo('Deputado(a) Federal'), todosDoCargo('Senador(a)')]);
+    if (uf !== this.ufEscolhida()) return;
+    this.deputadosUf.set(dep.status === 'fulfilled' ? dep.value.filter((p) => p.uf === uf) : []);
+    this.senadoresUf.set(sen.status === 'fulfilled' ? sen.value.filter((p) => p.uf === uf) : []);
+    this.erroRep.set(dep.status === 'rejected');
+    this.carregandoRep.set(false);
+  }
+
+  protected rotuloEstado(e: EstadoVerificacao): string {
+    return { 'Evidências sustentam': 'Verdadeiro', 'Evidências contradizem': 'Falso', 'Fora de contexto': 'Fora de contexto', 'Evidência insuficiente': 'Sem evidência', 'Em análise': 'Em análise' }[e];
   }
 
   private async carregar() {

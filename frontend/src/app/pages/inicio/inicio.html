@@ -127,6 +127,70 @@
       <a routerLink="/comunidades" class="ver-todas">Ver todas as comunidades <app-icone nome="arrow_forward" /></a>
     </section>
 
+    <!-- Meus deputados -->
+    <section class="card bloco meus-deputados">
+      <h2><app-icone nome="how_to_vote" /> Meus representantes</h2>
+      @if (!ufEscolhida()) {
+        <p class="texto-p">Escolha seu estado para ver quem representa você no Congresso.</p>
+        <label for="uf-home" class="sr-only">Seu estado</label>
+        <select id="uf-home" (change)="escolherUf($any($event.target).value)">
+          <option value="">Escolha o estado...</option>
+          @for (u of ufs; track u) { <option [value]="u">{{ u }}</option> }
+        </select>
+      } @else {
+        <p class="meus-uf">
+          <strong>{{ ufEscolhida() }}</strong>
+          <button type="button" class="link-sutil" (click)="trocarUf()">trocar</button>
+        </p>
+        @if (carregandoRep()) {
+          <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto" style="width: 60%"></span></div>
+        } @else if (erroRep()) {
+          <p class="texto-p">Não deu para carregar agora. <a [routerLink]="['/politicos']" [queryParams]="{ uf: ufEscolhida() }">Ver na busca</a></p>
+        } @else {
+          <a class="meus-linha" [routerLink]="['/politicos']" [queryParams]="{ uf: ufEscolhida() }">
+            <span class="avatares-empilhados">
+              @for (d of deputadosUf().slice(0, 5); track d.id) { <app-avatar class="avatar-oficial" [nome]="d.nome" [url]="d.foto_url" [tamanho]="34" /> }
+            </span>
+            <span><strong>{{ deputadosUf().length }} deputados federais</strong><small>Ver todos</small></span>
+          </a>
+          @if (senadoresUf().length) {
+            <ul class="meus-senadores">
+              @for (s of senadoresUf(); track s.id) {
+                <li><a [routerLink]="['/politicos/senado', s.id]"><app-avatar class="avatar-oficial" [nome]="s.nome" [url]="s.foto_url" [tamanho]="30" /><span><strong>{{ s.nome }}</strong><small>Senador(a) · {{ s.partido }}</small></span></a></li>
+              }
+            </ul>
+          }
+        }
+      }
+    </section>
+
+    <!-- Fato do dia -->
+    <section class="card bloco fato-dia">
+      <p class="sobretitulo"><app-icone nome="lightbulb" /> Fato do dia</p>
+      <h2>{{ fatoDoDia.termo }}</h2>
+      <p>{{ fatoDoDia.definicao }}</p>
+      <p class="fato-dia-exemplo">{{ fatoDoDia.exemplo }}</p>
+      <a routerLink="/base-da-politica" class="ver-todas">Mais termos na Base da Política <app-icone nome="arrow_forward" /></a>
+    </section>
+
+    <!-- Termômetro de fake news -->
+    @if (checagens().length) {
+      <section class="card bloco termometro">
+        <h2><app-icone nome="thermostat" /> Termômetro de fake news</h2>
+        <p class="texto-p">O que andam checando{{ demo ? ' (exemplos do modo demonstração e as suas checagens)' : '' }}:</p>
+        <ul>
+          @for (c of checagens(); track c.criado_em + c.afirmacao) {
+            <li>
+              <span class="estado estado-p" [attr.data-estado]="c.estado">{{ rotuloEstado(c.estado) }}</span>
+              <span class="termometro-texto">{{ c.afirmacao }}</span>
+              @if (c.fonte; as f) { <a class="termometro-fonte" [href]="f.url" target="_blank" rel="noopener noreferrer">Fonte: {{ f.titulo }}</a> }
+            </li>
+          }
+        </ul>
+        <a routerLink="/verificar" class="ver-todas">Verificar uma informação <app-icone nome="arrow_forward" /></a>
+      </section>
+    }
+
     <section class="card-ia">
       <h2><img src="logo.svg" alt="" width="22" height="22" /> Pergunte para a IA</h2>
       <div class="card-ia-corpo">

@@ -3,6 +3,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { modoDemo } from '../../core/supabase';
+import { AcessibilidadeService } from '../../core/acessibilidade.service';
 import { Icone } from '../../shared/componentes';
 
 @Component({
@@ -15,6 +16,21 @@ import { Icone } from '../../shared/componentes';
     </header>
 
     <div class="grade-2">
+      <section class="card">
+        <h2><app-icone nome="accessibility_new" /> Acessibilidade</h2>
+        <p class="texto-suave">Ajuste a leitura do site. Fica salvo neste navegador.</p>
+        <span class="rotulo">Tamanho da letra</span>
+        <div class="opcoes-fonte" role="radiogroup" aria-label="Tamanho da letra">
+          <button type="button" role="radio" [attr.aria-checked]="a11y.fonte() === 'normal'" (click)="a11y.definirFonte('normal')"><span style="font-size: 0.9rem">A</span> Normal</button>
+          <button type="button" role="radio" [attr.aria-checked]="a11y.fonte() === 'grande'" (click)="a11y.definirFonte('grande')"><span style="font-size: 1.1rem">A</span> Grande</button>
+          <button type="button" role="radio" [attr.aria-checked]="a11y.fonte() === 'maior'" (click)="a11y.definirFonte('maior')"><span style="font-size: 1.3rem">A</span> Maior</button>
+        </div>
+        <label class="opcao-alternar">
+          <input type="checkbox" [checked]="a11y.contraste()" (change)="a11y.alternarContraste()" />
+          <span><strong>Alto contraste</strong><small>Textos mais fortes, bordas visíveis e links sublinhados.</small></span>
+        </label>
+      </section>
+
       <section class="card">
         <h2><app-icone nome="manage_accounts" /> Conta</h2>
         @if (auth.usuario(); as u) {
@@ -54,6 +70,7 @@ import { Icone } from '../../shared/componentes';
 })
 export class ConfiguracoesPage {
   protected auth = inject(AuthService);
+  protected a11y = inject(AcessibilidadeService);
   private avisos = inject(AvisosService);
   private router = inject(Router);
   protected readonly demo = modoDemo;
