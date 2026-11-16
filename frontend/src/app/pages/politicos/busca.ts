@@ -7,6 +7,7 @@ import { verificadosDe } from '../../core/registros-verificados';
 import { modoDemo } from '../../core/supabase';
 import { UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
+import { MapaBrasil, nomeEstado } from '../../shared/mapa-brasil';
 
 const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const POR_VEZ = 48;
@@ -14,7 +15,7 @@ const POR_VEZ = 48;
 /** Candidatos: todos os políticos de cada cargo, em ordem alfabética, com índice A–Z e filtros. */
 @Component({
   selector: 'app-busca',
-  imports: [FormsModule, RouterLink, Icone, Avatar],
+  imports: [FormsModule, RouterLink, Icone, Avatar, MapaBrasil],
   templateUrl: './busca.html',
 })
 export class BuscaPage implements OnInit {
@@ -35,6 +36,21 @@ export class BuscaPage implements OnInit {
   protected readonly carregando = signal(false);
   protected readonly erro = signal('');
   protected readonly limite = signal(POR_VEZ);
+  protected readonly visao = signal<'lista' | 'mapa'>('lista');
+  protected readonly nomeEstado = nomeEstado;
+  /** Quantas pessoas do cargo atual há em cada estado (para o mapa). */
+  protected readonly porEstado = computed(() => {
+    const mapa: Record<string, number> = {};
+    for (const p of this.todos()) if (p.uf) mapa[p.uf] = (mapa[p.uf] ?? 0) + 1;
+    return mapa;
+  });
+  /** Partidos do estado selecionado no mapa, do maior para o menor. */
+  protected readonly partidosDoEstado = computed(() => {
+    const uf = this.uf();
+    const mapa = new Map<string, number>();
+    for (const p of this.todos()) if (p.uf === uf && p.partido) mapa.set(p.partido, (mapa.get(p.partido) ?? 0) + 1);
+    return [...mapa].sort((a, b) => b[1] - a[1]);
+  });
   protected readonly esqueletos = Array.from({ length: 6 });
   /** Quantos registros (polêmicas/Justiça) cada político tem: etiqueta vermelha no card. */
   protected readonly registros = signal<Record<string, number>>({});
@@ -121,6 +137,15 @@ export class BuscaPage implements OnInit {
   protected mudouFiltro() {
     this.limite.set(POR_VEZ);
     this.atualizarUrl();
+  }
+
+  protected escolherNoMapa(uf: string) {
+    this.uf.set(uf);
+    this.mudouFiltro();
+  }
+
+  protected verListaDoEstado() {
+    this.visao.set('lista');
   }
 
   protected mostrarMais() {

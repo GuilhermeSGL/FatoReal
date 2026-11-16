@@ -40,6 +40,42 @@
 </form>
 
 @if (!semFonte()) {
+  <div class="visoes" role="tablist" aria-label="Forma de ver">
+    <button type="button" role="tab" [attr.aria-selected]="visao() === 'lista'" (click)="visao.set('lista')"><app-icone nome="view_list" /> Lista A–Z</button>
+    <button type="button" role="tab" [attr.aria-selected]="visao() === 'mapa'" (click)="visao.set('mapa')"><app-icone nome="map" /> Mapa do Brasil</button>
+  </div>
+}
+
+@if (!semFonte() && visao() === 'mapa') {
+  <section class="card mapa-card">
+    <div class="mapa-layout">
+      <div>
+        <h2 class="titulo-secao">{{ cargo() }} por estado</h2>
+        <p class="texto-p">Toque em um estado. Quanto mais forte a cor, mais {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados' }}.</p>
+        <app-mapa-brasil [valores]="porEstado()" [selecionado]="uf()" [rotulo]="cargo() === 'Senador(a)' ? 'senadores' : 'deputados'" (escolher)="escolherNoMapa($event)" />
+      </div>
+      <aside class="mapa-painel">
+        @if (uf()) {
+          <p class="sobretitulo">{{ uf() }}</p>
+          <h3>{{ nomeEstado(uf()) }}</h3>
+          <p class="mapa-numero"><strong>{{ porEstado()[uf()] || 0 }}</strong> {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados federais' }}</p>
+          @if (partidosDoEstado().length) {
+            <ul class="mapa-partidos">
+              @for (pp of partidosDoEstado().slice(0, 6); track pp[0]) {
+                <li><span>{{ pp[0] }}</span><span class="mapa-barra"><span [style.width.%]="(pp[1] / partidosDoEstado()[0][1]) * 100"></span></span><strong>{{ pp[1] }}</strong></li>
+              }
+            </ul>
+          }
+          <button type="button" class="botao" (click)="verListaDoEstado()"><app-icone nome="list" /> Ver os nomes de {{ uf() }}</button>
+        } @else {
+          <p class="texto-suave">Escolha um estado no mapa para ver quantos representantes ele tem e de quais partidos.</p>
+        }
+      </aside>
+    </div>
+  </section>
+}
+
+@if (!semFonte() && visao() === 'lista') {
   <!-- Índice A–Z -->
   <nav class="indice-az" aria-label="Filtrar pela primeira letra do nome">
     <button type="button" class="indice-todos" [attr.aria-pressed]="!letra()" (click)="letra.set(''); mudouFiltro()">Todos</button>
@@ -70,7 +106,7 @@
     <span>Não existe uma API pública que o site consiga consultar direto para este cargo. A lista entra quando a equipe importar os dados oficiais do TSE para o banco (tabela <code>politicos</code>, coluna <code>cargo</code>).</span>
     <a class="botao botao-fantasma" href="https://divulgacandcontas.tse.jus.br/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Consultar no TSE (DivulgaCandContas)</a>
   </div>
-} @else {
+} @else if (visao() === 'lista') {
   @if (carregando()) {
     <ul class="grade-politicos">
       @for (e of esqueletos; track $index) {

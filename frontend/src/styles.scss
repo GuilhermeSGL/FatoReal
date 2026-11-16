@@ -1252,3 +1252,54 @@ legend { font-weight: 700; padding: 0 6px; }
 .estado-p { justify-self: start; font-size: 0.72rem !important; padding: 2px 8px !important; }
 .termometro-texto { font-size: 0.9rem; font-weight: 600; line-height: 1.35; }
 .termometro-fonte { font-size: 0.78rem; }
+
+/* Base da Política: linha do tempo "Como uma lei nasce" */
+.linha-lei h2 { display: flex; align-items: center; gap: 8px; margin: 0; .icone { color: var(--link); } }
+.linha-passos { list-style: none; position: relative; margin: 18px 0 6px; padding: 0; display: grid; gap: 4px; }
+.linha-passos::before { content: ''; position: absolute; left: 23px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--primaria), var(--destaque), var(--azul-vivo)); opacity: 0.5; }
+.linha-passo {
+  position: relative; display: flex; gap: 16px; align-items: flex-start; padding: 8px 0;
+  opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; transition-delay: var(--atraso, 0ms);
+  &.visivel { opacity: 1; transform: none; }
+}
+.linha-marcador {
+  position: relative; z-index: 1; flex: none; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
+  background: var(--superficie); border: 3px solid var(--primaria); color: var(--link); .icone { font-size: 1.4rem; }
+}
+.linha-passo:nth-child(3n + 2) .linha-marcador { border-color: var(--destaque); color: #b58500; }
+.linha-passo:nth-child(3n + 3) .linha-marcador { border-color: var(--azul-vivo); color: var(--azul-vivo); }
+:root[data-tema='escuro'] .linha-passo:nth-child(3n + 2) .linha-marcador { color: var(--destaque); }
+.linha-conteudo {
+  flex: 1; padding: 10px 14px; border-radius: 14px; background: var(--superficie-2);
+  h3 { margin: 2px 0 4px; font-size: 1.02rem; } p { margin: 0; font-size: 0.92rem; color: var(--texto-suave); line-height: 1.5; }
+}
+.linha-numero { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--link); }
+@media (prefers-reduced-motion: reduce) { .linha-passo { opacity: 1; transform: none; } }
+
+/* Candidatos: visão Lista/Mapa e mapa do Brasil em blocos */
+.visoes {
+  display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 12px; border-radius: 12px; background: var(--superficie); border: 1px solid var(--borda);
+  button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 9px; border: 0; background: none; color: var(--texto); font-weight: 600; cursor: pointer; .icone { font-size: 1.15rem; } }
+  button[aria-selected='true'] { background: var(--primaria); color: var(--primaria-texto); }
+}
+.mapa-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.mapa-blocos { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-template-rows: repeat(8, auto); gap: 6px; max-width: 460px; margin-top: 10px; }
+.mapa-uf {
+  aspect-ratio: 1; display: grid; place-content: center; gap: 0; border-radius: 10px; cursor: pointer; border: 2px solid transparent;
+  background: color-mix(in srgb, var(--primaria) calc(var(--forca, 0.2) * 100%), var(--superficie-2));
+  color: var(--texto); transition: transform 0.15s, border-color 0.15s;
+  strong { font-size: 0.95rem; line-height: 1; } small { font-size: 0.7rem; opacity: 0.85; }
+  &:hover { transform: scale(1.06); border-color: var(--texto); }
+  &.selecionado { border-color: var(--destaque); box-shadow: 0 0 0 3px color-mix(in srgb, var(--destaque) 40%, transparent); }
+}
+.mapa-painel {
+  padding: 16px; border-radius: 14px; background: var(--superficie-2);
+  h3 { margin: 0 0 6px; font-size: 1.3rem; } .sobretitulo { margin: 0; }
+}
+.mapa-numero { margin: 0 0 12px; strong { font-size: 1.8rem; margin-right: 4px; } }
+.mapa-partidos {
+  list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 6px;
+  li { display: grid; grid-template-columns: 110px 1fr 28px; align-items: center; gap: 8px; font-size: 0.85rem; } strong { text-align: right; }
+}
+.mapa-barra { height: 8px; border-radius: 999px; background: var(--superficie); overflow: hidden; span { display: block; height: 100%; background: var(--primaria); border-radius: inherit; } }
+@media (max-width: 860px) { .mapa-layout { grid-template-columns: 1fr; } .mapa-blocos { max-width: none; } }
