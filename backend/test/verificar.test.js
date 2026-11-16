@@ -2,6 +2,7 @@ import { test, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
+import { _resetPausa } from '../src/services/camara.js';
 import { _setClient } from '../src/services/gemini.js';
 
 const LISTA = {
@@ -39,6 +40,7 @@ const json = (o) => JSON.stringify(o);
 
 beforeEach(() => {
   clearCache();
+  _resetPausa();
   chamadas = [];
   originalFetch = globalThis.fetch;
   globalThis.fetch = mock.fn(async (url, opts) => {

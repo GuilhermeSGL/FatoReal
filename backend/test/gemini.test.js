@@ -2,6 +2,7 @@ import { test, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
+import { _resetPausa } from '../src/services/camara.js';
 import { _setClient, citacoesValidas } from '../src/services/gemini.js';
 
 const LISTA = {
@@ -39,6 +40,7 @@ const texto = (t) => ({ text: t });
 
 beforeEach(() => {
   clearCache();
+  _resetPausa();
   originalFetch = globalThis.fetch;
   globalThis.fetch = mock.fn(async (url, opts) => {
     const u = String(url);
@@ -75,7 +77,7 @@ test('usa a resposta do Gemini quando ela cita evidências válidas', async () =
   // O Gemini recebe as regras, as evidências numeradas e a pergunta isolada como dado.
   const { contents, config } = chamadas[0];
   assert.match(config.systemInstruction, /SOMENTE com base nas EVIDÊNCIAS/);
-  assert.equal(config.httpOptions.timeout, 20_000);
+  assert.ok(config.httpOptions.timeout > 0 && config.httpOptions.timeout <= 8_000);
   assert.match(contents, /\[1\] Tabata Amaral é deputado\(a\) federal pelo PSB-SP/);
   assert.match(contents, /<pergunta>Qual o partido de Tabata Amaral\?<\/pergunta>/);
 });
@@ -92,9 +94,11 @@ test('descarta resposta que cita evidência inexistente', async () => {
   assert.equal((await perguntar('Quem é Tabata Amaral?')).modo, 'somente_fontes');
 });
 
-test('SEM_EVIDENCIA do Gemini → mostra só os fatos encontrados', async () => {
+test('SEM_EVIDENCIA do Gemini → sem_evidencia: true (detalhes no teste do J6)', async () => {
   geminiFalso(texto('SEM_EVIDENCIA'));
-  assert.equal((await perguntar('Quantos projetos Tabata Amaral aprovou?')).modo, 'somente_fontes');
+  const body = await perguntar('Quantos projetos Tabata Amaral aprovou?');
+  assert.equal(body.sem_evidencia, true);
+  assert.equal(body.resposta, 'Não encontrei evidência para isso.');
 });
 
 test('bloqueio de segurança, resposta vazia ou erro não derrubam o FatoBot', async () => {

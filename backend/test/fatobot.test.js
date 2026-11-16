@@ -2,6 +2,7 @@ import { test, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
+import { _resetPausa } from '../src/services/camara.js';
 
 const LISTA = {
   dados: [
@@ -38,6 +39,7 @@ let base;
 
 beforeEach(() => {
   clearCache();
+  _resetPausa();
   originalFetch = globalThis.fetch;
   globalThis.fetch = mock.fn(async (url, opts) => {
     const u = String(url);

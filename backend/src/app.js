@@ -6,7 +6,7 @@ import fatobotRouter from './routes/fatobot.js';
 import verificarRouter from './routes/verificar.js';
 import cepRouter from './routes/cep.js';
 import whatsappRouter from './routes/whatsapp.js';
-import { CamaraError } from './services/camara.js';
+import { CamaraError, MSG_CAMARA_FORA } from './services/camara.js';
 
 const app = express();
 
@@ -35,10 +35,8 @@ app.use('/api', (req, res) => {
 app.use((err, req, res, next) => {
   if (err instanceof CamaraError) {
     if (err.status === 404) return res.status(404).json({ erro: 'Deputado não encontrado' });
-    console.error(err.message);
-    return res
-      .status(502)
-      .json({ erro: 'A fonte oficial (Câmara) não respondeu. Tente de novo em instantes.' });
+    // J3: Câmara fora do ar e sem cópia de reserva.
+    return res.status(503).json({ erro: MSG_CAMARA_FORA });
   }
   console.error(err);
   res.status(500).json({ erro: 'Erro interno do servidor' });

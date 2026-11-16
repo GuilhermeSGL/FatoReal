@@ -2,6 +2,7 @@ import { test, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
+import { _resetPausa } from '../src/services/camara.js';
 import { _setClient } from '../src/services/supabase.js';
 
 // Cliente falso do Supabase: imita .from().select().order() e .eq().maybeSingle()
@@ -40,6 +41,7 @@ let chamadasCamara;
 
 beforeEach(() => {
   clearCache();
+  _resetPausa();
   chamadasCamara = 0;
   originalFetch = globalThis.fetch;
   // Câmara fora do ar em todos os testes deste arquivo.
@@ -92,7 +94,7 @@ test('FatoBot funciona com a Câmara fora do ar, usando o Supabase', async () =>
   assert.match(JSON.stringify(body), /PSB-SP/);
 });
 
-test('sem Supabase e com a Câmara fora, responde 502', async () => {
+test('sem Supabase, Câmara fora e deputado fora da cópia → 503', async () => {
   const res = await fetch(`${base}/api/deputados/1`);
-  assert.equal(res.status, 502);
+  assert.equal(res.status, 503);
 });

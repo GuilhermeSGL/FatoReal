@@ -9,7 +9,8 @@
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
     "start": "node --env-file-if-exists=.env src/server.js",
     "test": "node --test",
-    "importar": "node --env-file-if-exists=.env scripts/importar-deputados.js"
+    "importar": "node --env-file-if-exists=.env scripts/importar-deputados.js",
+    "atualizar-deputados": "node scripts/atualizar-deputados.js"
   },
   "engines": {
     "node": ">=20"

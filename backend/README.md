@@ -28,18 +28,26 @@ npm test
 
 ```
 backend/
-├── api/index.js        → entrada da Vercel (serverless)
+├── api/index.js          → entrada da Vercel (serverless)
+├── scripts/
+│   ├── atualizar-deputados.js → npm run atualizar-deputados (cópia de reserva)
+│   └── importar-deputados.js  → npm run importar (Câmara → Supabase)
 ├── src/
-│   ├── app.js          → configura o Express (CORS, JSON, rotas)
-│   ├── server.js       → sobe o servidor localmente
-│   ├── routes/
-│   │   ├── health.js     → GET /api/health
-│   │   └── deputados.js  → busca e perfil de deputados
+│   ├── app.js            → configura o Express (CORS, JSON, rotas, erros)
+│   ├── server.js         → sobe o servidor localmente
+│   ├── data/
+│   │   └── deputados.json  → cópia de reserva dos 513 deputados, com data da coleta
+│   ├── routes/           → health, deputados, fatobot, verificar, cep, whatsapp
 │   ├── services/
-│   │   └── camara.js     → acesso à API de Dados Abertos da Câmara
-│   └── utils/            → cache em memória e normalização de texto
-├── test/               → testes (node --test)
-├── .env.example        → modelo das variáveis de ambiente
+│   │   ├── camara.js       → Câmara + Supabase + cópia de reserva, com limites de tempo
+│   │   ├── fatobot.js      → pipeline do FatoBot (evidências → Gemini → resposta)
+│   │   ├── gemini.js       → chamadas ao Gemini, travas de citação e gerarJson
+│   │   ├── verificar.js    → os 5 estados de verificação
+│   │   ├── supabase.js     → leitura da tabela politicos
+│   │   └── cep.js          → ViaCEP
+│   └── utils/            → cache, prazo e normalização de texto
+├── test/                 → testes (npm test); j1…j8-*.test.js cobrem cada item do pedido
+├── .env.example          → modelo das variáveis de ambiente
 └── vercel.json
 ```
 
@@ -76,14 +84,32 @@ Lista os deputados em exercício. Filtros opcionais (podem ser combinados):
 Perfil do deputado: nome, partido, UF, foto, situação, data do status, escolaridade, gabinete,
 redes sociais e `fonte`. **O CPF que a Câmara devolve é removido de propósito (LGPD).**
 
-Erros: `400` ID inválido · `404` deputado não encontrado · `502` a Câmara não respondeu.
+Erros: `400` ID inválido · `404` deputado não encontrado · `503` Câmara fora do ar e sem cópia
+(`{ "erro": "A fonte oficial (Câmara) está fora do ar agora." }`).
 
-### Sobre a API da Câmara
+### Sobre a API da Câmara (e o dia da apresentação)
 
-Ela é instável (às vezes demora mais de 15s ou responde 504). Por isso o backend tem:
-limite de 10s por chamada, uma nova tentativa automática e cache em memória
-(lista: 6h, perfil: 1h). Se a Câmara cair, a API devolve a última resposta boa que tinha
-(com a data original da consulta).
+Ela é instável: às vezes demora mais de 15s ou responde 504. Para o FatoBot funcionar mesmo
+assim:
+
+- **Ordem das fontes.** Lista: Supabase → Câmara → **cópia de reserva**. Perfil: Câmara →
+  Supabase → cópia de reserva (só nome, partido e UF).
+- **Cópia de reserva** (`src/data/deputados.json`): a lista dos 513 deputados com a data da
+  coleta. Quando ela é usada, a fonte diz *"(cópia de reserva de DD/MM/AAAA)"*.
+  **Atualize antes da apresentação** e faça commit do arquivo:
+
+  ```bash
+  npm run atualizar-deputados
+  ```
+
+- **Tempo máximo (~25s no pior caso).** Câmara: 4s por chamada, uma tentativa só, com as 6
+  páginas da lista pedidas ao mesmo tempo. Supabase: 3s. A pergunta inteira tem prazo de
+  24s, e o Gemini usa só o que sobrar (no máximo 8s por modelo). Os limites ficam em
+  `LIMITES` (`camara.js`), `LIMITES_IA` (`gemini.js`) e `LIMITES_FATOBOT` (`fatobot.js`).
+- Se a lista da Câmara falhar, por 1 minuto a API vai direto para a cópia, sem esperar de novo.
+- Cache em memória: lista 6h, perfil 1h. Se renovar falhar, usa a última resposta boa.
+- Se a Câmara cair **e** não houver cópia: `503` com
+  `{ "erro": "A fonte oficial (Câmara) está fora do ar agora." }`.
 
 ### Cópia no Supabase (tabela `politicos`)
 
@@ -150,7 +176,15 @@ Se a pergunta não cita nenhum deputado, o Gemini **nem é chamado**: a resposta
 ```
 
 - `tipo`: `fontes_encontradas` ou `sem_evidencia`.
-- `modo`: `ia_com_fontes` (resposta do Gemini) ou `somente_fontes` (lista de fatos, sem IA).
+- `modo`:
+  - `ia_com_fontes`: resposta do Gemini, com citação `[n]` em **toda** frase;
+  - `ia_sem_evidencia`: o Gemini disse que as fontes não respondem. Nesse caso
+    `sem_evidencia: true`, `resposta: "Não encontrei evidência para isso."`, `fontes: []` e os
+    fatos do perfil vão separados em `contexto` (`{ aviso, fatos, fontes }`), só como contexto;
+  - `somente_fontes`: sem IA. Mostra a lista de fatos, e `motivo_sem_ia` diz por quê:
+    `sem_chave`, `cota_esgotada` (erro 429), `sobrecarregado`, `tempo_esgotado`, `recusado`,
+    `bloqueado`, `citacao_invalida` ou `erro`. Para `cota_esgotada` a resposta começa com
+    *"A IA atingiu o limite de uso gratuito por agora..."*.
 - O front deve **sempre** mostrar o `aviso` e os links de `fontes`, e pode transformar `[n]`
   em link para `evidencias[n-1].url`.
 
@@ -179,6 +213,12 @@ com `afirmacao`, `link` e até 5 `anexos` de no máximo 4 MB cada.
 | Fora de contexto | Há base verdadeira, mas data, local, autoria ou sentido foram alterados (com citação) |
 | Evidência insuficiente | Nenhum deputado citado, ou a IA não citou fonte válida. Ausência de evidência ≠ falsidade |
 | Em análise | A IA está indisponível: mostra os fatos encontrados, sem confirmar nem negar |
+
+**Proteção contra truques no texto do usuário** (FatoBot e Verificar):
+- `<` e `>` são removidos da pergunta/afirmação antes de ir para o Gemini, então ninguém
+  consegue fechar a tag `</pergunta>` e fingir que o resto é uma evidência ou uma regra nova.
+- Toda frase da resposta precisa citar uma evidência que existe. Uma frase sem citação
+  (por exemplo, uma opinião sobre em quem votar) faz a resposta inteira ser descartada.
 
 Regras que **não dependem da IA**:
 - Sem citação válida, o sistema **nunca** confirma nem nega: vira "Evidência insuficiente".
@@ -214,12 +254,30 @@ Devolve `{ "url": "https://wa.me/55...?text=..." }`: o front só abre essa URL (
   Sem ele, a rota responde `503`.
 - **Nada é guardado** (LGPD): os dados só vão na mensagem que a própria pessoa envia.
 
+### Para outras rotas usarem o Gemini: `gerarJson`
+
+```js
+import { gerarJson, limparTextoUsuario } from '../services/gemini.js';
+
+const r = await gerarJson({
+  instrucoes: 'Regras para o modelo...',
+  mensagem: `<texto>${limparTextoUsuario(textoDoUsuario)}</texto>`,
+  schema: { type: 'object', properties: { campo: { type: 'string' } }, required: ['campo'] },
+});
+if (!r) { /* IA indisponível: siga sem ela */ }
+```
+
+Devolve o objeto ou `null` (sem chave, erro, bloqueio ou JSON inválido). Usa o mesmo modelo,
+modelo reserva, limite de tempo e logs do FatoBot.
+
 #### Configurar o Gemini
 
 1. Entre em https://aistudio.google.com/apikey com uma conta Google e clique em **Create API key**.
 2. Coloque a chave em `GEMINI_API_KEY` no `.env` (local) e nas *Environment Variables* da Vercel.
    **Nunca** no código nem no Angular.
-3. O modelo padrão é `gemini-3.5-flash-lite` (testado no plano gratuito). Para trocar, defina `GEMINI_MODEL`.
+3. O modelo padrão é `gemini-3.5-flash-lite`. No plano gratuito ele permite mais pedidos (segundo a
+   tabela usada pelo grupo: 15/min e 500/dia, contra só 20/dia do 3.8 Flash; confira os limites
+   atuais no AI Studio). Para trocar, defina `GEMINI_MODEL`.
 4. **Erro 503 (sobrecarregado)** é comum no plano gratuito. Defina `GEMINI_MODEL_RESERVA` com um
    modelo de outra geração (recomendado: `gemini-2.5-flash-lite`): quando o principal der 503 ou 429, a API tenta o reserva.
 

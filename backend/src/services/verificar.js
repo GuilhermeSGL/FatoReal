@@ -6,7 +6,7 @@
 // - Sem IA disponível → "Em análise" (não confirma nem nega sozinho).
 // - O link enviado NÃO é acessado nem usado como fonte (só fontes oficiais contam).
 // - Anexos NÃO são analisados nem guardados (análise de mídia precisa de revisão humana).
-import { identificarDeputados, evidenciasDosDeputados, AVISO } from './fatobot.js';
+import { identificarDeputados, evidenciasDosDeputados, AVISO, LIMITES_FATOBOT } from './fatobot.js';
 import { classificarComIA } from './gemini.js';
 
 export const ESTADOS = {
@@ -35,6 +35,7 @@ function observacoes({ link, anexos }) {
 }
 
 export async function verificar({ afirmacao, link = null, anexos = 0 }) {
+  const prazo = Date.now() + LIMITES_FATOBOT.totalMs; // J2: mesmo prazo total do FatoBot
   const consultado_em = new Date().toISOString();
   const extra = observacoes({ link, anexos });
   const montar = (estado, explicacao, fontes = []) => ({
@@ -49,7 +50,7 @@ export async function verificar({ afirmacao, link = null, anexos = 0 }) {
   if (deputados.length === 0) return montar('insuficiente', TEXTO_INSUFICIENTE);
 
   const { evidencias, fontes } = await evidenciasDosDeputados(deputados);
-  const resultado = await classificarComIA(afirmacao, evidencias);
+  const resultado = await classificarComIA(afirmacao, evidencias, { prazo });
   if (!resultado && !process.env.GEMINI_API_KEY) {
     console.warn('Verificar: GEMINI_API_KEY não configurada (confira o arquivo .env)');
   }

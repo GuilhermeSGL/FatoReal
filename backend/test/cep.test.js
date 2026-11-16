@@ -2,7 +2,9 @@ import { test, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
+import { _resetPausa } from '../src/services/camara.js';
 import { normalizarCep } from '../src/services/cep.js';
+import { _setCopia } from '../src/services/camara.js';
 
 const VIACEP_OK = {
   cep: '01310-100', logradouro: 'Avenida Paulista', complemento: '', bairro: 'Bela Vista',
@@ -24,6 +26,7 @@ let camaraFora;
 
 beforeEach(() => {
   clearCache();
+  _resetPausa();
   viacep = () => new Response(JSON.stringify(VIACEP_OK));
   camaraFora = false;
   originalFetch = globalThis.fetch;
@@ -71,13 +74,28 @@ test('?politicos=0 devolve só o endereço', async () => {
   assert.equal(body.deputados, undefined);
 });
 
-test('Câmara fora do ar não impede o endereço', async () => {
+test('Câmara fora do ar: deputados do estado vêm da cópia de reserva', async () => {
   camaraFora = true;
   const res = await fetch(`${base}/api/cep/01310100`);
   const body = await res.json();
   assert.equal(res.status, 200);
   assert.equal(body.endereco.uf, 'SP');
-  assert.equal(body.deputados, null);
+  assert.ok(body.deputados.total > 0);
+  assert.match(body.deputados.fonte.nome, /cópia de reserva/);
+});
+
+test('Câmara fora e sem cópia: o endereço volta mesmo assim', async () => {
+  camaraFora = true;
+  _setCopia(null);
+  try {
+    const res = await fetch(`${base}/api/cep/01310100`);
+    const body = await res.json();
+    assert.equal(res.status, 200);
+    assert.equal(body.endereco.uf, 'SP');
+    assert.equal(body.deputados, null);
+  } finally {
+    _setCopia(undefined);
+  }
 });
 
 test('CEP inválido → 400, inexistente → 404, ViaCEP fora → 502', async () => {

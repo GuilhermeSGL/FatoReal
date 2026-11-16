@@ -78,7 +78,22 @@ export async function evidenciasDosDeputados(deputados) {
   };
 }
 
+// J2 — prazo total de uma pergunta. Câmara/Supabase usam até ~14s no pior caso
+// (ver LIMITES em camara.js); o Gemini usa só o que sobrar até aqui.
+export const LIMITES_FATOBOT = { totalMs: 24_000 };
+
+export const SEM_EVIDENCIA_TEXTO = 'Não encontrei evidência para isso.';
+
+// J7 — por que a resposta veio sem IA, em linguagem simples.
+const EXPLICACAO_SEM_IA = {
+  cota_esgotada: 'A IA atingiu o limite de uso gratuito por agora, então mostro só os fatos das fontes oficiais:',
+  sobrecarregado: 'A IA está sobrecarregada agora, então mostro só os fatos das fontes oficiais:',
+  tempo_esgotado: 'A IA demorou demais para responder, então mostro só os fatos das fontes oficiais:',
+};
+const EXPLICACAO_PADRAO = 'Encontrei estas informações nas fontes oficiais:';
+
 export async function responder(pergunta) {
+  const prazo = Date.now() + LIMITES_FATOBOT.totalMs;
   const deputados = await identificarDeputados(pergunta);
 
   // Sem documento relacionado → declara incerteza em vez de especular (RN04).
@@ -100,21 +115,41 @@ export async function responder(pergunta) {
   }
 
   const { evidencias, fontes } = await evidenciasDosDeputados(deputados);
+  const ia = await sintetizarComIA(pergunta, evidencias, { prazo });
+  const base = { pergunta, evidencias, consultado_em: new Date().toISOString(), aviso: AVISO };
 
-  const sintese = await sintetizarComIA(pergunta, evidencias);
+  // Resposta do Gemini, com citação válida em toda frase.
+  if (ia.texto) {
+    return { ...base, tipo: 'fontes_encontradas', modo: 'ia_com_fontes', resposta: ia.texto, fontes, sem_evidencia: false };
+  }
 
+  // J6 — o Gemini disse que as evidências não respondem à pergunta. Os fatos do perfil
+  // vão só como contexto (separados), para não parecer que respondem à pergunta.
+  if (ia.semEvidencia) {
+    return {
+      ...base,
+      tipo: 'sem_evidencia',
+      modo: 'ia_sem_evidencia',
+      resposta: SEM_EVIDENCIA_TEXTO,
+      fontes: [],
+      sem_evidencia: true,
+      contexto: {
+        aviso: 'Fatos do perfil consultado, só como contexto: eles não respondem à pergunta.',
+        fatos: evidencias.map((e) => e.texto),
+        fontes,
+      },
+    };
+  }
+
+  // Sem IA (chave, cota, sobrecarga, tempo ou citação inválida): só os fatos das fontes.
   return {
-    pergunta,
+    ...base,
     tipo: 'fontes_encontradas',
-    modo: sintese ? 'ia_com_fontes' : 'somente_fontes',
+    modo: 'somente_fontes',
+    motivo_sem_ia: ia.falha,
     resposta:
-      sintese?.texto ??
-      'Encontrei estas informações nas fontes oficiais:\n' +
-        evidencias.map((e) => `• ${e.texto}`).join('\n'),
-    evidencias,
+      (EXPLICACAO_SEM_IA[ia.falha] ?? EXPLICACAO_PADRAO) + '\n' + evidencias.map((e) => `• ${e.texto}`).join('\n'),
     fontes,
-    consultado_em: new Date().toISOString(),
     sem_evidencia: false,
-    aviso: AVISO,
   };
 }
