@@ -4,6 +4,8 @@ import healthRouter from './routes/health.js';
 import deputadosRouter from './routes/deputados.js';
 import fatobotRouter from './routes/fatobot.js';
 import verificarRouter from './routes/verificar.js';
+import cepRouter from './routes/cep.js';
+import whatsappRouter from './routes/whatsapp.js';
 import { CamaraError } from './services/camara.js';
 
 const app = express();
@@ -20,6 +22,8 @@ app.use('/api/health', healthRouter);
 app.use('/api/deputados', deputadosRouter);
 app.use('/api/fatobot', fatobotRouter);
 app.use('/api/verificar', verificarRouter);
+app.use('/api/cep', cepRouter);
+app.use('/api/whatsapp', whatsappRouter);
 
 // Rota não encontrada
 app.use('/api', (req, res) => {
