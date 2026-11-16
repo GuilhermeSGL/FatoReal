@@ -76,3 +76,18 @@ test('J2: depois de uma falha, a próxima pergunta não espera a Câmara de novo
     await srv.encerrar();
   }
 });
+
+test('J2: o prazo NÃO vai para o Google (ele recusa prazos abaixo de 10s com erro 400)', async () => {
+  const srv = await iniciar();
+  const camara = mockCamara('ok');
+  const chamadas = mockGemini('Tabata Amaral é deputada federal pelo PSB-SP [1].');
+  try {
+    await perguntar(srv.base, 'Qual o partido de Tabata Amaral?');
+    const { config } = chamadas[0];
+    assert.equal(config.httpOptions?.timeout, undefined, 'httpOptions.timeout vira o cabeçalho X-Server-Timeout');
+    assert.ok(config.abortSignal instanceof AbortSignal);
+  } finally {
+    camara.restaurar();
+    await srv.encerrar();
+  }
+});

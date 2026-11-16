@@ -77,7 +77,7 @@ test('usa a resposta do Gemini quando ela cita evidências válidas', async () =
   // O Gemini recebe as regras, as evidências numeradas e a pergunta isolada como dado.
   const { contents, config } = chamadas[0];
   assert.match(config.systemInstruction, /SOMENTE com base nas EVIDÊNCIAS/);
-  assert.ok(config.httpOptions.timeout > 0 && config.httpOptions.timeout <= 8_000);
+  assert.ok(config.abortSignal instanceof AbortSignal, 'prazo controlado do nosso lado');
   assert.match(contents, /\[1\] Tabata Amaral é deputado\(a\) federal pelo PSB-SP/);
   assert.match(contents, /<pergunta>Qual o partido de Tabata Amaral\?<\/pergunta>/);
 });

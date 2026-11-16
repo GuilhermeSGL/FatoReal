@@ -70,7 +70,10 @@ async function gerar(params, prazo) {
       const chamada = getClient().models.generateContent({
         ...params,
         model: lista[i],
-        config: { ...params.config, httpOptions: { timeout, retryOptions: { attempts: 1 } } },
+        // O prazo é controlado SÓ do nosso lado (abortSignal). Não use httpOptions.timeout:
+        // o SDK manda ele ao Google (cabeçalho X-Server-Timeout), que recusa valores abaixo
+        // de 10s com erro 400 ("Minimum allowed deadline is 10s") — aconteceu em 16/11.
+        config: { ...params.config, abortSignal: AbortSignal.timeout(timeout), httpOptions: { retryOptions: { attempts: 1 } } },
       });
       const response = await comPrazo(chamada, timeout, `o Gemini (${lista[i]}) passou de ${timeout} ms`).catch(
         (err) => {
