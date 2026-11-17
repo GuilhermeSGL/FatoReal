@@ -207,14 +207,14 @@ export async function partidosCamara(): Promise<string[]> {
 }
 
 /** Legislaturas começam em 1º de fevereiro de 2023, 2027, 2031... */
-function inicioLegislatura(): string {
+export function inicioLegislatura(): string {
   const hoje = new Date();
   let ano = hoje.getFullYear() - ((((hoje.getFullYear() - 2023) % 4) + 4) % 4);
   if (ano === hoje.getFullYear() && hoje.getMonth() < 1) ano -= 4;
   return `${ano}-02-01`;
 }
 
-async function jsonCamara<T>(caminho: string): Promise<T> {
+export async function jsonCamara<T>(caminho: string): Promise<T> {
   const url = (caminho.startsWith('http') ? caminho : CAMARA_API + caminho).replace(/^http:\/\//, 'https://');
   const resp = await buscarCamara(url);
   if (!resp.ok) throw new Error('A API da Câmara não respondeu.');
