@@ -302,6 +302,7 @@
                     </div>
                     <p>{{ pr.ementa }}</p>
                     @if (pr.situacao) { <span class="situacao" [class.situacao-final]="/arquivad|transformad|retirad|prejudicad/i.test(pr.situacao)">{{ pr.situacao }}</span> }
+                    <app-projeto-acoes [ementa]="pr.ementa" [idProposicao]="pr.id" />
                   </li>
                 }
               </ul>
@@ -326,6 +327,7 @@
                   <li>
                     <div class="projeto-topo"><a [href]="a.url" target="_blank" rel="noopener noreferrer"><strong>{{ a.titulo }}</strong> <app-icone nome="open_in_new" /></a>@if (a.data) { <time>{{ a.data | date: 'dd/MM/yyyy' }}</time> }</div>
                     <p>{{ a.ementa }}</p>
+                    <app-projeto-acoes [ementa]="a.ementa" />
                   </li>
                 }
               </ul>

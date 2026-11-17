@@ -1446,3 +1446,77 @@ legend { font-weight: 700; padding: 0 6px; }
   .voto { justify-self: start; }
   .grafico-meses .mes-valor { display: none; }
 }
+
+/* ===== Projeto: explicar + opinar ===== */
+.projeto-acoes { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.botao-explicar { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; border: 1px dashed var(--link); background: transparent; color: var(--link); font: inherit; font-weight: 600; font-size: 0.85rem; cursor: pointer;
+  &:hover { background: color-mix(in srgb, var(--link) 10%, transparent); } .icone { font-size: 1.05rem; } }
+.opinar { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem;
+  button { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--borda); background: var(--superficie); color: var(--texto); font: inherit; font-size: 0.85rem; cursor: pointer; .icone { font-size: 1rem; } }
+  .opinar-favor[aria-pressed='true'] { background: rgba(20, 163, 112, 0.16); border-color: #0e8a5f; color: #0e8a5f; }
+  .opinar-contra[aria-pressed='true'] { background: rgba(192, 38, 45, 0.12); border-color: var(--perigo); color: var(--perigo); } }
+.traducao { margin-top: 8px; padding: 12px 14px; border-radius: 12px; background: color-mix(in srgb, var(--link) 9%, transparent); display: grid; gap: 6px;
+  strong { display: inline-flex; align-items: center; gap: 6px; color: var(--link); } p { margin: 0; line-height: 1.5; } small { font-size: 0.8rem; } }
+
+/* ===== Congresso ===== */
+.agenda-topo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  > div { display: grid; flex: 1; text-align: center; } .filtro-plenario { display: inline-flex; gap: 6px; align-items: center; font-size: 0.9rem; cursor: pointer; } }
+.agenda-dia h2 { text-transform: capitalize; }
+.lista-eventos { list-style: none; padding: 0; margin: 0;
+  > li { display: grid; grid-template-columns: 56px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--borda); &:last-child { border-bottom: 0; } }
+  time { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--link); }
+  p { margin: 4px 0; line-height: 1.45; font-size: 0.92rem; }
+  .evento-plenario time { color: var(--perigo); }
+  .evento-cancelado { opacity: 0.55; } }
+.evento-topo { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; .sigla { font-size: 0.72rem; padding: 2px 6px; border-radius: 6px; background: var(--superficie-2); font-weight: 700; } }
+.ao-vivo { display: inline-flex; align-items: center; gap: 4px; color: var(--perigo); font-weight: 800; font-size: 0.78rem;
+  .ponto { width: 8px; height: 8px; border-radius: 50%; background: var(--perigo); animation: piscar 1.2s infinite; } }
+@keyframes piscar { 50% { opacity: 0.2; } }
+.evento-acoes { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 0.88rem; a { color: var(--link); display: inline-flex; gap: 4px; align-items: center; } small { display: inline-flex; gap: 4px; align-items: center; } }
+.pauta { margin: 10px 0 0; padding-left: 20px; display: grid; gap: 12px; p { font-size: 0.88rem; } }
+.votacao-card { display: grid; gap: 8px; p { margin: 0; line-height: 1.45; } }
+.votacao-topo { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; h2 { margin: 2px 0 0; font-size: 1.15rem; } }
+.resultado-votacao { padding: 4px 12px; border-radius: 999px; font-weight: 800; font-size: 0.8rem; background: rgba(192, 38, 45, 0.12); color: var(--perigo); &.aprovada { background: rgba(20, 163, 112, 0.16); color: #0e8a5f; } }
+.b-sim { background: #14a370; } .b-nao { background: #d62839; } .b-outros { background: #b8c4cc; }
+.placar-barra { display: flex; height: 12px; border-radius: 999px; overflow: hidden; background: var(--superficie-2); }
+.placar-legenda { display: flex; gap: 14px; font-size: 0.82rem; color: var(--texto-suave); i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 3px; } }
+.votos-partidos { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px;
+  li { display: grid; grid-template-columns: 110px 1fr 120px; gap: 10px; align-items: center; font-size: 0.85rem; }
+  .vp-sigla { font-weight: 700; } .vp-barra { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--superficie-2); span { flex-basis: 0; } }
+  small { color: var(--texto-suave); } }
+.lista-leis { display: grid; gap: 12px; }
+.lei-card { a { color: var(--texto); text-decoration: none; &:hover h2 { color: var(--link); } } h2 { font-size: 1.15rem; margin: 6px 0; display: flex; align-items: center; gap: 6px; .icone { font-size: 1rem; } } p { margin: 0; line-height: 1.5; } }
+.lei-selo { display: inline-flex; gap: 4px; align-items: center; color: #0e8a5f; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; .icone { font-size: 1rem; } }
+
+/* ===== Ranking de presença ===== */
+.ranking-filtros { display: grid; gap: 12px; .seletor-ano { flex-wrap: wrap; } }
+.lista-ranking { list-style: none; padding: 0; margin: 0;
+  li { display: grid; grid-template-columns: 40px minmax(0, 1.4fr) 1fr 56px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--borda); }
+  .rk-pos { font-weight: 800; color: var(--texto-suave); }
+  .rk-pessoa { display: flex; gap: 10px; align-items: center; text-decoration: none; color: var(--texto); min-width: 0; span { display: grid; min-width: 0; } strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } small { color: var(--texto-suave); } &:hover strong { color: var(--link); } }
+  .rk-barra { height: 10px; border-radius: 999px; background: var(--superficie-2); overflow: hidden; span { display: block; height: 100%; background: var(--link); &.baixa { background: var(--perigo); } } }
+  .rk-valor { text-align: right; font-variant-numeric: tabular-nums; } }
+
+/* ===== Fato ou Fake ===== */
+.fof-placar { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; gap: 8px;
+  div { display: grid; } strong { font-size: 1.6rem; } small { color: var(--texto-suave); font-size: 0.8rem; } }
+.fof-lista { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.fof-item { position: relative; padding-left: 64px; transition: border-color 0.2s;
+  &.acertou { border-color: #14a370; } &.errou { border-color: var(--perigo); } }
+.fof-numero { position: absolute; left: 18px; top: 20px; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--primaria); color: var(--primaria-texto); font-weight: 800; }
+.fof-texto { font-size: 1.12rem; font-weight: 700; margin: 0 0 12px; line-height: 1.4; }
+.fof-botoes { display: flex; gap: 10px; flex-wrap: wrap;
+  button { flex: 1; min-width: 120px; display: inline-flex; justify-content: center; align-items: center; gap: 6px; padding: 12px; border-radius: 12px; font: inherit; font-weight: 800; font-size: 1rem; cursor: pointer; border: 2px solid; background: transparent; transition: transform 0.1s; &:active { transform: scale(0.97); } }
+  .fof-fato { border-color: #14a370; color: #0e8a5f; &:hover { background: rgba(20, 163, 112, 0.12); } }
+  .fof-fake { border-color: var(--perigo); color: var(--perigo); &:hover { background: rgba(214, 40, 57, 0.1); } } }
+.fof-resposta { display: grid; gap: 6px; animation: bv-aparecer 0.25s ease;
+  strong { display: inline-flex; gap: 6px; align-items: center; } p { margin: 0; line-height: 1.5; } a { color: var(--link); display: inline-flex; gap: 4px; align-items: center; font-size: 0.88rem; } }
+.acertou .fof-resposta strong { color: #0e8a5f; } .errou .fof-resposta strong { color: var(--perigo); }
+.fof-final { text-align: center; display: grid; justify-items: center; gap: 6px; > .icone { font-size: 3rem; color: var(--destaque); } h2 { margin: 0; } }
+.fof-final-acoes { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+@media (max-width: 640px) {
+  .votos-partidos li { grid-template-columns: 80px 1fr; small { grid-column: 2; } }
+  .lista-ranking li { grid-template-columns: 32px 1fr 48px; .rk-barra { display: none; } }
+  .lista-eventos > li { grid-template-columns: 46px 1fr; }
+  .fof-item { padding-left: 18px; padding-top: 56px; } .fof-numero { top: 14px; }
+}

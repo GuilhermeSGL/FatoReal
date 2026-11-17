@@ -11,7 +11,7 @@ import { Icone } from '../../shared/componentes';
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="notifications" /> Notificações</h1>
-      <p>Curtidas e comentários nas suas publicações e mensagens novas.</p>
+      <p>Curtidas, comentários, mensagens e o que os políticos que você segue fizeram (projetos, discursos e votos).</p>
     </header>
     <ul class="card lista-notificacoes">
       @for (n of service.lista(); track n.id) {
@@ -31,7 +31,7 @@ export class NotificacoesPage implements OnInit {
   protected service = inject(NotificacoesService);
   private vistos = inject(VistosService);
   protected readonly tempo = tempoAtras;
-  protected readonly icones = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail' };
+  protected readonly icones = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail', politico: 'account_balance' };
   /** Data da visita anterior: o que for mais novo aparece destacado. */
   protected vistoAntes = this.vistos.datas().notificacoes;
 

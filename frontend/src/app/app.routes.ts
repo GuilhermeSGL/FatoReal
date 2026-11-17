@@ -8,6 +8,7 @@ export const routes: Routes = [
   // Políticos
   { path: 'politicos', title: 'Buscar políticos · Fato Real', loadComponent: () => import('./pages/politicos/busca').then((m) => m.BuscaPage) },
   { path: 'politicos/comparar', title: 'Comparar políticos · Fato Real', loadComponent: () => import('./pages/politicos/comparar').then((m) => m.CompararPage) },
+  { path: 'politicos/ranking', title: 'Ranking de presença · Fato Real', loadComponent: () => import('./pages/politicos/ranking-votacoes').then((m) => m.RankingVotacoesPage) },
   { path: 'politicos/gastos', title: 'Ranking de gastos · Fato Real', loadComponent: () => import('./pages/politicos/gastos').then((m) => m.GastosPage) },
   { path: 'politicos/senado/:id', title: 'Perfil do senador · Fato Real', data: { casa: 'senado' }, loadComponent: () => import('./pages/politicos/perfil-politico').then((m) => m.PerfilPoliticoPage) },
   { path: 'politicos/:id', title: 'Perfil do político · Fato Real', loadComponent: () => import('./pages/politicos/perfil-politico').then((m) => m.PerfilPoliticoPage) },
@@ -30,6 +31,8 @@ export const routes: Routes = [
   { path: 'pessoas/:id', title: 'Perfil · Fato Real', loadComponent: () => import('./pages/conta/perfil').then((m) => m.PerfilPage) },
 
   // Novas áreas do menu
+  { path: 'congresso', title: 'Congresso · Fato Real', loadComponent: () => import('./pages/congresso/congresso').then((m) => m.CongressoPage) },
+  { path: 'fato-ou-fake', title: 'Fato ou Fake? · Fato Real', loadComponent: () => import('./pages/fato-ou-fake/fato-ou-fake').then((m) => m.FatoOuFakePage) },
   { path: 'busca', title: 'Busca · Fato Real', loadComponent: () => import('./pages/busca-geral').then((m) => m.BuscaGeralPage) },
   { path: 'noticias', title: 'Notícias · Fato Real', loadComponent: () => import('./pages/noticias/noticias').then((m) => m.NoticiasPage) },
   { path: 'base-da-politica', title: 'Base da Política · Fato Real', loadComponent: () => import('./pages/base-politica/base-politica').then((m) => m.BasePoliticaPage) },

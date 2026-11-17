@@ -1,0 +1,150 @@
+<header class="cabecalho-pagina">
+  <p class="sobretitulo">Congresso</p>
+  <h1>O que está acontecendo em Brasília</h1>
+  <p>Agenda da semana, como cada partido votou e as leis aprovadas. Tudo com dados oficiais da Câmara dos Deputados.</p>
+</header>
+
+<nav class="ficha-abas" role="tablist" aria-label="Seções">
+  <button type="button" role="tab" [attr.aria-selected]="abaAtual() === 'agenda'" (click)="irPara('agenda')"><app-icone nome="calendar_month" /> Agenda da semana</button>
+  <button type="button" role="tab" [attr.aria-selected]="abaAtual() === 'votacoes'" (click)="irPara('votacoes')"><app-icone nome="how_to_vote" /> Votações</button>
+  <button type="button" role="tab" [attr.aria-selected]="abaAtual() === 'leis'" (click)="irPara('leis')"><app-icone nome="gavel" /> Leis aprovadas</button>
+</nav>
+
+@switch (abaAtual()) {
+  <!-- ================= AGENDA ================= -->
+  @case ('agenda') {
+    <section class="card agenda-topo">
+      <button type="button" class="botao-icone" (click)="mudarSemana(-1)" aria-label="Semana anterior"><app-icone nome="chevron_left" /></button>
+      <div>
+        <strong>{{ semana() === 0 ? 'Esta semana' : semana() === 1 ? 'Próxima semana' : semana() === -1 ? 'Semana passada' : 'Semana de' }}</strong>
+        <small class="texto-suave">{{ segunda() | date: 'dd/MM' }} a {{ segunda().getTime() + 6 * 86400000 | date: 'dd/MM/yyyy' }}</small>
+      </div>
+      <button type="button" class="botao-icone" (click)="mudarSemana(1)" aria-label="Próxima semana"><app-icone nome="chevron_right" /></button>
+      <label class="filtro-plenario"><input type="checkbox" [checked]="soPlenario()" (change)="soPlenario.set(!soPlenario())" /> Só o plenário</label>
+    </section>
+
+    @if (carregandoAgenda()) {
+      <section class="card"><div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div></section>
+    } @else if (erroAgenda()) {
+      <section class="card"><p class="texto-suave">Não foi possível carregar a agenda. <button type="button" class="link-discreto" (click)="carregarAgenda()">Tentar de novo</button></p></section>
+    } @else {
+      @for (d of dias(); track d.dia) {
+        <section class="card agenda-dia">
+          <h2 class="titulo-secao">{{ d.dia + 'T12:00:00' | date: 'EEEE, dd/MM' : '' : 'pt-BR' }}</h2>
+          <ul class="lista-eventos">
+            @for (e of d.eventos; track e.id) {
+              <li [class.evento-plenario]="e.plenario" [class.evento-cancelado]="/cancelad/i.test(e.situacao)">
+                <time>{{ e.inicio | date: 'HH:mm' }}</time>
+                <div>
+                  <div class="evento-topo">
+                    <strong>{{ e.tipo }}</strong>
+                    @for (o of e.orgaos; track o.sigla) { <span class="sigla" [title]="o.nome">{{ o.sigla }}</span> }
+                    @if (aoVivo(e)) { <span class="ao-vivo"><span class="ponto"></span> Ao vivo</span> }
+                    @else if (e.situacao) { <small class="texto-suave">{{ e.situacao }}</small> }
+                  </div>
+                  @if (e.descricao) { <p>{{ e.descricao.length > 260 ? e.descricao.slice(0, 260) + '…' : e.descricao }}</p> }
+                  <div class="evento-acoes">
+                    @if (e.local) { <small class="texto-suave"><app-icone nome="location_on" /> {{ e.local }}</small> }
+                    <button type="button" class="link-discreto" (click)="verPauta(e)">{{ estadoPauta(e.id) === 'ok' ? 'Esconder pauta' : 'Ver pauta' }}</button>
+                    @if (e.video) { <a [href]="e.video" target="_blank" rel="noopener noreferrer"><app-icone nome="play_circle" /> Assistir</a> }
+                  </div>
+                  @switch (estadoPauta(e.id)) {
+                    @case ('carregando') { <p class="texto-suave">Carregando pauta...</p> }
+                    @case ('erro') { <p class="texto-suave">Pauta indisponível.</p> }
+                    @case ('ok') {
+                      @if (pautaDe(e.id)!.length) {
+                        <ol class="pauta">
+                          @for (i of pautaDe(e.id)!; track $index) {
+                            <li>
+                              <strong>{{ i.titulo }}</strong>
+                              @if (i.ementa) { <p>{{ i.ementa }}</p> }
+                              <small class="texto-suave">@if (i.relator) { Relator(a): {{ i.relator }} } @if (i.situacao) { · {{ i.situacao }} }</small>
+                              <app-projeto-acoes [ementa]="i.ementa" [idProposicao]="i.idProposicao" />
+                            </li>
+                          }
+                        </ol>
+                      } @else { <p class="texto-suave">Este evento não tem pauta de projetos.</p> }
+                    }
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      } @empty {
+        <section class="card vazio"><app-icone nome="event_busy" /><strong>Nada na agenda</strong><span>Não há eventos {{ soPlenario() ? 'no plenário ' : '' }}nesta semana.</span></section>
+      }
+    }
+  }
+
+  <!-- ================= VOTAÇÕES ================= -->
+  @case ('votacoes') {
+    @if (carregandoVotacoes()) {
+      <section class="card"><p class="texto-suave"><app-icone nome="hourglass_top" /> Conferindo as votações do plenário voto a voto...</p><div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div></section>
+    } @else if (erroVotacoes()) {
+      <section class="card"><p class="texto-suave">Não foi possível carregar. <button type="button" class="link-discreto" (click)="carregarVotacoes()">Tentar de novo</button></p></section>
+    } @else {
+      <p class="texto-p">Votações nominais do plenário da Câmara nos últimos 90 dias. Toque numa votação para ver como cada partido votou.</p>
+      @for (v of votacoes() ?? []; track v.id) {
+        <article class="card votacao-card">
+          <header class="votacao-topo">
+            <div>
+              <small class="texto-suave">{{ v.data | date: 'dd/MM/yyyy HH:mm' }}</small>
+              <h2>{{ v.proposicao || 'Votação em plenário' }}</h2>
+            </div>
+            @if (v.aprovada !== null) { <span class="resultado-votacao" [class.aprovada]="v.aprovada">{{ v.aprovada ? 'Aprovada' : 'Rejeitada' }}</span> }
+          </header>
+          <p>{{ v.descricao }}</p>
+          <div class="placar-barra" role="img" [attr.aria-label]="v.placar.sim + ' sim, ' + v.placar.nao + ' não, ' + v.placar.outros + ' outros'">
+            <span class="b-sim" [style.width.%]="pct(v.placar.sim, v.placar)"></span>
+            <span class="b-nao" [style.width.%]="pct(v.placar.nao, v.placar)"></span>
+            <span class="b-outros" [style.width.%]="pct(v.placar.outros, v.placar)"></span>
+          </div>
+          <div class="placar-legenda"><span><i class="b-sim"></i> {{ v.placar.sim }} Sim</span><span><i class="b-nao"></i> {{ v.placar.nao }} Não</span><span><i class="b-outros"></i> {{ v.placar.outros }} outros</span></div>
+          <button type="button" class="link-discreto" [attr.aria-expanded]="aberta() === v.id" (click)="aberta.set(aberta() === v.id ? null : v.id)">
+            <app-icone [nome]="aberta() === v.id ? 'expand_less' : 'expand_more'" /> {{ aberta() === v.id ? 'Esconder' : 'Ver' }} votos por partido
+          </button>
+          @if (aberta() === v.id) {
+            <ul class="votos-partidos">
+              @for (p of v.partidos; track p.sigla) {
+                <li>
+                  <span class="vp-sigla">{{ p.sigla }}</span>
+                  <span class="vp-barra">
+                    <span class="b-sim" [style.flex-grow]="p.sim"></span><span class="b-nao" [style.flex-grow]="p.nao"></span><span class="b-outros" [style.flex-grow]="p.outros"></span>
+                  </span>
+                  <small>{{ p.sim }} sim · {{ p.nao }} não</small>
+                </li>
+              }
+            </ul>
+          }
+          @if (v.idProposicao) { <app-projeto-acoes [idProposicao]="v.idProposicao" /> }
+        </article>
+      } @empty {
+        <section class="card vazio"><app-icone nome="how_to_vote" /><strong>Nenhuma votação nominal recente</strong></section>
+      }
+    }
+  }
+
+  <!-- ================= LEIS ================= -->
+  @case ('leis') {
+    <p class="texto-p">Propostas que passaram por todas as etapas e viraram lei (situação “Transformado em Norma Jurídica”) nos últimos 6 meses. Toque em “Explicar” para entender o que muda.</p>
+    @if (carregandoLeis()) {
+      <section class="card"><div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div></section>
+    } @else if (erroLeis()) {
+      <section class="card"><p class="texto-suave">Não foi possível carregar. <button type="button" class="link-discreto" (click)="carregarLeis()">Tentar de novo</button></p></section>
+    } @else {
+      <div class="lista-leis">
+        @for (l of leis() ?? []; track l.id) {
+          <article class="card lei-card">
+            <span class="lei-selo"><app-icone nome="verified" /> Virou lei</span>
+            <a [href]="l.url" target="_blank" rel="noopener noreferrer"><h2>{{ l.titulo }} <app-icone nome="open_in_new" /></h2></a>
+            <p>{{ l.ementa }}</p>
+            <app-projeto-acoes [ementa]="l.ementa" [idProposicao]="l.id" />
+          </article>
+        } @empty {
+          <section class="card vazio"><app-icone nome="gavel" /><strong>Nenhuma lei encontrada no período</strong></section>
+        }
+      </div>
+    }
+  }
+}

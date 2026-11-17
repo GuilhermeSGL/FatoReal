@@ -20,7 +20,7 @@ function totalPeloLink(r: Pagina<unknown>): number {
 }
 
 /** Executa tarefas com no máximo `n` ao mesmo tempo (para não sobrecarregar a API). */
-async function emLotes<T, R>(itens: T[], n: number, fn: (t: T) => Promise<R>): Promise<(R | null)[]> {
+export async function emLotes<T, R>(itens: T[], n: number, fn: (t: T) => Promise<R>): Promise<(R | null)[]> {
   const saida: (R | null)[] = new Array(itens.length).fill(null);
   let i = 0;
   await Promise.all(
@@ -210,10 +210,26 @@ function votosDaVotacao(id: string): Promise<VotoCamara[]> {
   return cacheVotos.get(id)!;
 }
 
-let ultimasVotacoes: Promise<{ id: string; dataHoraRegistro?: string; data?: string; descricao?: string; proposicaoObjeto?: string | null }[]> | null = null;
+export interface VotacaoPlenario { id: string; dataHoraRegistro?: string; data?: string; descricao?: string; proposicaoObjeto?: string | null; uriProposicaoObjeto?: string | null; aprovacao?: number | null }
+export type VotoDeputado = VotoCamara;
 
-/** Últimas votações nominais do plenário e como o(a) deputado(a) votou em cada uma. */
-export async function votacoesDe(id: number, partido: string | null | undefined): Promise<ResumoVotacoes> {
+let ultimasVotacoes: Promise<VotacaoPlenario[]> | null = null;
+let nominaisCache: Promise<{ v: VotacaoPlenario; votos: VotoCamara[] }[]> | null = null;
+
+/** Últimas votações nominais do plenário (até 20, últimos 90 dias), com os votos de cada deputado. Fica guardado na memória. */
+export function votacoesNominais(): Promise<{ v: VotacaoPlenario; votos: VotoCamara[] }[]> {
+  nominaisCache ??= (async () => {
+    const lista = await listaVotacoes();
+    const comVotos = await emLotes(lista.slice(0, 40), 5, async (v) => ({ v, votos: await votosDaVotacao(v.id) }));
+    return comVotos.filter((x): x is NonNullable<typeof x> => !!x && x.votos.length > 0).slice(0, 20);
+  })().catch((e) => {
+    nominaisCache = null;
+    throw e;
+  });
+  return nominaisCache;
+}
+
+function listaVotacoes(): Promise<VotacaoPlenario[]> {
   ultimasVotacoes ??= (async () => {
     const ini = new Date();
     ini.setDate(ini.getDate() - 90);
@@ -225,9 +241,12 @@ export async function votacoesDe(id: number, partido: string | null | undefined)
     ultimasVotacoes = null;
     throw e;
   });
-  const lista = await ultimasVotacoes;
-  const comVotos = await emLotes(lista.slice(0, 40), 5, async (v) => ({ v, votos: await votosDaVotacao(v.id) }));
-  const nominais = comVotos.filter((x): x is NonNullable<typeof x> => !!x && x.votos.length > 0).slice(0, 20);
+  return ultimasVotacoes;
+}
+
+/** Como o(a) deputado(a) votou nas últimas votações nominais do plenário. */
+export async function votacoesDe(id: number, partido: string | null | undefined): Promise<ResumoVotacoes> {
+  const nominais = await votacoesNominais();
 
   let votou = 0;
   let comparaveis = 0;

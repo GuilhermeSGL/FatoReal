@@ -14,12 +14,13 @@ import {
 } from '../../core/ficha-politico';
 import { compartilharCartao } from '../../shared/cartao-compartilhar';
 import { Avatar, Campo, FonteDado, Icone } from '../../shared/componentes';
+import { ProjetoAcoes } from '../../shared/projeto-acoes';
 
 type Aba = 'geral' | 'projetos' | 'votacoes' | 'gastos' | 'discursos' | 'carreira';
 
 @Component({
   selector: 'app-perfil-politico',
-  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone],
+  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone, ProjetoAcoes],
   templateUrl: './perfil-politico.html',
 })
 export class PerfilPoliticoPage implements OnInit {

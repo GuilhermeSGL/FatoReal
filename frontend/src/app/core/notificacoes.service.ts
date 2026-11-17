@@ -5,10 +5,11 @@ import { ComunidadesService, lerBancoSocial } from './comunidades.service';
 import { MensagensService } from './mensagens.service';
 import { supabase } from './supabase';
 import { VistosService } from './vistos.service';
+import { SeguidosService } from './seguidos.service';
 
 export interface Notificacao {
   id: string;
-  tipo: 'curtida' | 'comentario' | 'mensagem';
+  tipo: 'curtida' | 'comentario' | 'mensagem' | 'politico';
   texto: string;
   rota: string;
   data: string;
@@ -24,6 +25,7 @@ export class NotificacoesService {
   private mensagens = inject(MensagensService);
   private comunidades = inject(ComunidadesService);
   private vistos = inject(VistosService);
+  private seguidos = inject(SeguidosService);
 
   readonly lista = signal<Notificacao[]>([]);
   readonly naoLidas = computed(() => this.lista().filter((n) => n.data > this.vistos.datas().notificacoes).length);
@@ -54,6 +56,12 @@ export class NotificacoesService {
           data: c.ultima.criado_em,
         }));
       this.lista.set([...msgs, ...atividade].sort((a, b) => b.data.localeCompare(a.data)));
+      // Avisos dos políticos seguidos chegam depois, sem atrasar o resto
+      import('./avisos-politicos').then((m) => m.avisosDosSeguidos(this.seguidos.lista())).then((avisos) => {
+        if (!avisos.length || this.auth.usuario()?.id !== eu.id) return;
+        const pol: Notificacao[] = avisos.map((a) => ({ ...a, tipo: 'politico' as const }));
+        this.lista.update((l) => [...l.filter((n) => n.tipo !== 'politico'), ...pol].sort((a, b) => b.data.localeCompare(a.data)));
+      });
       const ids = new Set(minhas.map((c) => c.id));
       const desde = this.vistos.datas().comunidades;
       this.novasNasComunidades.set(feed.filter((p) => ids.has(p.comunidade_id) && p.autor.id !== eu.id && p.criado_em > desde).length);

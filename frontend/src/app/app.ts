@@ -32,13 +32,15 @@ export class App {
   protected readonly menuAberto = signal(false);
   protected readonly notifAberto = signal(false);
   protected readonly tempo = tempoAtras;
-  protected readonly iconesNotif = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail' };
+  protected readonly iconesNotif = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail', politico: 'account_balance' };
 
   protected readonly menu: { rota: string; icone: string; texto: string; exato?: boolean; contador?: Contador }[] = [
     { rota: '/', icone: 'home', texto: 'Início', exato: true },
     { rota: '/noticias', icone: 'newspaper', texto: 'Notícias' },
     { rota: '/politicos', icone: 'person', texto: 'Candidatos' },
+    { rota: '/congresso', icone: 'account_balance', texto: 'Congresso' },
     { rota: '/base-da-politica', icone: 'school', texto: 'Base da Política' },
+    { rota: '/fato-ou-fake', icone: 'quiz', texto: 'Fato ou Fake' },
     { rota: '/comunidades', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
     { rota: '/fatobot', icone: 'smart_toy', texto: 'IA FatoBot' },
     { rota: '/verificar', icone: 'fact_check', texto: 'Verificar Informação' },
@@ -49,6 +51,8 @@ export class App {
     { rota: '/', texto: 'Início', exato: true },
     { rota: '/politicos', texto: 'Candidatos', exato: false },
     { rota: '/noticias', texto: 'Notícias', exato: false },
+    { rota: '/congresso', texto: 'Congresso', exato: false },
+    { rota: '/fato-ou-fake', texto: 'Fato ou Fake', exato: false },
     { rota: '/comunidades', texto: 'Comunidades', exato: false },
     { rota: '/fatobot', texto: 'IA', exato: false },
     { rota: '/base-da-politica', texto: 'Base da Política', exato: false },
