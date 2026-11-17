@@ -8,11 +8,13 @@ import { SeguidosService } from '../../core/seguidos.service';
 import { AvisosService } from '../../core/avisos.service';
 import { DetalhesPolitico, PoliticosService, adicionarAlerta, alertasDe, detalhesCamara, obterSenador, removerAlerta } from '../../core/politicos.service';
 import { linkSeguro } from '../../core/util';
+import { inicioLegislatura } from '../../core/politicos.service';
 import {
   Carreira, Discurso, FichaSenador, GastosAno, Proposicao, ResumoVotacoes, TIPOS_PROPOSICAO,
-  anoLegislatura, carreiraCamara, contagemProposicoes, discursosDe, fichaSenador, gastosDoAno, idade, proposicoesDe, votacoesDe,
+  anoLegislatura, carreiraCamara, contagemProposicoes, discursosDe, fichaSenador, gastosDoAno, idade, proposicoesDe, totalDiscursos, votacoesDe,
 } from '../../core/ficha-politico';
 import { compartilharCartao } from '../../shared/cartao-compartilhar';
+import { nomeEstado } from '../../shared/mapa-brasil';
 import { Avatar, Campo, FonteDado, Icone } from '../../shared/componentes';
 import { ProjetoAcoes } from '../../shared/projeto-acoes';
 
@@ -276,6 +278,125 @@ export class PerfilPoliticoPage implements OnInit {
     return partes.join(' ');
   });
 
+  // ---------------- Visão geral no formato do slide 10 ----------------
+  protected readonly discursosTotal = signal<number | null>(null);
+  protected readonly agora = new Date().toISOString();
+  protected readonly legislatura = computed(() => {
+    const ini = inicioLegislatura();
+    const ano = Number(ini.slice(0, 4));
+    return { inicio: ini, periodo: `${ano}–${ano + 4}` };
+  });
+  /** Quando entrou no mandato atual (primeiro registro na legislatura atual). */
+  protected readonly inicioMandato = computed(() => {
+    if (this.casa() === 'senado') {
+      const m = this.senador()?.mandatos[0];
+      return m?.periodo ? m.periodo.split(' a ')[0] : null;
+    }
+    return this.legislatura().inicio;
+  });
+  protected readonly genero = computed(() => {
+    const s = this.casa() === 'senado' ? this.senador()?.sexo : this.carreira()?.sexo;
+    return s === 'F' ? 'Feminino' : s === 'M' ? 'Masculino' : null;
+  });
+  /** Área de atuação: a comissão principal (titular) em que atua. */
+  protected readonly area = computed(() => {
+    const coms = this.casa() === 'senado' ? this.senador()?.comissoes ?? [] : this.detalhes()?.comissoes ?? [];
+    const c = coms.find((x) => /titular|presidente/i.test(x.papel)) ?? coms[0];
+    if (!c) return null;
+    return c.nome.replace(/^Comissão (de |da |do )?/i, '').replace(/^./, (l) => l.toUpperCase());
+  });
+  /** Votos nas votações nominais recentes, para o gráfico de rosca. */
+  protected readonly rosca = computed(() => {
+    const votos = this.casa() === 'senado' ? (this.senador()?.votos ?? []).map((v) => v.voto) : (this.votacoes()?.votos ?? []).map((v) => v.voto);
+    if (!votos.length) return null;
+    const sim = votos.filter((v) => /^sim$/i.test(v)).length;
+    const nao = votos.filter((v) => /^n[ãa]o$/i.test(v)).length;
+    const ausente = votos.filter((v) => /não votou|^ap$|ausente|^ncom|^ls|^lap|^mis/i.test(v)).length;
+    const outros = votos.length - sim - nao - ausente;
+    const total = votos.length;
+    const fatias = [
+      { nome: 'A favor (Sim)', valor: sim, cor: '#14a370' },
+      { nome: 'Contra (Não)', valor: nao, cor: '#d62839' },
+      { nome: 'Abstenção / obstrução', valor: outros, cor: '#3b82f6' },
+      { nome: 'Não votou', valor: ausente, cor: '#9aa8b3' },
+    ].filter((f) => f.valor > 0);
+    // Arcos do SVG (circunferência de r=40 ≈ 251,3)
+    const C = 2 * Math.PI * 40;
+    let acum = 0;
+    const arcos = fatias.map((f) => {
+      const tam = (f.valor / total) * C;
+      const arco = { ...f, pct: Math.round((f.valor / total) * 100), dash: `${tam} ${C - tam}`, offset: -acum };
+      acum += tam;
+      return arco;
+    });
+    return { total, arcos };
+  });
+  /** Até 3 itens da trajetória: mandatos e cargos anteriores. */
+  protected readonly trajetoria = computed(() => {
+    const p = this.politico();
+    if (this.casa() === 'senado') {
+      const s = this.senador();
+      return [
+        ...(s?.mandatos ?? []).map((m) => ({ periodo: m.periodo, titulo: 'Senador(a)', local: m.uf ? `Senado Federal · ${m.uf}` : 'Senado Federal' })),
+        ...(s?.formacao ?? []).map((f) => ({ periodo: '', titulo: f.curso, local: f.local })),
+      ];
+    }
+    const c = this.carreira();
+    return [
+      ...(c?.legislaturas ?? []).map((l) => ({ periodo: `${anoLegislatura(l)}–${anoLegislatura(l) + 4}`, titulo: 'Deputado(a) federal', local: `Câmara dos Deputados · ${p?.uf ?? ''}` })),
+      ...(c?.mandatosExternos ?? []).map((m) => ({ periodo: m.periodo, titulo: m.cargo, local: m.local })),
+      ...(c?.ocupacoes ?? []).map((o) => ({ periodo: o.periodo, titulo: o.titulo, local: o.entidade })),
+    ];
+  });
+  /** Linha do tempo do mandato: fatos com data vindos das APIs (projetos, discursos, votos, partido). */
+  protected readonly linhaDoTempo = computed(() => {
+    const ev: { data: string; texto: string }[] = [];
+    if (this.casa() === 'senado') {
+      const s = this.senador();
+      if (this.inicioMandato()) ev.push({ data: `${this.inicioMandato()}-02-01`, texto: 'Início do mandato' });
+      for (const a of (s?.autorias ?? []).slice(0, 3)) if (a.data) ev.push({ data: a.data, texto: `Apresentou ${a.titulo}` });
+      for (const d of (s?.discursos ?? []).slice(0, 2)) if (d.data) ev.push({ data: d.data, texto: d.tipo || 'Discurso no plenário' });
+      for (const v of (s?.votos ?? []).slice(0, 2)) if (v.data) ev.push({ data: v.data, texto: `Votou “${v.voto}”${v.materia ? ' na ' + v.materia : ''}` });
+    } else {
+      ev.push({ data: this.legislatura().inicio, texto: 'Início do mandato' });
+      for (const pt of this.carreira()?.partidos ?? []) if (pt.desde >= this.legislatura().inicio) ev.push({ data: pt.desde, texto: `Filiou-se ao ${pt.sigla}` });
+      for (const pr of this.projetos().slice(0, 3)) if (pr.apresentacao) ev.push({ data: pr.apresentacao, texto: `Apresentou o ${pr.titulo}` });
+      for (const d of this.discursos().slice(0, 2)) ev.push({ data: d.data, texto: d.fase ? `Discurso: ${d.fase}` : 'Discurso no plenário' });
+      for (const v of (this.votacoes()?.votos ?? []).slice(0, 2)) ev.push({ data: v.data, texto: `Votou “${v.voto}”${v.proposicao ? ' no ' + v.proposicao : ''}` });
+    }
+    const vistos = new Set<string>();
+    return ev
+      .filter((e) => e.data && !vistos.has(e.texto) && !!vistos.add(e.texto))
+      .sort((a, b) => a.data.localeCompare(b.data))
+      .slice(-7);
+  });
+  protected readonly nomeEstado = nomeEstado;
+  protected dominio(u: string) {
+    try {
+      return new URL(u).hostname.replace(/^www\./, '');
+    } catch {
+      return u;
+    }
+  }
+  protected readonly presenca = computed<number | null>(() => {
+    if (this.casa() !== 'senado') return this.votacoes()?.presenca ?? null;
+    const r = this.rosca();
+    if (!r) return null;
+    const aus = r.arcos.find((a) => a.nome === 'Não votou')?.valor ?? 0;
+    return Math.round(((r.total - aus) / r.total) * 100);
+  });
+  protected readonly fontes = computed(() => {
+    const p = this.politico();
+    if (!p) return [];
+    const sen = this.casa() === 'senado';
+    return [
+      { icone: 'account_balance', titulo: sen ? 'Página oficial no Senado' : 'Página oficial na Câmara', url: p.fonte_url },
+      { icone: 'data_object', titulo: sen ? 'Dados Abertos do Senado' : 'Dados Abertos da Câmara', url: sen ? `https://legis.senado.leg.br/dadosabertos/senador/${p.id}` : `https://dadosabertos.camara.leg.br/api/v2/deputados/${p.id}` },
+      { icone: 'how_to_vote', titulo: 'Tribunal Superior Eleitoral (bens e doações)', url: 'https://divulgacandcontas.tse.jus.br/divulga/#/home' },
+      { icone: 'payments', titulo: 'Portal da Transparência', url: 'https://portaldatransparencia.gov.br/' },
+    ];
+  });
+
   protected readonly politico = signal<Politico | null>(null);
   protected readonly carregando = signal(true);
   protected readonly erro = signal('');
@@ -309,6 +430,12 @@ export class PerfilPoliticoPage implements OnInit {
       fichaSenador(id).then((f) => this.senador.set(f)).catch(() => this.senador.set(null)).finally(() => this.carregandoFicha.set(false));
     } else {
       carreiraCamara(id).then((c) => this.carreira.set(c)).catch(() => this.carreira.set(null)).finally(() => this.carregandoFicha.set(false));
+      // Dados da visão geral (projetos, votos, discursos), sem travar a página
+      this.carregadas.add('projetos').add('votacoes').add('discursos');
+      this.carregarProjetos(1);
+      this.carregarVotacoes();
+      this.carregarDiscursos(1);
+      totalDiscursos(id).then((t) => this.discursosTotal.set(t)).catch(() => {});
       detalhesCamara(id)
         .then((d) => this.detalhes.set(d))
         .catch(() => this.detalhes.set(null))

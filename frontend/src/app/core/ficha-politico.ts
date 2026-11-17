@@ -510,3 +510,9 @@ export async function fichaSenador(cod: number): Promise<FichaSenador> {
     falhas,
   };
 }
+
+/** Total de discursos na legislatura atual (1 por página: o número da última página é o total). */
+export async function totalDiscursos(id: number): Promise<number> {
+  const r = await jsonCamara<Pagina<unknown>>(`/deputados/${id}/discursos?dataInicio=${inicioLegislatura()}&itens=1&ordenarPor=dataHoraInicio&ordem=DESC`);
+  return totalPeloLink(r);
+}

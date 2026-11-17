@@ -9,22 +9,51 @@
   <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
 } @else if (politico(); as p) {
   <article class="perfil">
-    <header class="card perfil-cabecalho">
-      <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="128" />
-      <div class="perfil-identidade">
-        <p class="sobretitulo">{{ p.cargo || 'Deputado(a) Federal' }}</p>
-        <h1>{{ p.nome }}</h1>
-        <p class="perfil-partido">{{ p.partido || 'Partido não informado' }} · {{ p.uf || 'UF não informada' }}</p>
-        <div class="etiquetas">
-          @if (p.situacao) { <span class="etiqueta etiqueta-verde"><span class="ponto"></span>{{ p.situacao === 'Exercício' ? 'Em exercício' : p.situacao }}</span> }
-          @if (detalhes()?.condicaoEleitoral; as c) { <span class="etiqueta">{{ c }}</span> }
+    <header class="card perfil-slide">
+      <div class="ps-topo">
+        <app-avatar class="avatar-oficial ps-foto" [nome]="p.nome" [url]="p.foto_url" [tamanho]="148" />
+        <div class="ps-id">
+          <h1>{{ p.nome }} <app-icone nome="verified" class="ps-selo" [attr.title]="'Dados oficiais ' + (casa() === 'senado' ? 'do Senado' : 'da Câmara')" /></h1>
+          <p class="ps-cargo">{{ p.cargo || 'Deputado(a) Federal' }}@if (p.uf) { • {{ nomeEstado(p.uf) }}/{{ p.uf }} }</p>
+          <div class="ps-chips">
+            @if (p.partido) { <span class="ps-partido"><span class="ps-sigla">{{ p.partido.slice(0, 2) }}</span> {{ p.partido }}</span> }
+            @if (p.situacao) { <span class="etiqueta etiqueta-verde"><span class="ponto"></span>{{ p.situacao === 'Exercício' ? 'Em exercício' : p.situacao }}</span> }
+            @if (detalhes()?.condicaoEleitoral; as c) { <span class="etiqueta">{{ c }}</span> }
+          </div>
+          <dl class="ps-info">
+            <div><dt>Mandato</dt><dd>{{ casa() === 'senado' ? (senador()?.mandatos?.[0]?.periodo || '—') : legislatura().periodo }}</dd></div>
+            <div><dt>Início do mandato</dt><dd>@if (casa() === 'senado') { {{ inicioMandato() || '—' }} } @else { {{ legislatura().inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }} }</dd></div>
+            <div><dt>Área de atuação</dt><dd>{{ area() || '—' }}</dd></div>
+            <div><dt>Gênero</dt><dd>{{ genero() || '—' }}</dd></div>
+          </dl>
         </div>
-        @if (fonte(); as f) { <app-fonte [fonte]="f" /> }
+        <aside class="ps-resumo" aria-label="Resumo do mandato">
+          <h2>Resumo do mandato</h2>
+          <ul>
+            <li>
+              <app-icone nome="description" />
+              @if (casa() === 'senado' ? carregandoFicha() : carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
+              @else { <strong>{{ casa() === 'senado' ? (senador()?.autorias?.length ?? '—') : (detalhes()?.totalProposicoes ?? '—') }}</strong> }
+              <small>{{ casa() === 'senado' ? 'matérias de autoria' : 'proposições apresentadas' }}</small>
+            </li>
+            <li>
+              <app-icone nome="task_alt" />
+              @if (casa() === 'senado' ? carregandoFicha() : carregandoVotacoes()) { <span class="esqueleto esqueleto-numero"></span> }
+              @else { <strong>{{ presenca() !== null ? presenca() + '%' : '—' }}</strong> }
+              <small>presença nas votações recentes</small>
+            </li>
+            <li>
+              <app-icone nome="record_voice_over" />
+              <strong>{{ casa() === 'senado' ? (senador()?.discursos?.length ?? '—') : (discursosTotal() ?? '—') }}</strong>
+              <small>{{ casa() === 'senado' ? 'discursos no último ano' : 'discursos na legislatura' }}</small>
+            </li>
+          </ul>
+        </aside>
       </div>
-      <div class="perfil-acoes">
+      <div class="perfil-acoes ps-acoes">
         <a class="botao botao-verde" [routerLink]="['/fatobot']" [queryParams]="{ p: perguntaIa() }"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</a>
         <button type="button" class="botao botao-fantasma" [class.botao-seguindo-politico]="seguidos.sigo(p)" (click)="alternarSeguir(p)">
-          <app-icone [nome]="seguidos.sigo(p) ? 'notifications_active' : 'person_add'" /> {{ seguidos.sigo(p) ? 'Seguindo' : 'Seguir político' }}
+          <app-icone [nome]="seguidos.sigo(p) ? 'notifications_active' : 'person_add'" /> {{ seguidos.sigo(p) ? 'Seguindo' : 'Seguir' }}
         </button>
         @if (casa() !== 'senado') {
           <a class="botao botao-fantasma" routerLink="/politicos/comparar" [queryParams]="{ a: p.id }"><app-icone nome="compare_arrows" /> Comparar</a>
@@ -140,47 +169,98 @@
     @switch (aba()) {
       <!-- ================= VISÃO GERAL ================= -->
       @case ('geral') {
-        @if (!sen) {
-          <ul class="indicadores" aria-label="Resumo da atuação">
-            <li class="card">
-              <span class="indicador-rotulo"><app-icone nome="description" /> Proposições</span>
-              @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ detalhes()?.totalProposicoes ?? '—' }}</strong> }
-              <small>nesta legislatura</small>
-            </li>
-            <li class="card">
-              <span class="indicador-rotulo"><app-icone nome="payments" /> Cota parlamentar</span>
-              @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
-              @else if (detalhes()?.despesas; as g) { <strong>{{ g.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong><small>gastos em {{ g.ano }}{{ g.parcial ? ' (parcial)' : '' }}</small> }
-              @else { <strong>—</strong><small>sem dados no momento</small> }
-            </li>
-            <li class="card">
-              <span class="indicador-rotulo"><app-icone nome="account_balance" /> Comissões</span>
-              @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ detalhes() ? detalhes()!.comissoes.length : '—' }}</strong> }
-              <small>atuais</small>
-            </li>
-            <li class="card">
-              <span class="indicador-rotulo"><app-icone nome="groups_3" /> Frentes</span>
-              @if (carregandoFicha()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ car ? car.frentes.length : '—' }}</strong> }
-              <small>parlamentares</small>
-            </li>
-            <li class="card">
-              <span class="indicador-rotulo"><app-icone nome="workspace_premium" /> Mandatos</span>
-              @if (carregandoFicha()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ car?.legislaturas?.length || '—' }}</strong> }
-              <small>como deputado(a) federal</small>
-            </li>
-          </ul>
-        } @else {
-          <ul class="indicadores" aria-label="Resumo da atuação">
-            <li class="card"><span class="indicador-rotulo"><app-icone nome="description" /> Matérias</span>
-              @if (carregandoFicha()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ s ? s.autorias.length : '—' }}</strong> }<small>de autoria (mais recentes)</small></li>
-            <li class="card"><span class="indicador-rotulo"><app-icone nome="account_balance" /> Comissões</span>
-              @if (carregandoFicha()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ s ? s.comissoes.length : '—' }}</strong> }<small>atuais</small></li>
-            <li class="card"><span class="indicador-rotulo"><app-icone nome="record_voice_over" /> Discursos</span>
-              @if (carregandoFicha()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ s ? s.discursos.length : '—' }}</strong> }<small>no último ano</small></li>
-            <li class="card"><span class="indicador-rotulo"><app-icone nome="workspace_premium" /> Mandatos</span>
-              @if (carregandoFicha()) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ s?.mandatos?.length || '—' }}</strong> }<small>no Senado</small></li>
-          </ul>
+        <div class="ps-grade3">
+          <!-- Projetos apresentados -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="description" /></span> Projetos apresentados</h2>
+            @let lista = sen ? (s?.autorias ?? []).slice(0, 3) : [];
+            @if (sen ? carregandoFicha() : carregandoProjetos()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (!sen && projetos().length) {
+              <ul class="ps-projetos">
+                @for (pr of projetos().slice(0, 3); track pr.id) {
+                  <li><a [href]="pr.url" target="_blank" rel="noopener noreferrer"><strong>{{ pr.titulo }}</strong></a>
+                    <span class="ps-ementa">{{ pr.ementa }}</span>
+                    <small>{{ pr.apresentacao ? (pr.apresentacao | date: 'yyyy') + ' · ' : '' }}{{ pr.situacao || 'Situação não informada' }}</small></li>
+                }
+              </ul>
+            } @else if (sen && lista.length) {
+              <ul class="ps-projetos">
+                @for (a of lista; track $index) {
+                  <li><a [href]="a.url" target="_blank" rel="noopener noreferrer"><strong>{{ a.titulo }}</strong></a><span class="ps-ementa">{{ a.ementa }}</span><small>{{ a.data | date: 'yyyy' }}</small></li>
+                }
+              </ul>
+            } @else { <p class="texto-suave">Nenhum projeto encontrado nesta legislatura.</p> }
+            <button type="button" class="ps-ver" (click)="abrirAba('projetos')">Ver todos os projetos <app-icone nome="arrow_forward" /></button>
+          </section>
+
+          <!-- Votações -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="how_to_vote" /></span> Votações</h2>
+            @if (sen ? carregandoFicha() : carregandoVotacoes()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (rosca(); as r) {
+              <div class="ps-rosca">
+                <svg viewBox="0 0 100 100" role="img" [attr.aria-label]="'Votos em ' + r.total + ' votações recentes'">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--superficie-2)" stroke-width="14" />
+                  @for (a of r.arcos; track a.nome) {
+                    <circle cx="50" cy="50" r="40" fill="none" [attr.stroke]="a.cor" stroke-width="14" [attr.stroke-dasharray]="a.dash" [attr.stroke-dashoffset]="a.offset" transform="rotate(-90 50 50)" />
+                  }
+                  <text x="50" y="48" text-anchor="middle" class="ps-rosca-num">{{ r.total }}</text>
+                  <text x="50" y="60" text-anchor="middle" class="ps-rosca-txt">votações</text>
+                </svg>
+                <ul>
+                  @for (a of r.arcos; track a.nome) {
+                    <li><i [style.background]="a.cor"></i><span>{{ a.nome }}<strong>{{ a.valor }} ({{ a.pct }}%)</strong></span></li>
+                  }
+                </ul>
+              </div>
+              <small class="texto-suave">{{ sen ? 'Votações mais recentes no plenário do Senado.' : 'Últimas votações nominais do plenário (90 dias).' }}</small>
+            } @else { <p class="texto-suave">Sem votações nominais recentes.</p> }
+            <button type="button" class="ps-ver" (click)="abrirAba('votacoes')">Ver todas as votações <app-icone nome="arrow_forward" /></button>
+          </section>
+
+          <!-- Trajetória -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="timeline" /></span> Trajetória</h2>
+            @if (carregandoFicha()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (trajetoria().length) {
+              <ol class="ps-trajetoria">
+                @for (t of trajetoria().slice(0, 3); track $index) {
+                  <li><span class="ps-periodo">{{ t.periodo }}</span><span><strong>{{ t.titulo }}</strong><small>{{ t.local }}</small></span></li>
+                }
+              </ol>
+            } @else { <p class="texto-suave">Sem dados de trajetória.</p> }
+            <button type="button" class="ps-ver" (click)="abrirAba('carreira')">Ver mais sobre a trajetória <app-icone nome="arrow_forward" /></button>
+          </section>
+        </div>
+
+        <!-- Linha do tempo do mandato -->
+        @if (linhaDoTempo().length > 1) {
+          <section class="card ps-linha">
+            <h2 class="ps-titulo">Linha do tempo do mandato</h2>
+            <ol>
+              @for (e of linhaDoTempo(); track $index) {
+                <li><span class="ps-ponto"></span><time>{{ e.data | date: 'MMM yyyy' : '' : 'pt-BR' }}</time><span>{{ e.texto }}</span></li>
+              }
+            </ol>
+          </section>
         }
+
+        <!-- Fontes e transparência -->
+        <section class="card ps-fontes">
+          <h2 class="ps-titulo">Fontes e transparência</h2>
+          <ul>
+            @for (f of fontes(); track f.url) {
+              <li><a [href]="f.url" target="_blank" rel="noopener noreferrer"><app-icone [nome]="f.icone" /><span><strong>{{ f.titulo }}</strong><small>{{ dominio(f.url) }}</small></span></a></li>
+            }
+          </ul>
+          <footer class="ps-rodape">
+            <span>Dados consultados em {{ agora | date: 'dd/MM/yyyy HH:mm' }}</span>
+            <span>Como coletamos e conferimos os dados: <a routerLink="/sobre">metodologia</a></span>
+          </footer>
+        </section>
 
         <div class="grade-perfil">
           <div class="coluna">
