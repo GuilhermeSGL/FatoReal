@@ -1,7 +1,9 @@
+<div class="pol-palco">
 <app-nav-politicos />
 
 <!-- ===== Cabeçalho com busca em destaque ===== -->
 <section class="pol-topo">
+  <img class="pol-fatobot" src="img/fatobot.svg" alt="" />
   <div class="pol-titulo">
     <p class="sobretitulo">Políticos</p>
     <h1>Conheça quem representa você</h1>
@@ -79,22 +81,37 @@
   }
 </section>
 
-<!-- ===== Cargos (por esfera de governo) ===== -->
-<section class="pol-cargos" aria-label="Cargo">
-  @for (e of esferas; track e.nome) {
-    <div class="pol-esfera">
-      <span class="pol-esfera-nome">{{ e.nome }}</span>
-      <div class="pol-esfera-cargos" role="tablist">
-        @for (c of e.cargos; track c.nome) {
-          <button type="button" role="tab" class="pol-cargo" [attr.aria-selected]="cargo() === c.nome" [class.sem-dados]="!temDados(c.nome)" (click)="escolherCargo(c.nome)">
-            <span class="pol-cargo-icone"><app-icone [nome]="c.icone" /></span>
-            <span class="pol-cargo-texto"><strong>{{ c.rotulo }}</strong>
-              <small>@if (!temDados(c.nome)) { Em breve } @else if (totais()[c.nome]) { {{ totais()[c.nome] }} nomes } @else { carregando... }</small>
-            </span>
-          </button>
-        }
-      </div>
-    </div>
+<!-- ===== Escolha o cargo (cartões grandes) ===== -->
+<h2 class="pol-secao">Escolha o cargo <small>Toque para ver todos os nomes</small></h2>
+<section class="pol-cargos" aria-label="Cargo" role="tablist">
+  @for (c of cargosPrincipais; track c.nome) {
+    <button type="button" role="tab" class="pol-cargo" [style.--c]="c.cor" [attr.aria-selected]="cargo() === c.nome" [class.sem-dados]="!temDados(c.nome)" (click)="escolherCargo(c.nome)">
+      <app-icone [nome]="c.icone" class="pol-cargo-icone" />
+      <app-icone [nome]="c.icone" class="pol-cargo-fundo" />
+      @if (cargo() === c.nome) { <app-icone nome="check_circle" class="pol-cargo-ok" /> }
+      <strong>{{ c.rotulo }}</strong>
+      <small>@if (!temDados(c.nome)) { em breve } @else if (totais()[c.nome]) { {{ totais()[c.nome] }} nomes } @else { carregando... }</small>
+    </button>
+  }
+  <div class="pol-outros">
+    <strong>Outros cargos</strong>
+    @for (c of cargosOutros; track c.nome) {
+      <button type="button" role="tab" [attr.aria-selected]="cargo() === c.nome" (click)="escolherCargo(c.nome)">
+        <app-icone [nome]="c.icone" /> {{ c.rotulo }} @if (!temDados(c.nome)) { <em>em breve</em> }
+      </button>
+    }
+  </div>
+</section>
+
+<!-- ===== Explore ===== -->
+<h2 class="pol-secao">Explore</h2>
+<section class="pol-explore">
+  @for (x of explorar; track x.rota) {
+    <a class="pol-explore-card" [routerLink]="x.rota">
+      <img [src]="x.imagem" alt="" loading="lazy" />
+      <app-icone [nome]="x.icone" />
+      <span><strong>{{ x.titulo }}</strong><small>{{ x.texto }}</small></span>
+    </a>
   }
 </section>
 
@@ -145,17 +162,6 @@
   </section>
 }
 
-@if (!semFonte() && visao() === 'lista' && ordem() === 'az') {
-  <!-- Índice A–Z (atalho para a primeira letra do nome) -->
-  <nav class="indice-az" aria-label="Filtrar pela primeira letra do nome">
-    <button type="button" class="indice-todos" [attr.aria-pressed]="!letra()" (click)="letra.set(''); mudouFiltro()">A–Z</button>
-    @for (l of letras; track l) {
-      <button type="button" [attr.aria-pressed]="letra() === l" [disabled]="!contagemLetra()[l]" (click)="escolherLetra(l)"
-        [attr.aria-label]="l + ': ' + (contagemLetra()[l] || 0) + ' nomes'" [title]="(contagemLetra()[l] || 0) + ' nomes'">{{ l }}</button>
-    }
-  </nav>
-}
-
 @if (erro()) {
   <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }} <button type="button" class="botao botao-fantasma" (click)="carregar()">Tentar de novo</button></div>
 }
@@ -181,12 +187,12 @@
 
   @for (g of grupos(); track g.letra) {
     <section class="grupo-letra" [attr.aria-label]="g.letra">
-      <h2 class="grupo-letra-titulo">{{ g.letra }}</h2>
+      @if (ordem() === 'partido' || ordem() === 'estado') { <h2 class="grupo-letra-titulo">{{ g.letra }}</h2> }
       <ul class="grade-politicos pol-grade">
         @for (p of g.pessoas; track p.id) {
           <li>
-            <a [routerLink]="linkPerfil(p)" class="card card-politico pol-card">
-              <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="60" />
+            <a [routerLink]="linkPerfil(p)" class="card card-politico pol-card" [style.--c]="corPartido(p.partido)">
+              <app-avatar class="avatar-oficial pol-foto" [nome]="p.nome" [url]="p.foto_url" [tamanho]="62" />
               <span class="card-politico-texto">
                 <strong>{{ p.nome }}</strong>
                 <span class="pol-card-meta"><span class="pol-sigla">{{ p.partido || 'S/P' }}</span> {{ p.uf ? nomeEstado(p.uf) : 'UF n/d' }}</span>
@@ -219,4 +225,5 @@
   }
 }
 
-<p class="nota-fontes"><app-icone nome="verified" /> Deputados federais: API de Dados Abertos da Câmara. Senadores: Dados Abertos do Senado Federal. Os demais cargos entram com os dados oficiais do TSE.</p>
+<p class="nota-fontes"><app-icone nome="verified" /> Fotos oficiais da Câmara dos Deputados e do Senado Federal. Deputados federais: API de Dados Abertos da Câmara. Senadores: Dados Abertos do Senado Federal. Os demais cargos entram com os dados oficiais do TSE.</p>
+</div>

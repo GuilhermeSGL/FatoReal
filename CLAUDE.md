@@ -24,7 +24,9 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 
 ## Visual (decisões do Luiz)
 - **Foco atual: computador.** Protótipo de celular não é prioridade agora (o layout só não pode quebrar).
-- **Modo claro:** verde do Fato Real. **Modo escuro:** azul-marinho com cartões de "vidro" e destaques **verde-limão** (`--lima: #c6f432`), inspirado nos slides da apresentação.
+- **Modo claro:** verde do Fato Real. **Modo escuro:** preto e grafite (`#09090b`, `#121316`, bordas `#2a2d31`), contraste definido e destaques discretos em **verde-limão** (`--lima: #c6f432`). Aprovado pelo Luiz em 18 nov. 2026 (antes era azul-marinho).
+- **Página Políticos:** sempre no "palco" preto/grafite (`.pol-palco`), mesmo no modo claro. Cargos em cartões grandes coloridos, cartões "Explore" com imagem, cartões de políticos com foto oficial (Câmara/Senado). Sem índice A–Z.
+- **Notícias:** formato de portal (abas por assunto, faixa de últimas, carrossel, "Brasil e mundo", feed). Lista em `core/noticias.ts`: só título original + link; resumo só se alguém leu a matéria. Feed automático futuro: `GET {API_URL}/noticias`.
 - Os slides em `apresentacao/` são **referência só de visual** (ícones, cores, cartões, selos), **não de conteúdo** — o conteúdo deles é técnico.
 - **Selos de status** padronizados (`shared/selo-status.ts`): Verificado, Confiável, Em análise, Novo, Sem contexto, Evidência insuficiente, Falso. Usar sempre esse componente.
 - Ícones em quadradinhos coloridos (`.icone-tile`, `.ps-icone`), cartões com título + ícone (`.ps-cartao`, `.ps-titulo`).

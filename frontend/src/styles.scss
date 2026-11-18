@@ -44,21 +44,21 @@
 }
 
 :root[data-tema='escuro'] {
-  /* Modo escuro no visual da apresentação: azul-marinho profundo, cartões de vidro e destaques verde-limão. */
-  --moldura: #060c1d;
-  --moldura-2: #0f1a33;
-  --moldura-borda: #1c2a48;
+  /* Modo escuro: preto e grafite, contraste definido e destaques discretos em verde-limão. */
+  --moldura: #000000;
+  --moldura-2: #16181c;
+  --moldura-borda: #26282c;
   --moldura-texto: #e6edf7;
-  --moldura-suave: #8fa0bd;
+  --moldura-suave: #8b9096;
   --moldura-titulo: #f2f6fc;
-  --moldura-campo: #0f1a33;
+  --moldura-campo: #16181c;
   --moldura-hover: rgba(198, 244, 50, 0.08);
-  --painel: #08112a;
-  --superficie: #0f1a33;
-  --superficie-2: #16243f;
-  --texto: #e6edf7;
-  --texto-suave: #93a3bf;
-  --borda: #22345a;
+  --painel: #09090b;
+  --superficie: #121316;
+  --superficie-2: #1a1c20;
+  --texto: #e7e9ea;
+  --texto-suave: #8b9096;
+  --borda: #2a2d31;
   --primaria: #c6f432;
   --primaria-texto: #101a00;
   --link: #c6f432;
@@ -1183,9 +1183,9 @@ small.nt-k { display: block; color: color-mix(in srgb, var(--c) 80%, var(--texto
   .tag-verde { background: rgba(0, 186, 124, 0.16); color: var(--link); }
   .etiqueta-verde, .selo-verificado, .post-tipo-verificado { background: rgba(0, 186, 124, 0.14); color: var(--link); }
   .chip { box-shadow: none; }
-  .botao-fantasma { border-color: #2f4470; color: var(--texto); background: rgba(15, 26, 51, 0.6); }
+  .botao-fantasma { border-color: #3a3d42; color: var(--texto); background: rgba(26, 28, 32, 0.6); }
   .card-ia { background: var(--superficie); border-color: var(--borda); color: var(--texto); h2 { color: var(--texto); } }
-  .destaque { background: #060c1d; }
+  .destaque { background: #000; }
   .menu a.ativo { background: rgba(198, 244, 50, 0.12); color: var(--lima); box-shadow: inset 3px 0 0 var(--lima); .icone { color: var(--lima); } }
   .post-verificado { border-color: var(--borda); box-shadow: inset 4px 0 0 var(--primaria); }
   .abas-celular a.ativo { background: var(--primaria); color: var(--primaria-texto); }
@@ -1748,18 +1748,18 @@ small.nt-k { display: block; color: color-mix(in srgb, var(--c) 80%, var(--texto
 
 /* ===== Modo escuro "vidro" (slides): fundo com brilho e cartões translúcidos ===== */
 :root[data-tema='escuro'] {
-  body { background: radial-gradient(1200px 600px at 85% -10%, rgba(76, 141, 255, 0.12), transparent 60%), radial-gradient(900px 500px at -10% 110%, rgba(198, 244, 50, 0.06), transparent 60%), var(--painel); background-attachment: fixed; }
+  body { background: radial-gradient(1200px 600px at 85% -10%, rgba(124, 77, 255, 0.08), transparent 60%), radial-gradient(900px 500px at -10% 110%, rgba(198, 244, 50, 0.04), transparent 60%), var(--painel); background-attachment: fixed; }
   .painel { background: transparent; border-left: 1px solid var(--moldura-borda); }
-  .card { background: linear-gradient(180deg, rgba(22, 36, 63, 0.92), rgba(13, 22, 43, 0.92)); border-color: var(--borda); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 30px rgba(0, 0, 0, 0.25); backdrop-filter: blur(6px); }
-  .topo { background: rgba(6, 12, 29, 0.88); backdrop-filter: blur(10px); }
-  .ps-resumo, .ps-info, .ps-fontes ul a, .ps-consultas a { background: rgba(8, 17, 42, 0.55); }
+  .card { background: linear-gradient(180deg, rgba(24, 25, 29, 0.94), rgba(16, 17, 20, 0.94)); border-color: var(--borda); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 10px 30px rgba(0, 0, 0, 0.25); backdrop-filter: blur(6px); }
+  .topo { background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(10px); }
+  .ps-resumo, .ps-info, .ps-fontes ul a, .ps-consultas a { background: rgba(255, 255, 255, 0.03); }
   .ps-icone { background: var(--lima); color: #101a00; box-shadow: 0 0 18px rgba(198, 244, 50, 0.25); }
   .ps-titulo, .titulo-secao, h1, h2 { letter-spacing: -0.01em; }
   .botao:not(.botao-fantasma):not(.botao-perigo) { box-shadow: 0 0 0 1px rgba(198, 244, 50, 0.25), 0 6px 18px rgba(198, 244, 50, 0.12); }
   .ficha-abas button[aria-selected='true'], .seletor-ano button[aria-pressed='true'] { box-shadow: 0 0 16px rgba(198, 244, 50, 0.25); }
   .ps-ponto { background: var(--lima); border-color: #101a00; box-shadow: 0 0 10px rgba(198, 244, 50, 0.6); }
   .ps-linha li::before { background: linear-gradient(90deg, rgba(198, 244, 50, 0.9), rgba(198, 244, 50, 0.4)); box-shadow: 0 0 8px rgba(198, 244, 50, 0.4); }
-  input, select, textarea { background: rgba(8, 17, 42, 0.7); border-color: var(--borda); color: var(--texto); }
+  input, select, textarea { background: #16181c; border-color: var(--borda); color: var(--texto); }
   .sobretitulo { color: var(--lima); }
 }
 
@@ -1968,16 +1968,56 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
   &[aria-pressed='true'] { background: var(--primaria); border-color: var(--primaria); color: var(--primaria-texto); } }
 .pol-select-p { flex: 0 0 auto !important; min-width: 120px !important; padding: 6px 10px; border-radius: 999px; font-size: 0.85rem; }
 .pol-painel-rodape { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; padding-top: 12px; border-top: 1px solid var(--borda); }
-.pol-cargos { display: grid; grid-template-columns: 3fr 2fr 2fr; gap: 14px; margin-bottom: 18px; }
-.pol-esfera { display: grid; gap: 8px; align-content: start; }
-.pol-esfera-nome { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--texto-suave); padding-left: 4px; }
-.pol-esfera-cargos { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
-.pol-cargo { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 16px; border: 1px solid var(--borda); background: var(--superficie); color: var(--texto); font: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; min-width: 0;
-  &:hover { border-color: var(--link); transform: translateY(-1px); }
-  &[aria-selected='true'] { border: 2px solid var(--link); background: color-mix(in srgb, var(--link) 8%, var(--superficie)); box-shadow: 0 6px 18px color-mix(in srgb, var(--link) 18%, transparent); .pol-cargo-icone { background: var(--link); color: var(--primaria-texto); } }
-  &.sem-dados { opacity: 0.6; .pol-cargo-texto small { font-style: italic; } } }
-.pol-cargo-icone { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--link) 12%, transparent); color: var(--link); .icone { font-size: 1.3rem; font-variation-settings: 'FILL' 1; } }
-.pol-cargo-texto { display: grid; min-width: 0; strong { font-size: 0.88rem; line-height: 1.2; } small { color: var(--texto-suave); font-size: 0.76rem; } }
+/* Políticos: palco preto/grafite (fica escuro também no modo claro), cargos em cartões grandes e "Explore" */
+.pol-palco { --superficie: #121316; --superficie-2: #1a1c20; --texto: #e7e9ea; --texto-suave: #8b9096; --borda: #2a2d31; --link: #c6f432; --primaria: #c6f432; --primaria-texto: #101a00;
+  --sombra: 0 10px 30px rgba(0, 0, 0, 0.35); color-scheme: dark;
+  color: var(--texto); background: radial-gradient(900px 400px at 85% -5%, rgba(124, 77, 255, 0.1), transparent 60%), #09090b;
+  border-radius: 24px; padding: 20px 24px 24px; border: 1px solid #1f2125;
+  .card { background: #121316; border-color: var(--borda); box-shadow: none; }
+  h1, h2, h3, strong { color: #fff; }
+  .sobretitulo { color: var(--lima, #c6f432); }
+  input, select { background: #16181c; color: var(--texto); border-color: #2f3336; }
+  .nota-fontes { color: #71767b; }
+  .grupo-letra-titulo { color: #fff; border-color: var(--borda); } }
+:root[data-tema='escuro'] .pol-palco { border-color: transparent; background: radial-gradient(900px 400px at 85% -5%, rgba(124, 77, 255, 0.1), transparent 60%); padding: 0; }
+.pol-topo { padding-right: 120px; }
+.pol-fatobot { position: absolute; right: 0; top: -6px; width: 104px; height: 104px; pointer-events: none; }
+.pol-palco .pol-busca { background: #16181c; border: 1px solid #2f3336; border-radius: 16px; box-shadow: none; &:focus-within { border-color: #c6f432; } }
+.pol-palco .pol-filtros-botao { border-radius: 12px; }
+.pol-palco .pol-filtros-qtd { color: #101a00; }
+.pol-secao { display: flex; justify-content: space-between; align-items: baseline; margin: 20px 0 10px; font-size: 1rem;
+  small { font-weight: 500; font-size: 0.8rem; color: var(--texto-suave); } }
+.pol-cargos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.15fr); gap: 12px; margin-bottom: 4px; }
+.pol-cargo { --c: #22c55e; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; height: 116px; padding: 14px 16px; border-radius: 20px; cursor: pointer; text-align: left; font: inherit; color: #fff;
+  background: linear-gradient(150deg, color-mix(in srgb, var(--c) 55%, #16181c), color-mix(in srgb, var(--c) 20%, #0b0b0d)); border: 1px solid color-mix(in srgb, var(--c) 40%, #2f3336);
+  transition: transform 0.15s, box-shadow 0.15s;
+  &:hover { transform: translateY(-2px); box-shadow: 0 10px 26px color-mix(in srgb, var(--c) 25%, transparent); }
+  strong { font-size: 0.98rem; color: #fff; } small { font-size: 0.8rem; color: rgba(255, 255, 255, 0.75); }
+  &[aria-selected='true'] { border: 2px solid #c6f432; box-shadow: 0 0 0 4px rgba(198, 244, 50, 0.1); }
+  &.sem-dados { filter: saturate(0.35); opacity: 0.75; } }
+.pol-cargo-icone { position: absolute; left: 16px; top: 14px; font-size: 1.6rem; font-variation-settings: 'FILL' 1; }
+.pol-cargo-fundo { position: absolute; right: -10px; bottom: -18px; font-size: 96px; color: var(--c); opacity: 0.3; font-variation-settings: 'FILL' 1; }
+.pol-cargo-ok { position: absolute; right: 12px; top: 12px; color: #c6f432; font-size: 1.4rem; font-variation-settings: 'FILL' 1; }
+.pol-outros { display: grid; gap: 2px; align-content: center; padding: 10px 12px; border-radius: 20px; border: 1px dashed #3a3d42; background: #111214;
+  > strong { font-size: 0.82rem; color: #d5d8dc; margin-bottom: 2px; }
+  button { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border: 0; border-radius: 8px; background: none; color: #8b9096; font: inherit; font-size: 0.8rem; cursor: pointer; text-align: left;
+    .icone { font-size: 1.05rem; color: #71767b; } em { margin-left: auto; font-style: normal; font-size: 0.68rem; background: #202327; padding: 1px 7px; border-radius: 9px; white-space: nowrap; }
+    &:hover { background: #1a1c20; color: #e7e9ea; } &[aria-selected='true'] { color: #c6f432; .icone { color: #c6f432; } } } }
+.pol-explore { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.pol-explore-card { position: relative; overflow: hidden; display: flex; align-items: center; gap: 12px; height: 84px; padding: 0 16px; border-radius: 18px; border: 1px solid #2f3336; background: #121316; color: #fff; text-decoration: none; transition: border-color 0.15s, transform 0.15s;
+  img { position: absolute; right: 0; top: 0; width: 50%; height: 100%; object-fit: cover; opacity: 0.85; mask-image: linear-gradient(90deg, transparent, #000 60%); }
+  > .icone { position: relative; font-size: 1.6rem; color: #c6f432; }
+  > span { position: relative; display: grid; strong { color: #fff; } small { color: #8b9096; font-size: 0.8rem; } }
+  &:hover { border-color: #c6f432; transform: translateY(-2px); } }
+.pol-palco .pol-card { background: #121316; border: 1px solid #26282c; border-radius: 18px;
+  &:hover { border-color: color-mix(in srgb, var(--c) 60%, #26282c); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4); } }
+.pol-foto { box-shadow: 0 0 0 3px #09090b, 0 0 0 5px color-mix(in srgb, var(--c, #c6f432) 75%, transparent); }
+.pol-palco .pol-sigla { background: rgba(198, 244, 50, 0.1); color: #c6f432; }
+@media (max-width: 1100px) {
+  .pol-cargos { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pol-outros { grid-column: 1 / -1; }
+  .pol-explore { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) { .pol-topo { padding-right: 0; } .pol-fatobot { display: none; } .pol-palco { padding: 14px; } }
 .pol-resultados-topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .pol-contagem { margin: 0; color: var(--texto-suave); strong { color: var(--texto); font-size: 1.1rem; } }
 .pol-ativos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -1986,5 +2026,5 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 .pol-card { transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; &:hover { transform: translateY(-2px); border-color: var(--link); box-shadow: 0 10px 24px rgba(9, 25, 43, 0.1); } }
 .pol-card-meta { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--texto-suave); }
 .pol-sigla { padding: 1px 7px; border-radius: 6px; background: color-mix(in srgb, var(--link) 12%, transparent); color: var(--link); font-weight: 800; font-size: 0.75rem; }
-@media (max-width: 1100px) { .pol-cargos { grid-template-columns: 1fr; } .pol-painel { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .pol-painel { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .pol-esfera-cargos { grid-auto-flow: row; grid-template-columns: 1fr 1fr; } .pol-filtros-botao { padding: 10px 12px; } }

@@ -14,7 +14,7 @@ import { AuthService } from '../../core/auth.service';
 const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const POR_VEZ = 48;
 
-/** Políticos: todos os representantes de cada cargo, em ordem alfabética, com índice A–Z e filtros. */
+/** Políticos: todos os representantes de cada cargo, em ordem alfabética, com busca, filtros e cartões por cargo. */
 @Component({
   selector: 'app-busca',
   imports: [FormsModule, RouterLink, Icone, Avatar, MapaBrasil, NavPoliticos],
@@ -25,28 +25,36 @@ export class BuscaPage implements OnInit {
   private router = inject(Router);
   private auth = inject(AuthService);
 
-  // ---------- Cargos em cartões, por esfera ----------
-  protected readonly esferas: { nome: string; cargos: { nome: string; rotulo: string; icone: string }[] }[] = [
-    { nome: 'Federal', cargos: [
-      { nome: 'Presidente', rotulo: 'Presidente', icone: 'flag' },
-      { nome: 'Senador(a)', rotulo: 'Senadores', icone: 'gavel' },
-      { nome: 'Deputado(a) Federal', rotulo: 'Deputados federais', icone: 'account_balance' },
-    ] },
-    { nome: 'Estadual', cargos: [
-      { nome: 'Governador(a)', rotulo: 'Governadores', icone: 'location_city' },
-      { nome: 'Deputado(a) Estadual', rotulo: 'Deputados estaduais', icone: 'apartment' },
-    ] },
-    { nome: 'Municipal', cargos: [
-      { nome: 'Prefeito(a)', rotulo: 'Prefeitos', icone: 'holiday_village' },
-      { nome: 'Vereador(a)', rotulo: 'Vereadores', icone: 'groups' },
-    ] },
+  // ---------- Cargos: 4 cartões grandes + "outros cargos" ----------
+  protected readonly cargosPrincipais = [
+    { nome: 'Presidente', rotulo: 'Presidente', icone: 'flag', cor: '#e11d48' },
+    { nome: 'Senador(a)', rotulo: 'Senadores', icone: 'gavel', cor: '#3b82f6' },
+    { nome: 'Deputado(a) Federal', rotulo: 'Deputados federais', icone: 'account_balance', cor: '#22c55e' },
+    { nome: 'Governador(a)', rotulo: 'Governadores', icone: 'location_city', cor: '#a855f7' },
   ];
+  protected readonly cargosOutros = [
+    { nome: 'Deputado(a) Estadual', rotulo: 'Deputados estaduais', icone: 'apartment' },
+    { nome: 'Prefeito(a)', rotulo: 'Prefeitos', icone: 'holiday_village' },
+    { nome: 'Vereador(a)', rotulo: 'Vereadores', icone: 'groups' },
+  ];
+  protected readonly explorar = [
+    { titulo: 'Congresso em ação', texto: 'Agenda, votações e leis', icone: 'account_balance', rota: '/congresso', imagem: 'img/destaque-congresso.svg' },
+    { titulo: 'Rankings', texto: 'Gastos e presença', icone: 'leaderboard', rota: '/politicos/gastos', imagem: 'img/capa-contas-publicas.svg' },
+    { titulo: 'Comparar', texto: 'Dois políticos lado a lado', icone: 'compare_arrows', rota: '/politicos/comparar', imagem: 'img/capa-camara-e-senado-em-pauta.svg' },
+  ];
+  /** Cor do anel da foto: sempre a mesma para o mesmo partido (só enfeite, não indica nada). */
+  protected corPartido(sigla: string | null | undefined): string {
+    const cores = ['#3b82f6', '#a855f7', '#22c55e', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444', '#6366f1'];
+    let h = 0;
+    for (const ch of sigla ?? '') h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    return cores[h % cores.length];
+  }
   /** Quantos nomes cada cargo tem (só os que já têm fonte de dados). */
   protected readonly totais = signal<Record<string, number>>({});
   protected temDados(cargo: string) {
     return !this.demo || !!CARGOS.find((c) => c.nome === cargo)?.fonte;
   }
-  protected rotuloCargo = computed(() => this.esferas.flatMap((e) => e.cargos).find((c) => c.nome === this.cargo())?.rotulo ?? this.cargo());
+  protected rotuloCargo = computed(() => [...this.cargosPrincipais, ...this.cargosOutros].find((c) => c.nome === this.cargo())?.rotulo ?? this.cargo());
 
   // ---------- Busca com sugestões e painel de filtros ----------
   protected readonly filtrosAbertos = signal(false);
@@ -147,7 +155,7 @@ export class BuscaPage implements OnInit {
     const grupos: { letra: string; pessoas: Politico[] }[] = [];
     const o = this.ordem();
     for (const p of this.visiveis()) {
-      const l = o === 'az' || o === 'za' ? letraDe(p.nome) : o === 'partido' ? p.partido || 'Sem partido' : p.uf ? `${p.uf} · ${nomeEstado(p.uf)}` : 'Sem estado';
+      const l = o === 'az' || o === 'za' ? 'todos' : o === 'partido' ? p.partido || 'Sem partido' : p.uf ? `${p.uf} · ${nomeEstado(p.uf)}` : 'Sem estado';
       if (grupos.at(-1)?.letra !== l) grupos.push({ letra: l, pessoas: [] });
       grupos.at(-1)!.pessoas.push(p);
     }
