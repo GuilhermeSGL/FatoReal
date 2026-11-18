@@ -1,4 +1,5 @@
 import { NavPoliticos } from '../../shared/nav-politicos';
+import { Faixa } from '../../shared/faixa';
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
@@ -13,10 +14,25 @@ type Aba = 'agenda' | 'votacoes' | 'leis';
 
 @Component({
   selector: 'app-congresso',
-  imports: [DatePipe, Icone, ProjetoAcoes, NavPoliticos],
+  imports: [DatePipe, Icone, ProjetoAcoes, NavPoliticos, Faixa],
   templateUrl: './congresso.html',
 })
 export class CongressoPage {
+  /** Cor e ícone de cada tipo de evento da agenda (só visual). */
+  protected readonly tiposLegenda = [
+    { nome: 'Plenário', icone: 'gavel', cor: '#2563eb' },
+    { nome: 'Comissão', icone: 'groups', cor: '#7c3aed' },
+    { nome: 'Audiência pública', icone: 'campaign', cor: '#d97706' },
+    { nome: 'Outros eventos', icone: 'event', cor: '#0d9488' },
+  ];
+  protected tipoDe(tipo: string) {
+    const t = (tipo || '').toLowerCase();
+    if (t.includes('audiência')) return this.tiposLegenda[2];
+    if (t.includes('sessão')) return this.tiposLegenda[0];
+    if (t.includes('reunião')) return this.tiposLegenda[1];
+    return this.tiposLegenda[3];
+  }
+
   private router = inject(Router);
   /** ?aba= na URL */
   readonly aba = input<string>('agenda');

@@ -1,4 +1,5 @@
 import { rolarSuave } from '../../shared/rolar-suave';
+import { Faixa } from '../../shared/faixa';
 import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, computed, signal, viewChild } from '@angular/core';
 import { GLOSSARIO } from '../../core/glossario';
@@ -18,12 +19,10 @@ interface Trilha {
 /** Base da Política: área educativa para quem está começando. Tom didático e apartidário. */
 @Component({
   selector: 'app-base-politica',
-  imports: [Icone, PerguntarFatobot],
+  imports: [Icone, PerguntarFatobot, Faixa],
   template: `
-    <header class="cabecalho-pagina">
-      <h1><app-icone nome="school" /> Base da Política</h1>
-      <p>Aprender política sem precisar já entender de política. Explicações curtas sobre como o Brasil funciona, com link para a fonte oficial.</p>
-    </header>
+    <app-faixa sobretitulo="Aprender" icone="school" titulo="Base da Política" imagem="img/capa-juventude-e-participacao.svg" [cores]="['#78350f', '#b45309', '#f59e0b']"
+      texto="Aprender política sem precisar já entender de política. Explicações curtas sobre como o Brasil funciona, com link para a fonte oficial." />
 
     <section class="card glossario-carrossel" aria-roledescription="carrossel" aria-labelledby="titulo-glossario"
       (mouseenter)="pausado.set(true)" (mouseleave)="pausado.set(false)" (focusin)="aoFocar($event)" (focusout)="pausado.set(false)">

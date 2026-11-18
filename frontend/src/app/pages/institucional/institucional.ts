@@ -1,6 +1,7 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Icone } from '../../shared/componentes';
+import { Faixa } from '../../shared/faixa';
 
 /** E-mail do canal de contato. TROCAR pelo e-mail oficial da equipe. */
 const EMAIL_CONTATO = 'contato.fatoreal@exemplo.com';
@@ -11,7 +12,7 @@ const EMAIL_CONTATO = 'contato.fatoreal@exemplo.com';
  */
 @Component({
   selector: 'app-institucional',
-  imports: [RouterLink, Icone],
+  imports: [RouterLink, Icone, Faixa],
   templateUrl: './institucional.html',
 })
 export class InstitucionalPage {

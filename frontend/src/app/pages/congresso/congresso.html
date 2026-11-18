@@ -1,10 +1,7 @@
 <app-nav-politicos />
 
-<header class="cabecalho-pagina">
-  <p class="sobretitulo">Políticos · Congresso em ação</p>
-  <h1>O que está acontecendo em Brasília</h1>
-  <p>Agenda da semana, como cada partido votou e as leis aprovadas. Tudo com dados oficiais da Câmara dos Deputados.</p>
-</header>
+<app-faixa sobretitulo="Políticos · Congresso em ação" icone="account_balance" titulo="O que está acontecendo em Brasília" imagem="img/destaque-congresso.svg"
+  [cores]="['#1e1b4b', '#3730a3', '#6366f1']" texto="Agenda da semana, como cada partido votou e as leis aprovadas. Tudo com dados oficiais da Câmara dos Deputados." fonte="Fonte: Câmara dos Deputados" />
 
 <nav class="ficha-abas" role="tablist" aria-label="Seções">
   <button type="button" role="tab" [attr.aria-selected]="abaAtual() === 'agenda'" (click)="irPara('agenda')"><app-icone nome="calendar_month" /> Agenda da semana</button>
@@ -22,6 +19,9 @@
         <small class="texto-suave">{{ segunda() | date: 'dd/MM' }} a {{ segunda().getTime() + 6 * 86400000 | date: 'dd/MM/yyyy' }}</small>
       </div>
       <button type="button" class="botao-icone" (click)="mudarSemana(1)" aria-label="Próxima semana"><app-icone nome="chevron_right" /></button>
+      <ul class="cg-legenda" aria-label="Tipos de evento">
+        @for (t of tiposLegenda; track t.nome) { <li [style.--c]="t.cor"><app-icone [nome]="t.icone" /> {{ t.nome }}</li> }
+      </ul>
       <label class="filtro-plenario"><input type="checkbox" [checked]="soPlenario()" (change)="soPlenario.set(!soPlenario())" /> Só o plenário</label>
     </section>
 
@@ -35,8 +35,8 @@
           <h2 class="titulo-secao">{{ d.dia + 'T12:00:00' | date: 'EEEE, dd/MM' : '' : 'pt-BR' }}</h2>
           <ul class="lista-eventos">
             @for (e of d.eventos; track e.id) {
-              <li [class.evento-plenario]="e.plenario" [class.evento-cancelado]="/cancelad/i.test(e.situacao)">
-                <time>{{ e.inicio | date: 'HH:mm' }}</time>
+              <li class="cg-evento" [class.evento-plenario]="e.plenario" [class.evento-cancelado]="/cancelad/i.test(e.situacao)" [style.--c]="tipoDe(e.tipo).cor">
+                <span class="cg-hora"><span class="cg-tile"><app-icone [nome]="tipoDe(e.tipo).icone" /></span><time>{{ e.inicio | date: 'HH:mm' }}</time></span>
                 <div>
                   <div class="evento-topo">
                     <strong>{{ e.tipo }}</strong>

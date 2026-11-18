@@ -1,3 +1,4 @@
+import { ContaMoldura } from '../../shared/conta-moldura';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -5,8 +6,9 @@ import { AuthService } from '../../core/auth.service';
 
 @Component({
   selector: 'app-recuperar-senha',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ContaMoldura],
   template: `
+    <app-conta-moldura frase="Acontece com todo mundo. Vamos te ajudar a voltar.">
     <section class="card formulario formulario-estreito">
       <h1>Recuperar senha</h1>
       @if (enviado()) {
@@ -24,6 +26,7 @@ import { AuthService } from '../../core/auth.service';
         </form>
       }
     </section>
+    </app-conta-moldura>
   `,
 })
 export class RecuperarSenhaPage {

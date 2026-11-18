@@ -1,3 +1,4 @@
+import { ContaMoldura } from '../../shared/conta-moldura';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -6,8 +7,9 @@ import { AvisosService } from '../../core/avisos.service';
 
 @Component({
   selector: 'app-entrar',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ContaMoldura],
   template: `
+    <app-conta-moldura frase="Que bom te ver de novo! Pesquise, entenda e converse sobre política.">
     <section class="card formulario formulario-estreito">
       <h1>Entrar</h1>
       <p class="texto-suave">Use sua conta para participar das comunidades.</p>
@@ -28,6 +30,7 @@ import { AvisosService } from '../../core/avisos.service';
         <span>Não tem conta? <a routerLink="/cadastrar">Criar conta</a></span>
       </p>
     </section>
+    </app-conta-moldura>
   `,
 })
 export class EntrarPage {

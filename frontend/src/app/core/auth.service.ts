@@ -32,7 +32,9 @@ export class AuthService {
 
   private async iniciar(): Promise<void> {
     if (!supabase) {
-      this.usuario.set(lerDemo<Usuario | null>('usuario', null));
+      // Modo demonstração: quem não pôs foto ganha um avatar ilustrado (fictício), escolhido pelo id
+      const u = lerDemo<Usuario | null>('usuario', null);
+      this.usuario.set(u && !u.foto_url ? { ...u, foto_url: avatarIlustrado(u.id) } : u);
       return;
     }
     const { data } = await supabase.auth.getSession();
@@ -159,7 +161,7 @@ export class AuthService {
   }
 
   private salvarDemo(u: Usuario): void {
-    this.usuario.set(u);
+    this.usuario.set(u.foto_url ? u : { ...u, foto_url: avatarIlustrado(u.id) });
     salvarDemo('usuario', u);
     salvarDemo('ultimo-usuario', u);
   }
@@ -175,4 +177,11 @@ function traduzirErro(msg: string): string {
   if (m.includes('password')) return 'A senha precisa ter pelo menos 6 caracteres.';
   if (m.includes('rate limit')) return 'Muitas tentativas. Espere alguns minutos e tente de novo.';
   return 'Não foi possível concluir. Tente novamente.';
+}
+
+/** Avatar ilustrado de exemplo (public/img/avatares), sempre o mesmo para o mesmo id. Só no modo demonstração. */
+export function avatarIlustrado(id: string): string {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return `img/avatares/a${(h % 16) + 1}.svg`;
 }
