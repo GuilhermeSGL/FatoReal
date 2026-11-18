@@ -2022,3 +2022,49 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 .pol-sigla { padding: 1px 7px; border-radius: 6px; background: color-mix(in srgb, var(--link) 12%, transparent); color: var(--link); font-weight: 800; font-size: 0.75rem; }
 @media (max-width: 1100px) { .pol-painel { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .pol-esfera-cargos { grid-auto-flow: row; grid-template-columns: 1fr 1fr; } .pol-filtros-botao { padding: 10px 12px; } }
+
+/* ===== Mapa do Brasil com estados clicáveis (shared/mapa-estados.ts) ===== */
+.mapa-estados { position: relative; width: 100%; max-width: 420px;
+  svg { display: block; width: 100%; height: auto; overflow: visible; } }
+.mapa-estado { fill: var(--c); stroke: var(--superficie); stroke-width: 1.4; cursor: pointer; transition: fill 0.15s, filter 0.15s; outline: none;
+  &:hover, &:focus-visible { fill: color-mix(in srgb, var(--c) 78%, #fff); filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.2)); }
+  &.destaque { stroke: var(--texto); stroke-width: 2.4; }
+  &.selecionado { fill: color-mix(in srgb, var(--c) 72%, #000); stroke: var(--texto); stroke-width: 3; } }
+.mapa-sigla { font: 800 19px var(--fonte); fill: #fff; text-anchor: middle; dominant-baseline: middle; pointer-events: none; paint-order: stroke; stroke: rgba(0, 0, 0, 0.25); stroke-width: 2px; }
+.mapa-balao { position: absolute; transform: translate(-50%, calc(-100% - 8px)); padding: 6px 10px; border-radius: 10px; background: #0a1a2b; color: #fff; font-size: 0.8rem; white-space: nowrap; pointer-events: none; z-index: 5; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  strong { display: block; } small { display: block; opacity: 0.8; } }
+:root[data-tema='escuro'] .mapa-balao { background: #eceef0; color: #0b0b0d; }
+
+/* ===== Ranking de gastos ===== */
+.gst-hero { position: relative; overflow: hidden; border-radius: 22px; padding: 22px 26px; margin-bottom: 16px; min-height: 150px; color: #fff; display: grid; align-content: center; gap: 4px;
+  background: linear-gradient(115deg, #7c2d12, #b45309 55%, #f59e0b);
+  img { position: absolute; right: 0; top: 0; height: 100%; width: 46%; object-fit: cover; mask-image: linear-gradient(90deg, transparent, #000 40%); }
+  > * { position: relative; }
+  h1 { margin: 0; color: #fff; font-size: clamp(1.5rem, 2.6vw, 1.9rem); letter-spacing: -0.02em; }
+  p { margin: 0; max-width: 560px; opacity: 0.92; } }
+.gst-hero-k { font-size: 0.75rem !important; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+.gst-pill { display: inline-flex; align-items: center; gap: 6px; width: max-content; margin-top: 8px; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); font-size: 0.8rem; font-weight: 700; .icone { font-size: 1rem; } }
+.gst-grade { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.gst-mapa { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: center; }
+.gst-mapa-texto { display: grid; gap: 10px; align-content: center;
+  .ps-titulo { margin: 0; } p { margin: 0; font-size: 0.88rem; }
+  .botao { justify-content: center; } select { width: 100%; } }
+.gst-legenda { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; font-size: 0.86rem;
+  li { display: flex; align-items: center; gap: 8px; } i { width: 14px; height: 14px; border-radius: 4px; } }
+.gst-credito { font-size: 0.7rem; color: var(--texto-suave); }
+.gst-lado { display: grid; gap: 12px; }
+.gst-exp { --c: #d97706; display: flex; gap: 14px; align-items: center; padding: 14px 16px; border-radius: 18px;
+  background: color-mix(in srgb, var(--c) 10%, var(--superficie)); border: 1px solid color-mix(in srgb, var(--c) 28%, var(--borda));
+  strong { display: block; font-size: 0.98rem; } small { display: block; margin-top: 2px; color: var(--texto-suave); font-size: 0.85rem; line-height: 1.4; } }
+.gst-exp-icone { flex: none; width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--c); color: #fff; box-shadow: 0 8px 18px color-mix(in srgb, var(--c) 30%, transparent); .icone { font-size: 1.8rem; } }
+.gst-resultado { margin-top: 22px; scroll-margin-top: 90px; }
+.gst-res-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; h2 { margin: 0; font-size: 1.3rem; } }
+.gst-podio { display: grid; grid-template-columns: repeat(3, minmax(0, 200px)); justify-content: center; align-items: end; gap: 14px; margin: 6px 0 18px; }
+.gst-degrau { display: grid; justify-items: center; gap: 4px; text-align: center; text-decoration: none; color: var(--texto);
+  strong { font-size: 0.9rem; line-height: 1.25; } small { color: var(--texto-suave); font-size: 0.78rem; }
+  .gst-coluna { width: 100%; margin-top: 6px; border-radius: 14px 14px 0 0; display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 1.4rem; height: 60px; background: #94a3b8; }
+  &[data-pos='1'] .gst-coluna { height: 92px; background: linear-gradient(180deg, #fbbf24, #d97706); }
+  &[data-pos='3'] .gst-coluna { height: 44px; background: linear-gradient(180deg, #c2410c, #9a3412); }
+  &:hover strong { text-decoration: underline; } }
+@media (max-width: 1100px) { .gst-grade { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .gst-mapa { grid-template-columns: 1fr; } .gst-hero img { opacity: 0.35; width: 100%; } }
