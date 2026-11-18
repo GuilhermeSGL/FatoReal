@@ -1605,3 +1605,80 @@ legend { font-weight: 700; padding: 0 6px; }
 .ps-gantt-eixo .ps-gantt-trilha { background: none; height: 16px; small { position: absolute; transform: translateX(-50%); font-size: 0.72rem; color: var(--texto-suave); } }
 @media (max-width: 1100px) { .ps-grade2 { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .ps-consultas { grid-template-columns: 1fr; } .ps-gantt-linha { grid-template-columns: 100px 1fr; } }
+
+/* ===== Perfil da pessoa (Orkut + LinkedIn, mesma base do perfil dos políticos) ===== */
+.perfil-pessoa { padding: 0 !important; overflow: hidden; margin-bottom: 16px; }
+.pp-capa { height: clamp(140px, 22vw, 230px); background: var(--superficie-2); }
+.pp-corpo { padding: 0 clamp(16px, 3vw, 26px) 20px; display: grid; gap: 16px; }
+.pp-topo { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(260px, 360px); gap: 20px; align-items: start; }
+.pp-topo > .pp-foto { margin-top: -70px; }
+.pp-topo > .ps-resumo { margin-top: 16px; }
+.pp-foto { border: 5px solid var(--superficie); border-radius: 50%; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15); }
+.pp-id { display: grid; gap: 6px; min-width: 0; padding-top: 16px;
+  h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } }
+.pp-linha { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--texto-suave); font-weight: 500;
+  span:first-child { color: var(--azul-vivo); font-weight: 600; } span { display: inline-flex; align-items: center; gap: 3px; } .icone { font-size: 1.05rem; } }
+:root[data-tema='escuro'] .pp-linha span:first-child { color: #7aa7ff; }
+.pp-nivel { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; background: rgba(238, 192, 67, 0.22); color: #8a6200; font-weight: 700; font-size: 0.82rem; .icone { font-size: 1rem; } }
+:root[data-tema='escuro'] .pp-nivel { color: var(--destaque); }
+.pp-seg { background: none; border: 0; padding: 2px 4px; color: var(--texto-suave); font: inherit; font-size: 0.9rem; cursor: pointer; strong { color: var(--texto); } &:hover { text-decoration: underline; } }
+.pp-resumo { grid-template-columns: repeat(4, 1fr) !important; }
+.ps-resumo .pp-resumo li strong { font-size: 1.35rem; }
+.pp-info { margin: 0; }
+.redes-icones { list-style: none; padding: 0; margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 8px;
+  a { display: inline-grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; color: #fff; text-decoration: none; transition: transform 0.15s, box-shadow 0.15s; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    &:hover, &:focus-visible { transform: translateY(-2px) scale(1.06); box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22); } }
+  svg { width: 22px; height: 22px; }
+  &.redes-grandes a { width: auto; height: auto; border-radius: 999px; padding: 6px 12px 6px 8px; display: inline-flex; gap: 6px; font-weight: 700; font-size: 0.85rem; } }
+.pp-preparo { display: grid; gap: 10px; margin-bottom: 16px; border: 1px dashed var(--link);
+  h2 { margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; .icone { color: var(--link); } } p { margin: 4px 0 0; }
+  .botao { justify-self: start; } }
+.pp-preparo-topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.pp-pct { font-size: 1.8rem; color: var(--link); }
+.pp-passos { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--texto-suave);
+  li { display: inline-flex; align-items: center; gap: 4px; .icone { font-size: 1.1rem; } } .ok { color: var(--link); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--link) 50%, transparent); } }
+.pp-grade { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.pp-lateral { display: grid; gap: 16px; .card { margin: 0; } }
+.pp-feed { display: grid; gap: 14px; min-width: 0; > .card { margin: 0; } }
+.pp-bio { margin: 0; line-height: 1.55; }
+.pp-interesses { display: flex; flex-wrap: wrap; gap: 6px;
+  span { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 0.82rem; font-weight: 600; background: color-mix(in srgb, var(--cor, var(--link)) 14%, transparent); color: var(--cor, var(--link)); .icone { font-size: 1rem; } } }
+:root[data-tema='escuro'] .pp-interesses span { color: var(--texto); }
+.pp-mosaico { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  a { display: grid; gap: 4px; justify-items: center; text-align: center; text-decoration: none; color: var(--texto);
+    img, .pp-mosaico-icone { width: 100%; aspect-ratio: 1; border-radius: 12px; object-fit: cover; }
+    .pp-mosaico-icone { display: grid; place-items: center; background: var(--cor-tema, var(--link)); color: #fff; .icone { font-size: 2rem; } }
+    small { font-size: 0.74rem; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    &:hover small { color: var(--link); } } }
+.pp-amigos a .avatar { width: 100%; height: auto; aspect-ratio: 1; border-radius: 12px; --tam: 100%; }
+.pp-sugestoes { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px;
+  li { display: flex; justify-content: space-between; align-items: center; gap: 8px; } a { display: flex; align-items: center; gap: 8px; color: var(--texto); text-decoration: none; min-width: 0; span { font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } } }
+.pp-conquistas { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px;
+  li { display: flex; gap: 10px; align-items: center; opacity: 0.55; span { display: grid; font-weight: 600; font-size: 0.9rem; } small { font-weight: 400; color: var(--texto-suave); font-size: 0.76rem; }
+    .icone { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--superficie-2); flex: none; } }
+  .ok { opacity: 1; .icone { background: rgba(238, 192, 67, 0.3); color: #8a6200; } } }
+:root[data-tema='escuro'] .pp-conquistas .ok .icone { color: var(--destaque); }
+.pp-composer-extra { margin-top: 8px; input { width: 100%; } }
+.pp-abas { margin: 0; }
+.pp-filtros { display: flex; flex-wrap: wrap; gap: 6px;
+  button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--borda); background: var(--superficie); color: var(--texto); font: inherit; font-size: 0.85rem; cursor: pointer; .icone { font-size: 1rem; }
+    &[aria-pressed='true'] { border-color: var(--link); background: color-mix(in srgb, var(--link) 12%, transparent); color: var(--link); font-weight: 700; } } }
+/* Editar perfil */
+.envio-imagens { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 12px; }
+.envio-imagem { display: grid; gap: 8px; }
+.envio-linha { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; label.botao { cursor: pointer; } }
+.envio-capa { width: 120px; height: 44px; border-radius: 10px; border: 1px solid var(--borda); }
+.redes-campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
+.perfil-editar-previa .pp-topo { grid-template-columns: auto minmax(0, 1fr); }
+.perfil-editar-previa .pp-id { padding-top: 12px; }
+.pp-feed .composer-acoes { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; select { flex: 1; min-width: 180px; } }
+@media (max-width: 1100px) {
+  .pp-topo { grid-template-columns: auto minmax(0, 1fr); } .pp-topo > .ps-resumo { grid-column: 1 / -1; }
+  .pp-grade { grid-template-columns: 1fr; } .pp-lateral { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .pp-topo { grid-template-columns: 1fr; } .pp-id { padding-top: 0; } .pp-foto { --tam: 104px !important; } .pp-topo > .pp-foto { margin-top: -56px; } .pp-topo > .ps-resumo { margin-top: 0; }
+  .pp-resumo { grid-template-columns: repeat(2, 1fr) !important; }
+  .pp-lateral { grid-template-columns: 1fr; }
+  .envio-imagens, .redes-campos { grid-template-columns: 1fr; }
+}

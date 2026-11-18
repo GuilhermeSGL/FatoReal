@@ -28,6 +28,8 @@ export const UFS = [
 export function imagemSegura(url?: string | null): string | null {
   if (!url) return null;
   if (/^[a-z0-9/_.-]+$/i.test(url) && !url.includes('..')) return url;
+  // Imagem enviada do computador/celular (já reduzida pelo site)
+  if (/^data:image\/(png|jpeg|webp);base64,[a-z0-9+/=]+$/i.test(url)) return url;
   return linkSeguro(url);
 }
 

@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { PerfisService } from '../../core/perfis.service';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -145,6 +146,9 @@ export class MensagensPage implements OnInit {
   private service = inject(MensagensService);
   private avisos = inject(AvisosService);
   private auth = inject(AuthService);
+  private perfis = inject(PerfisService);
+  /** ?com=<id> abre direto a conversa com essa pessoa (botão "Mensagem" do perfil). */
+  readonly com = input<string>();
 
   protected readonly conversas = signal<Conversa[]>([]);
   protected readonly grupos = signal<ConversaGrupo[]>([]);
@@ -196,6 +200,11 @@ export class MensagensPage implements OnInit {
       this.conversas.set(conversas);
       this.grupos.set(grupos);
       this.contatos.set(contatos);
+      const id = this.com();
+      if (id && id !== this.auth.usuario()?.id) {
+        const p = conversas.find((c) => c.pessoa.id === id)?.pessoa ?? contatos.find((c) => c.id === id) ?? (await this.perfis.obter(id));
+        if (p) this.abrir({ chave: 'p:' + p.id, tipo: 'pessoa', nome: p.nome, pessoa: { id: p.id, nome: p.nome, foto_url: p.foto_url }, previa: '', data: '', naoLidas: 0 });
+      }
     } catch (e) {
       this.avisos.erro(e);
     }

@@ -8,7 +8,7 @@ import { lerDemo, salvarDemo } from './demo-store';
  * LGPD: coletamos só nome, e-mail e (opcional) foto. Nada de opinião política.
  */
 
-const CAMPOS_EXTRAS = ['bio', 'cidade', 'uf', 'capa'];
+const CAMPOS_EXTRAS = ['bio', 'cidade', 'uf', 'capa', 'profissao', 'interesses', 'redes', 'capa_url'];
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly usuario = signal<Usuario | null>(null);
@@ -65,6 +65,10 @@ export class AuthService {
       cidade: data?.cidade ?? null,
       uf: data?.uf ?? null,
       capa: data?.capa ?? null,
+      profissao: data?.profissao ?? null,
+      interesses: data?.interesses ?? null,
+      redes: data?.redes ?? null,
+      capa_url: data?.capa_url ?? null,
       criado_em: data?.criado_em ?? null,
     });
   }
@@ -125,6 +129,10 @@ export class AuthService {
     cidade?: string | null;
     uf?: string | null;
     capa?: string | null;
+    profissao?: string | null;
+    interesses?: string[] | null;
+    redes?: Usuario['redes'];
+    capa_url?: string | null;
   }): Promise<void> {
     const atual = this.usuario();
     if (!atual) return;

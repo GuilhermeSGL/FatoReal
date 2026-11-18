@@ -50,6 +50,17 @@ export interface AlertaJuridico {
   verificado?: boolean;
 }
 
+/** Redes sociais do perfil (nome de usuário ou link; WhatsApp = número). */
+export interface Redes {
+  instagram?: string | null;
+  tiktok?: string | null;
+  facebook?: string | null;
+  whatsapp?: string | null;
+  x?: string | null;
+  linkedin?: string | null;
+  youtube?: string | null;
+}
+
 export interface Usuario {
   id: string;
   email: string;
@@ -63,6 +74,13 @@ export interface Usuario {
   uf?: string | null;
   /** Cor da capa do perfil (chave de CAPAS em perfis.service.ts). */
   capa?: string | null;
+  /** Profissão ou ocupação (estilo LinkedIn). */
+  profissao?: string | null;
+  /** Temas de interesse (Política, Educação...). */
+  interesses?: string[] | null;
+  redes?: Redes | null;
+  /** Imagem de capa enviada pela pessoa (link https ou imagem reduzida em data URL). */
+  capa_url?: string | null;
 }
 
 /** Dados de perfil que qualquer pessoa pode ver (sem e-mail). */
@@ -76,6 +94,13 @@ export interface PerfilPublico {
   capa?: string | null;
   moderador: boolean;
   criado_em?: string | null;
+  /** Profissão ou ocupação (estilo LinkedIn). */
+  profissao?: string | null;
+  /** Temas de interesse (Política, Educação...). */
+  interesses?: string[] | null;
+  redes?: Redes | null;
+  /** Imagem de capa enviada pela pessoa (link https ou imagem reduzida em data URL). */
+  capa_url?: string | null;
 }
 
 export interface Autor {

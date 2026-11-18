@@ -6,31 +6,37 @@ export const PESSOAS_EXEMPLO: PerfilPublico[] = [
   {
     id: 'equipe', nome: 'Fato Real', foto_url: 'logo.svg', moderador: true, capa: 'verde',
     bio: 'Perfil oficial do Fato Real. Publicamos informação com fonte oficial e data.', cidade: null, uf: null,
+    profissao: 'Equipe de checagem', interesses: ['Política', 'Cidadania', 'Tecnologia'],
     criado_em: '2026-08-01T12:00:00Z',
   },
   {
     id: 'ex-ana', nome: 'Ana Ribeiro (exemplo)', foto_url: null, moderador: false, capa: 'roxo',
     bio: 'Professora de história. Gosto de explicar como funciona o Congresso.', cidade: 'Salvador', uf: 'BA',
+    profissao: 'Professora de História', interesses: ['Política', 'Educação'],
     criado_em: '2026-09-12T12:00:00Z',
   },
   {
     id: 'ex-bruno', nome: 'Bruno Tavares (exemplo)', foto_url: null, moderador: false, capa: 'azul',
     bio: 'Estudante de economia. Acompanho as contas públicas e a cota parlamentar.', cidade: 'Belo Horizonte', uf: 'MG',
+    profissao: 'Estudante de Economia', interesses: ['Economia', 'Política'],
     criado_em: '2026-10-03T12:00:00Z',
   },
   {
     id: 'ex-carla', nome: 'Carla Nogueira (exemplo)', foto_url: null, moderador: false, capa: 'laranja',
     bio: 'Jornalista em formação, apaixonada por checagem de fatos.', cidade: 'Porto Alegre', uf: 'RS',
+    profissao: 'Estudante de Jornalismo', interesses: ['Cidadania', 'Tecnologia'],
     criado_em: '2026-10-20T12:00:00Z',
   },
   {
     id: 'ex-diego', nome: 'Diego Martins (exemplo)', foto_url: null, moderador: false, capa: 'grafite',
     bio: 'Técnico em informática. Quero entender melhor o que acontece na Câmara.', cidade: 'Fortaleza', uf: 'CE',
+    profissao: 'Técnico em Informática', interesses: ['Tecnologia', 'Segurança'],
     criado_em: '2026-10-25T12:00:00Z',
   },
   {
     id: 'ex-fernanda', nome: 'Fernanda Lopes (exemplo)', foto_url: null, moderador: false, capa: 'brasil',
     bio: 'Mãe, enfermeira e curiosa por saúde pública e educação.', cidade: 'Curitiba', uf: 'PR',
+    profissao: 'Enfermeira', interesses: ['Saúde', 'Educação'],
     criado_em: '2026-11-02T12:00:00Z',
   },
 ];
