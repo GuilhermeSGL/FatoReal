@@ -121,7 +121,19 @@ export class Selo {
   `,
 })
 export class AvisoDemo {
-  protected readonly demo = modoDemo;
+  /** Modo gravação (para vídeo/apresentação): abrir o site com ?gravacao=1 esconde a faixa. ?gravacao=0 volta a mostrar. */
+  protected readonly demo = modoDemo && !modoGravacao();
+}
+
+function modoGravacao(): boolean {
+  try {
+    const p = new URLSearchParams(location.search || location.hash.split('?')[1] || '').get('gravacao');
+    if (p === '1') sessionStorage.setItem('fatoreal-gravacao', '1');
+    if (p === '0') sessionStorage.removeItem('fatoreal-gravacao');
+    return sessionStorage.getItem('fatoreal-gravacao') === '1';
+  } catch {
+    return false;
+  }
 }
 
 /** Aviso obrigatório em toda resposta do FatoBot. */
