@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ComunidadesService } from './comunidades.service';
 import { GLOSSARIO } from './glossario';
-import { NOTICIAS_DESTAQUE } from './noticias';
+import { NOTICIAS } from './noticias';
 import { todosDoCargo } from './politicos.service';
 
 export type TipoResultado = 'politico' | 'comunidade' | 'termo' | 'noticia' | 'pagina';
@@ -67,7 +67,7 @@ export class BuscaGeralService {
     const termos = GLOSSARIO.filter((g) => tem(g.termo) || (t.length >= 4 && tem(g.definicao))).slice(0, porGrupo).map<ResultadoBusca>((g) => ({
       tipo: 'termo', titulo: g.termo, detalhe: g.definicao, icone: g.icone, rota: ['/base-da-politica'],
     }));
-    const noticias = NOTICIAS_DESTAQUE.filter((n) => tem(n.titulo, n.resumo, n.tema)).slice(0, porGrupo).map<ResultadoBusca>((n) => ({
+    const noticias = NOTICIAS.filter((n) => tem(n.titulo, n.resumo ?? '', n.categoria)).slice(0, porGrupo).map<ResultadoBusca>((n) => ({
       tipo: 'noticia', selo: 'verificado', titulo: n.titulo, detalhe: `${n.fonte} · ${n.data}`, icone: 'newspaper', externo: n.url,
     }));
     const paginas = PAGINAS.filter((p) => tem(p.titulo, p.detalhe)).slice(0, porGrupo);
