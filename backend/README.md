@@ -151,8 +151,18 @@ Corpo: `{ "pergunta": "Quem é Tabata Amaral?" }` (3 a 500 caracteres).
 
 Responde **somente com base em fontes oficiais** (RN02 e RN04), em duas etapas:
 
-1. **Busca de evidências:** identifica deputados citados pelo nome parlamentar completo e
-   transforma o perfil em fatos numerados, cada um com fonte e data.
+1. **Busca de evidências** (a mesma do `/api/verificar`), em três fontes:
+   - **deputados** citados pelo nome parlamentar completo → fatos do perfil, com fonte e data;
+   - **total de deputados** em exercício, quando a pergunta é "quantos deputados...";
+   - **Constituição Federal de 1988** (`src/data/base-conhecimento.js`, 24 fatos com o artigo):
+     busca por palavras-chave, até 3 fatos por pergunta. Ex.: "O que são os Três Poderes?",
+     "Como funciona uma PEC?", "Qual a idade mínima para ser senador?".
+
+   Se a Câmara estiver fora e sem cópia, uma pergunta sobre a Constituição ainda é respondida;
+   o `503` só acontece quando não há nenhuma evidência.
+
+   **Para ensinar algo novo ao FatoBot**, acrescente um item em `src/data/base-conhecimento.js`
+   (id, título, artigo, texto fiel à fonte e palavras-chave) e confira o texto no site do Planalto.
 2. **Síntese com o Gemini (IA):** o Gemini recebe **só** essas evidências e escreve uma resposta
    curta e neutra, citando cada fato como `[1]`, `[2]`... O número aponta para `evidencias[n-1]`.
 

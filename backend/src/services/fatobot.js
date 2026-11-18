@@ -10,6 +10,7 @@
 // o FatoBot responde no modo "somente_fontes": só a lista de fatos, sem IA.
 import { listarDeputados, obterDeputado } from './camara.js';
 import { sintetizarComIA } from './gemini.js';
+import { buscarNaBase, evidenciasDaBase, fontesDaBase } from './base.js';
 import { normalizar } from '../utils/texto.js';
 
 export const AVISO =
@@ -20,9 +21,12 @@ const MAX_DEPUTADOS_POR_PERGUNTA = 3;
 
 // Etapa 2a: descobre quais deputados a pergunta cita (pelo nome parlamentar completo).
 export async function identificarDeputados(pergunta) {
-  const texto = ` ${normalizar(pergunta).replace(/[^a-z0-9]+/g, ' ')} `;
   const { dados } = await listarDeputados();
+  return deputadosCitados(pergunta, dados);
+}
 
+function deputadosCitados(pergunta, dados) {
+  const texto = ` ${normalizar(pergunta).replace(/[^a-z0-9]+/g, ' ')} `;
   return dados
     .filter((d) => {
       const nome = normalizar(d.nome).replace(/[^a-z0-9]+/g, ' ').trim();
@@ -93,20 +97,60 @@ const EXPLICACAO_SEM_IA = {
 };
 const EXPLICACAO_PADRAO = 'Encontrei estas informações nas fontes oficiais:';
 
+// J11 — "Quantos deputados existem?": o número vem da lista oficial, não de memória.
+const PERGUNTA_TOTAL = /\b(quantos|numero de|total de|quantidade de) deputad/;
+
+// Etapas 2 e 3 completas: deputados citados + total de deputados + Constituição.
+// Se a Câmara estiver fora e sem cópia, a pergunta ainda pode ser respondida pela
+// Constituição; só falha (503) se não houver NENHUMA evidência.
+export async function buscarEvidencias(texto) {
+  const itensBase = buscarNaBase(texto);
+  const evidencias = [];
+  const fontes = [];
+
+  try {
+    const lista = await listarDeputados();
+    const deputados = deputadosCitados(texto, lista.dados);
+    if (deputados.length) {
+      const dep = await evidenciasDosDeputados(deputados);
+      evidencias.push(...dep.evidencias);
+      fontes.push(...dep.fontes);
+    }
+    if (PERGUNTA_TOTAL.test(normalizar(texto))) {
+      const { fonte } = lista;
+      evidencias.push({
+        texto: `Há ${lista.dados.length} deputados federais em exercício.`,
+        fonte: fonte.nome,
+        url: fonte.url,
+        consultadoEm: fonte.consultadoEm,
+      });
+      fontes.push({ titulo: `${fonte.nome}: deputados em exercício`, url: fonte.url, data: fonte.consultadoEm });
+    }
+  } catch (err) {
+    if (itensBase.length === 0) throw err;
+    console.warn(`FatoBot: sem dados da Câmara agora (${err.message}); usando só a Constituição.`);
+  }
+
+  evidencias.push(...evidenciasDaBase(itensBase));
+  fontes.push(...fontesDaBase(itensBase));
+  return { evidencias, fontes };
+}
+
 export async function responder(pergunta) {
   const prazo = Date.now() + LIMITES_FATOBOT.totalMs;
-  const deputados = await identificarDeputados(pergunta);
+  const { evidencias, fontes } = await buscarEvidencias(pergunta);
 
   // Sem documento relacionado → declara incerteza em vez de especular (RN04).
-  if (deputados.length === 0) {
+  if (evidencias.length === 0) {
     return {
       pergunta,
       tipo: 'sem_evidencia',
       modo: 'somente_fontes',
       resposta:
         'Não encontrei evidência nas fontes oficiais que consulto para responder a essa pergunta. ' +
-        'Por enquanto consigo responder sobre deputados federais em exercício: ' +
-        'tente incluir o nome parlamentar completo (ex.: "Quem é Tabata Amaral?").',
+        'Por enquanto consigo responder sobre deputados federais em exercício (use o nome parlamentar ' +
+        'completo, ex.: "Quem é Tabata Amaral?") e sobre regras básicas da Constituição ' +
+        '(ex.: "O que são os Três Poderes?").',
       evidencias: [],
       fontes: [],
       consultado_em: new Date().toISOString(),
@@ -115,7 +159,6 @@ export async function responder(pergunta) {
     };
   }
 
-  const { evidencias, fontes } = await evidenciasDosDeputados(deputados);
   const ia = await sintetizarComIA(pergunta, evidencias, { prazo });
   const base = { pergunta, evidencias, consultado_em: new Date().toISOString(), aviso: AVISO };
 
