@@ -1,3 +1,4 @@
+import { NavPoliticos } from '../../shared/nav-politicos';
 import { CurrencyPipe } from '@angular/common';
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -23,10 +24,10 @@ const VALIDADE = 12 * 3600_000;
  */
 @Component({
   selector: 'app-gastos',
-  imports: [FormsModule, RouterLink, CurrencyPipe, Avatar, Icone],
+  imports: [FormsModule, RouterLink, CurrencyPipe, Avatar, Icone, NavPoliticos],
   template: `
-    <a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Candidatos</a>
-    <header class="cabecalho-pagina">
+    <app-nav-politicos />
+        <header class="cabecalho-pagina">
       <p class="sobretitulo">Transparência</p>
       <h1>Ranking da cota parlamentar</h1>
       <p>Quanto cada deputado federal do estado gastou da cota parlamentar (verba para passagens, combustível, divulgação etc.) no ano. Dados oficiais da Câmara.</p>

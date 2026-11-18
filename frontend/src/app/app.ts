@@ -11,6 +11,7 @@ import { AcessibilidadeService } from './core/acessibilidade.service';
 import { tempoAtras } from './core/util';
 import { Avatar, AvisoDemo, Icone } from './shared/componentes';
 import { BoasVindas } from './shared/boas-vindas';
+import { DestaqueLateral } from './shared/destaque-lateral';
 import { FatoBotBolha, PerguntarFatobot } from './shared/fatobot-bolha';
 
 type Contador = 'comunidades' | 'mensagens';
@@ -18,7 +19,7 @@ type Contador = 'comunidades' | 'mensagens';
 /** Casca do app, como na apresentação: barra superior escura, menu lateral, painel claro e navegação inferior no celular. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral],
   templateUrl: './app.html',
 })
 export class App {
@@ -35,23 +36,29 @@ export class App {
   protected readonly tempo = tempoAtras;
   protected readonly iconesNotif = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail', politico: 'account_balance' };
 
-  protected readonly menu: { rota: string; icone: string; texto: string; exato?: boolean; contador?: Contador }[] = [
-    { rota: '/', icone: 'home', texto: 'Início', exato: true },
-    { rota: '/noticias', icone: 'newspaper', texto: 'Notícias' },
-    { rota: '/politicos', icone: 'person', texto: 'Candidatos' },
-    { rota: '/congresso', icone: 'account_balance', texto: 'Congresso' },
-    { rota: '/base-da-politica', icone: 'school', texto: 'Base da Política' },
-    { rota: '/comunidades', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
-    { rota: '/fato-ou-fake', icone: 'fact_check', texto: 'Fato ou Fake' },
-    { rota: '/mensagens', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
-    { rota: '/perfil', icone: 'account_circle', texto: 'Meu perfil' },
+  /** Navegação principal (com a cor de cada seção, como no desenho original). */
+  protected readonly menu: { rota: string; cor: string; icone: string; texto: string; exato?: boolean; contador?: Contador; tambem?: string[] }[] = [
+    { rota: '/', cor: '#00c27a', icone: 'home', texto: 'Início', exato: true },
+    { rota: '/noticias', cor: '#1e6bff', icone: 'newspaper', texto: 'Notícias' },
+    { rota: '/politicos', cor: '#7c4dff', icone: 'account_balance', texto: 'Políticos', tambem: ['/congresso'] },
+    { rota: '/base-da-politica', cor: '#ffb000', icone: 'school', texto: 'Base da Política' },
+    { rota: '/comunidades', cor: '#ff7a1a', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
   ];
+  /** Parte de baixo da navegação: o que é da pessoa. */
+  protected readonly menuPessoal: { rota: string; cor: string; icone: string; texto: string; contador?: Contador }[] = [
+    { rota: '/perfil', cor: '#1e6bff', icone: 'account_circle', texto: 'Meu Perfil' },
+    { rota: '/mensagens', cor: '#ff3d7f', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
+  ];
+  /** Rota atual, para manter "Políticos" ativo também em /congresso. */
+  protected readonly rotaAtual = signal('');
+  protected ativoTambem(item: { tambem?: string[] }) {
+    return !!item.tambem?.some((r) => this.rotaAtual().startsWith(r));
+  }
 
   protected readonly abas = [
     { rota: '/', texto: 'Início', exato: true },
-    { rota: '/politicos', texto: 'Candidatos', exato: false },
+    { rota: '/politicos', texto: 'Políticos', exato: false },
     { rota: '/noticias', texto: 'Notícias', exato: false },
-    { rota: '/congresso', texto: 'Congresso', exato: false },
     { rota: '/fato-ou-fake', texto: 'Fato ou Fake', exato: false },
     { rota: '/comunidades', texto: 'Comunidades', exato: false },
     { rota: '/base-da-politica', texto: 'Base da Política', exato: false },
@@ -61,6 +68,7 @@ export class App {
     // Atualiza os números vermelhos ao trocar de página e ao entrar/sair da conta
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       this.menuAberto.set(false);
+      this.rotaAtual.set(this.router.url);
       this.notifAberto.set(false);
       this.notificacoes.atualizar();
       this.mensagens.atualizarContagem();

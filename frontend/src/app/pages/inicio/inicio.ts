@@ -61,7 +61,7 @@ export class InicioPage implements OnInit {
 
   protected readonly destaques: Destaque[] = [
     {
-      tag: 'Candidatos', icone: 'account_balance', imagem: 'img/destaque-congresso.svg', rota: '/politicos', acao: 'Pesquisar',
+      tag: 'Políticos', icone: 'account_balance', imagem: 'img/destaque-congresso.svg', rota: '/politicos', acao: 'Pesquisar',
       titulo: 'Conheça quem representa você na Câmara',
       texto: 'Perfis de deputados federais com dados oficiais, fonte e data de cada informação.',
     },

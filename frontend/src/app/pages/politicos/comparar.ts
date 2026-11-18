@@ -1,3 +1,4 @@
+import { NavPoliticos } from '../../shared/nav-politicos';
 import { CurrencyPipe } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -18,10 +19,10 @@ const VAZIO: Lado = { politico: null, detalhes: null, registros: null, carregand
 /** Compara dois deputados federais lado a lado, só com dados oficiais (sem dizer quem é "melhor"). */
 @Component({
   selector: 'app-comparar',
-  imports: [FormsModule, RouterLink, Avatar, Icone],
+  imports: [FormsModule, RouterLink, Avatar, Icone, NavPoliticos],
   template: `
-    <a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Candidatos</a>
-    <header class="cabecalho-pagina">
+    <app-nav-politicos />
+        <header class="cabecalho-pagina">
       <p class="sobretitulo">Comparar</p>
       <h1>Dois deputados, lado a lado</h1>
       <p>Escolha dois deputados federais para comparar dados oficiais da atuação na legislatura atual.</p>

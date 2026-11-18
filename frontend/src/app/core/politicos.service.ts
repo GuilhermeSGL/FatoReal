@@ -404,7 +404,7 @@ export async function removerAlerta(p: Politico, id: number): Promise<void> {
   if (error) throw new Error('Não foi possível remover o registro.');
 }
 
-/** Quantos registros cada político tem (para a etiqueta vermelha na lista de candidatos). */
+/** Quantos registros cada político tem (para a etiqueta vermelha na lista de políticos). */
 export async function contagemAlertas(): Promise<Record<string, number>> {
   if (!supabase) {
     const db = lerAlertasDemo();

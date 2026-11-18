@@ -1,3 +1,4 @@
+import { NavPoliticos } from '../../shared/nav-politicos';
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
@@ -12,7 +13,7 @@ type Aba = 'agenda' | 'votacoes' | 'leis';
 
 @Component({
   selector: 'app-congresso',
-  imports: [DatePipe, Icone, ProjetoAcoes],
+  imports: [DatePipe, Icone, ProjetoAcoes, NavPoliticos],
   templateUrl: './congresso.html',
 })
 export class CongressoPage {

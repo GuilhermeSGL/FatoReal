@@ -6,7 +6,7 @@ export const routes: Routes = [
   { path: '', title: 'Fato Real', loadComponent: () => import('./pages/inicio/inicio').then((m) => m.InicioPage) },
 
   // Políticos
-  { path: 'politicos', title: 'Buscar políticos · Fato Real', loadComponent: () => import('./pages/politicos/busca').then((m) => m.BuscaPage) },
+  { path: 'politicos', title: 'Políticos · Fato Real', loadComponent: () => import('./pages/politicos/busca').then((m) => m.BuscaPage) },
   { path: 'politicos/comparar', title: 'Comparar políticos · Fato Real', loadComponent: () => import('./pages/politicos/comparar').then((m) => m.CompararPage) },
   { path: 'politicos/ranking', title: 'Ranking de presença · Fato Real', loadComponent: () => import('./pages/politicos/ranking-votacoes').then((m) => m.RankingVotacoesPage) },
   { path: 'politicos/gastos', title: 'Ranking de gastos · Fato Real', loadComponent: () => import('./pages/politicos/gastos').then((m) => m.GastosPage) },

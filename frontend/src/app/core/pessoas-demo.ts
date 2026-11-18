@@ -59,7 +59,7 @@ export const PUBLICACOES_EXEMPLO: { autor: string; comunidade: string; texto: st
   },
   {
     autor: 'ex-bruno', comunidade: 'contas-publicas', horas: 9, link_url: null,
-    texto: 'Vocês sabiam que dá para ver quanto cada deputado gastou da cota parlamentar? Aqui no Fato Real aparece no perfil de cada um, em Candidatos.',
+    texto: 'Vocês sabiam que dá para ver quanto cada deputado gastou da cota parlamentar? Aqui no Fato Real aparece no perfil de cada um, em Políticos.',
   },
   {
     autor: 'ex-carla', comunidade: 'checagem-de-fatos', horas: 14, link_url: null,

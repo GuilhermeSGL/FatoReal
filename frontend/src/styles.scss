@@ -1836,3 +1836,94 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
   small { color: var(--moldura-suave); font-size: 0.8rem; line-height: 1.35; } .botao { justify-content: center; } }
 .lateral-perfil-pessoa { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--moldura-titulo); span { display: grid; min-width: 0; } strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } &:hover small { color: var(--link); } }
 .lateral-perfil-visitante { strong { color: var(--moldura-titulo); } .link-sutil { justify-self: center; font-size: 0.85rem; } }
+
+/* =========================================================
+   Navegação lateral (reestruturada): ícones coloridos, área pessoal e espaço dinâmico
+   ========================================================= */
+.menu a .menu-icone { --cor: var(--cor-icone, var(--link)); display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; flex: none;
+  background: color-mix(in srgb, var(--cor) 14%, transparent); transition: background 0.15s, box-shadow 0.15s;
+  .icone { color: var(--cor) !important; font-size: 1.15rem; font-variation-settings: 'FILL' 1; } }
+.menu a { padding: 6px 12px; gap: 12px; }
+.menu a:hover .menu-icone { background: color-mix(in srgb, var(--cor) 22%, transparent); }
+.menu a.ativo { color: var(--moldura-titulo); background: color-mix(in srgb, var(--cor-icone, var(--link)) 10%, transparent); box-shadow: inset 3px 0 0 var(--cor-icone, var(--link));
+  .menu-icone { background: var(--cor-icone, var(--link)); box-shadow: 0 4px 12px color-mix(in srgb, var(--cor-icone, var(--link)) 35%, transparent); .icone { color: #fff !important; } } }
+:root[data-tema='escuro'] .menu a.ativo { color: #fff; background: color-mix(in srgb, var(--cor-icone) 16%, transparent); box-shadow: inset 3px 0 0 var(--cor-icone); }
+.menu-pessoal { padding-top: 10px; border-top: 1px solid var(--moldura-borda); }
+.menu-avatar { --tam: 32px; flex: none; }
+.lateral { gap: 12px; }
+/* Espaço dinâmico (campanhas, comunicados, dicas) */
+.destaque-lateral { margin-top: auto; display: grid; gap: 8px; }
+.destaque-item { --cor: #ffc21a; display: grid; gap: 6px; padding: 14px; border-radius: 16px; text-decoration: none; color: var(--moldura-titulo); overflow: hidden; position: relative;
+  border: 1px solid color-mix(in srgb, var(--cor) 45%, var(--moldura-borda)); background: linear-gradient(160deg, color-mix(in srgb, var(--cor) 14%, var(--moldura-2)), var(--moldura-2)); animation: destaque-entra 0.5s ease;
+  strong { font-size: 0.92rem; line-height: 1.3; } small { color: var(--moldura-suave); font-size: 0.78rem; line-height: 1.35; }
+  img { width: calc(100% + 28px); margin: 2px -14px -14px; height: 80px; object-fit: cover; }
+  &:hover .destaque-acao { gap: 8px; } }
+.destaque-tipo { justify-self: start; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cor); }
+:root:not([data-tema='escuro']) .destaque-tipo { color: color-mix(in srgb, var(--cor) 70%, #000); }
+.destaque-icone { position: absolute; right: 10px; top: 10px; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--cor); color: #fff; .icone { font-size: 1.15rem; } }
+.destaque-item:has(.destaque-icone) strong { padding-right: 40px; }
+.destaque-acao { display: inline-flex; align-items: center; gap: 4px; font-size: 0.8rem; font-weight: 700; color: var(--link); transition: gap 0.15s; .icone { font-size: 1rem; } }
+.destaque-item:has(img) .destaque-acao { order: 3; }
+.destaque-item:has(img) img { order: 4; }
+.destaque-pontos { display: flex; justify-content: center; gap: 6px;
+  button { width: 7px; height: 7px; padding: 0; border-radius: 999px; border: 0; background: var(--moldura-borda); cursor: pointer; transition: width 0.2s, background 0.2s; &[aria-selected='true'] { width: 20px; background: var(--link); } } }
+@keyframes destaque-entra { from { opacity: 0; transform: translateY(6px); } }
+.lateral-rodape { margin-top: 0; }
+/* Botão Verificar na barra de cima (credibilidade sempre à mão) */
+.botao-verificar { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 0.9rem;
+  color: #0b6b4a; background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(22, 163, 74, 0.35); transition: background 0.15s;
+  .icone { font-size: 1.15rem; font-variation-settings: 'FILL' 1; } &:hover, &.ativo { background: rgba(22, 163, 74, 0.18); } }
+:root[data-tema='escuro'] .botao-verificar { color: var(--lima); background: rgba(198, 244, 50, 0.08); border-color: rgba(198, 244, 50, 0.35); }
+@media (max-width: 760px) { .botao-verificar span { display: none; } .botao-verificar { padding: 8px; } }
+
+/* =========================================================
+   Seção Políticos
+   ========================================================= */
+.nav-politicos { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 0 0 18px; padding: 4px; border-radius: 14px; background: var(--superficie); border: 1px solid var(--borda);
+  a { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; color: var(--texto-suave); text-decoration: none; font-weight: 600; font-size: 0.9rem;
+    .icone { font-size: 1.1rem; } &:hover { color: var(--texto); background: var(--superficie-2); }
+    &.ativo { color: var(--primaria-texto); background: var(--primaria); .icone { font-variation-settings: 'FILL' 1; } } } }
+.pol-topo { display: grid; gap: 14px; margin-bottom: 18px; position: relative; }
+.pol-titulo { h1 { margin: 2px 0 6px; font-size: clamp(1.6rem, 3vw, 2.1rem); } .sobretitulo { margin: 0; } }
+.pol-confianca { margin: 0; display: inline-flex; align-items: center; gap: 6px; font-size: 0.86rem; color: var(--texto-suave); .icone { color: #16a34a; font-size: 1.1rem; font-variation-settings: 'FILL' 1; } }
+:root[data-tema='escuro'] .pol-confianca .icone { color: #4ade80; }
+.pol-busca { position: relative; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 18px; border-radius: 999px; background: var(--superficie); border: 2px solid var(--borda); box-shadow: 0 8px 28px rgba(9, 25, 43, 0.08); transition: border-color 0.15s, box-shadow 0.15s;
+  &:focus-within { border-color: var(--link); box-shadow: 0 0 0 4px color-mix(in srgb, var(--link) 15%, transparent), 0 8px 28px rgba(9, 25, 43, 0.08); }
+  input { flex: 1; min-width: 0; border: 0 !important; background: transparent !important; font-size: 1.08rem; padding: 10px 4px; outline: none; box-shadow: none !important; color: var(--texto); }
+  input::-webkit-search-cancel-button { display: none; } }
+.pol-busca-lupa { color: var(--texto-suave); font-size: 1.5rem; }
+.pol-busca-limpar { border: 0; background: var(--superficie-2); color: var(--texto-suave); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; .icone { font-size: 1.1rem; } }
+.pol-filtros-botao { display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px; border-radius: 999px; border: 0; background: var(--primaria); color: var(--primaria-texto); font: inherit; font-weight: 700; cursor: pointer;
+  &.ativo { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5); } }
+.pol-filtros-qtd { min-width: 20px; height: 20px; border-radius: 999px; background: #fff; color: #0b6b4a; font-size: 0.75rem; display: grid; place-items: center; padding: 0 5px; }
+.pol-sugestoes { position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 30; list-style: none; margin: 0; padding: 6px; border-radius: 18px; background: var(--superficie); border: 1px solid var(--borda); box-shadow: 0 18px 40px rgba(9, 25, 43, 0.18);
+  a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; color: var(--texto); text-decoration: none; span { flex: 1; display: grid; } small { color: var(--texto-suave); } > .icone { color: var(--texto-suave); } &:hover { background: var(--superficie-2); } } }
+.pol-painel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; padding: 18px; border-radius: 18px; background: var(--superficie); border: 1px solid var(--borda); box-shadow: var(--sombra); animation: destaque-entra 0.25s ease; }
+.pol-painel-grupo { display: grid; gap: 8px; align-content: start; }
+.pol-painel-rotulo { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.9rem; .icone { color: var(--link); font-size: 1.1rem; } }
+.pol-painel-linha { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; select { flex: 1; min-width: 160px; } }
+.pol-chip { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--borda); background: var(--superficie-2); color: var(--texto); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  .icone { font-size: 1rem; } &:hover:not(:disabled) { border-color: var(--link); } &:disabled { opacity: 0.45; cursor: default; }
+  &[aria-pressed='true'] { background: var(--primaria); border-color: var(--primaria); color: var(--primaria-texto); } }
+.pol-select-p { flex: 0 0 auto !important; min-width: 120px !important; padding: 6px 10px; border-radius: 999px; font-size: 0.85rem; }
+.pol-painel-rodape { grid-column: 1 / -1; display: flex; justify-content: flex-end; align-items: center; gap: 14px; padding-top: 12px; border-top: 1px solid var(--borda); }
+.pol-cargos { display: grid; grid-template-columns: 3fr 2fr 2fr; gap: 14px; margin-bottom: 18px; }
+.pol-esfera { display: grid; gap: 8px; align-content: start; }
+.pol-esfera-nome { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--texto-suave); padding-left: 4px; }
+.pol-esfera-cargos { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.pol-cargo { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 16px; border: 1px solid var(--borda); background: var(--superficie); color: var(--texto); font: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; min-width: 0;
+  &:hover { border-color: var(--link); transform: translateY(-1px); }
+  &[aria-selected='true'] { border: 2px solid var(--link); background: color-mix(in srgb, var(--link) 8%, var(--superficie)); box-shadow: 0 6px 18px color-mix(in srgb, var(--link) 18%, transparent); .pol-cargo-icone { background: var(--link); color: var(--primaria-texto); } }
+  &.sem-dados { opacity: 0.6; .pol-cargo-texto small { font-style: italic; } } }
+.pol-cargo-icone { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--link) 12%, transparent); color: var(--link); .icone { font-size: 1.3rem; font-variation-settings: 'FILL' 1; } }
+.pol-cargo-texto { display: grid; min-width: 0; strong { font-size: 0.88rem; line-height: 1.2; } small { color: var(--texto-suave); font-size: 0.76rem; } }
+.pol-resultados-topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.pol-contagem { margin: 0; color: var(--texto-suave); strong { color: var(--texto); font-size: 1.1rem; } }
+.pol-ativos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pol-ativo { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px 4px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--link) 40%, transparent); background: color-mix(in srgb, var(--link) 10%, transparent); color: var(--link); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; .icone { font-size: 1rem; } }
+.pol-grade { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important; }
+.pol-card { transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; &:hover { transform: translateY(-2px); border-color: var(--link); box-shadow: 0 10px 24px rgba(9, 25, 43, 0.1); } }
+.pol-card-meta { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--texto-suave); }
+.pol-sigla { padding: 1px 7px; border-radius: 6px; background: color-mix(in srgb, var(--link) 12%, transparent); color: var(--link); font-weight: 800; font-size: 0.75rem; }
+@media (max-width: 1100px) { .pol-cargos { grid-template-columns: 1fr; } .pol-painel { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .pol-esfera-cargos { grid-auto-flow: row; grid-template-columns: 1fr 1fr; } .pol-filtros-botao { padding: 10px 12px; } }

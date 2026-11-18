@@ -36,6 +36,9 @@
 
   <div class="topo-acoes">
     <a routerLink="/politicos" class="sino so-celular" aria-label="Pesquisar" title="Pesquisar"><app-icone nome="search" /></a>
+    <a routerLink="/fato-ou-fake" class="botao-verificar" routerLinkActive="ativo" title="Fato ou Fake: verifique uma informação antes de compartilhar">
+      <app-icone nome="fact_check" /> <span>Verificar</span>
+    </a>
     <button type="button" class="sino" (click)="tema.alternar()"
       [attr.aria-label]="tema.tema() === 'claro' ? 'Ativar modo escuro' : 'Ativar modo claro'"
       [title]="tema.tema() === 'claro' ? 'Modo escuro' : 'Modo claro'">
@@ -99,31 +102,27 @@
 <div class="corpo">
   <!-- ===== Menu lateral (computador) ===== -->
   <aside class="lateral" aria-label="Menu principal">
-    <!-- Meu perfil (rede social: o perfil é o ponto de partida para postar) -->
-    @if (auth.usuario(); as u) {
-      <section class="lateral-perfil">
-        <a routerLink="/perfil" class="lateral-perfil-pessoa">
-          <app-avatar [nome]="u.nome" [url]="u.foto_url" [tamanho]="44" />
-          <span><strong>{{ u.nome }}</strong><small>Ver meu perfil</small></span>
-        </a>
-        <a routerLink="/perfil" fragment="publicar" class="botao botao-verde botao-p lateral-publicar"><app-icone nome="edit_square" /> Publicar</a>
-      </section>
-    } @else {
-      <section class="lateral-perfil lateral-perfil-visitante">
-        <strong>Faça parte da rede</strong>
-        <small>Crie seu perfil para publicar, comentar e participar das comunidades.</small>
-        <a routerLink="/cadastrar" class="botao botao-verde botao-p">Criar meu perfil</a>
-        <a routerLink="/entrar" class="link-sutil">Já tenho conta</a>
-      </section>
-    }
-    <nav class="menu">
+    <nav class="menu" aria-label="Seções">
       @for (item of menu; track item.rota) {
-        <a [routerLink]="item.rota" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: !!item.exato }">
-          <app-icone [nome]="item.icone" /> <span class="menu-texto">{{ item.texto }}</span>
+        <a [routerLink]="item.rota" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: !!item.exato }" [class.ativo]="ativoTambem(item)" [style.--cor-icone]="item.cor">
+          <span class="menu-icone"><app-icone [nome]="item.icone" /></span> <span class="menu-texto">{{ item.texto }}</span>
           @if (contador(item.contador); as n) { <span class="contador" [attr.aria-label]="n + ' novos'">{{ n }}</span> }
         </a>
       }
     </nav>
+
+    <nav class="menu menu-pessoal" aria-label="Sua conta">
+      @for (item of menuPessoal; track item.rota) {
+        <a [routerLink]="item.rota" routerLinkActive="ativo" [style.--cor-icone]="item.cor">
+          @if (item.rota === '/perfil' && auth.usuario(); as u) { <app-avatar class="menu-avatar" [nome]="u.nome" [url]="u.foto_url" [tamanho]="28" /> }
+          @else { <span class="menu-icone"><app-icone [nome]="item.icone" /></span> }
+          <span class="menu-texto">{{ item.texto }}</span>
+          @if (contador(item.contador); as n) { <span class="contador" [attr.aria-label]="n + ' novas'">{{ n }}</span> }
+        </a>
+      }
+    </nav>
+
+    <app-destaque-lateral />
 
     <nav class="lateral-rodape" aria-label="Institucional">
       <a routerLink="/sobre">Sobre e fontes</a>
