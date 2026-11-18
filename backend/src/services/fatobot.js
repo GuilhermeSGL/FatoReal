@@ -87,6 +87,7 @@ export const SEM_EVIDENCIA_TEXTO = 'Não encontrei evidência para isso.';
 // J7 — por que a resposta veio sem IA, em linguagem simples.
 const EXPLICACAO_SEM_IA = {
   cota_esgotada: 'A IA atingiu o limite de uso gratuito por agora, então mostro só os fatos das fontes oficiais:',
+  limite_local: 'A IA atingiu o limite de uso por agora, então mostro só os fatos das fontes oficiais:',
   sobrecarregado: 'A IA está sobrecarregada agora, então mostro só os fatos das fontes oficiais:',
   tempo_esgotado: 'A IA demorou demais para responder, então mostro só os fatos das fontes oficiais:',
 };
