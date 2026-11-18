@@ -236,6 +236,58 @@
           </section>
         </div>
 
+        <div class="ps-grade2">
+          <!-- Pontos de atenção -->
+          <section class="card ps-cartao ps-atencao">
+            <h2 class="ps-titulo"><span class="ps-icone ps-icone-alerta"><app-icone nome="warning" /></span> Pontos de atenção</h2>
+            @if (pontos().length) {
+              <ul class="ps-pontos">
+                @for (pt of pontos(); track pt.texto) {
+                  <li [attr.data-tipo]="pt.tipo"><app-icone [nome]="pt.icone" /><span><strong>{{ pt.texto }}</strong><small>{{ pt.detalhe }}</small></span></li>
+                }
+              </ul>
+            } @else {
+              <p class="texto-suave">Calculando com os dados oficiais...</p>
+            }
+            @if (!sen && !comparacaoGastos()) {
+              <a class="ps-dica" routerLink="/politicos/gastos" [queryParams]="{ uf: p.uf }"><app-icone nome="leaderboard" /> Calcule o ranking de gastos de {{ p.uf }} para ver se gastou acima da média</a>
+            }
+            <h3 class="sub-secao">Dívidas, sanções e contas de campanha</h3>
+            <p class="texto-p">Esses dados não têm API aberta, por isso o site não confere sozinho. Pesquise o nome nos sites oficiais:</p>
+            <ul class="ps-consultas">
+              @for (c of consultasNegativas; track c.url) {
+                <li><a [href]="c.url" target="_blank" rel="noopener noreferrer"><app-icone [nome]="c.icone" /><span><strong>{{ c.titulo }}</strong><small>{{ c.texto }}</small></span><app-icone nome="open_in_new" class="ps-ext" /></a></li>
+              }
+            </ul>
+          </section>
+
+          <!-- Tempo na vida pública -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="hourglass_top" /></span> Tempo na vida pública</h2>
+            @if (carregandoFicha()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (vidaPublica(); as v) {
+              <p class="ps-total"><strong>{{ v.politica }} anos</strong> em cargos públicos @if (v.inicio < anoAtual) { <span class="texto-suave">· desde {{ v.inicio }}</span> }</p>
+              <div class="ps-barra-total" role="img" [attr.aria-label]="'Divisão do tempo: ' + v.politica + ' anos em cargos públicos'">
+                @for (c of v.porCategoria; track c.nome) { <span [style.flex-grow]="c.anos" [style.background]="c.cor" [title]="c.nome + ': ' + c.anos + ' anos'"></span> }
+              </div>
+              <ul class="ps-legenda">
+                @for (c of v.porCategoria; track c.nome) { <li><i [style.background]="c.cor"></i> {{ c.nome }} <strong>{{ c.anos }} {{ c.anos === 1 ? 'ano' : 'anos' }}</strong></li> }
+              </ul>
+              <div class="ps-gantt">
+                @for (l of v.linhas; track $index) {
+                  <div class="ps-gantt-linha">
+                    <span class="ps-gantt-rotulo" [title]="l.rotulo">{{ l.rotulo }}</span>
+                    <span class="ps-gantt-trilha"><span [style.left.%]="l.esq" [style.width.%]="l.larg" [style.background]="l.cor" [title]="l.ini + '–' + (l.fim | number: '1.0-0') + ' (' + l.anos + ' anos)'"></span></span>
+                  </div>
+                }
+                <div class="ps-gantt-linha ps-gantt-eixo"><span></span><span class="ps-gantt-trilha">@for (m of v.marcas; track m) { <small [style.left.%]="((m - v.inicio) / (v.fim - v.inicio)) * 100">{{ m }}</small> }</span></div>
+              </div>
+              <small class="texto-suave">{{ sen ? 'Mandatos registrados no Senado.' : 'Mandatos na Câmara, cargos anteriores e ocupações declaradas à Câmara.' }}</small>
+            } @else { <p class="texto-suave">Sem dados de trajetória.</p> }
+          </section>
+        </div>
+
         <!-- Linha do tempo do mandato -->
         @if (linhaDoTempo().length > 1) {
           <section class="card ps-linha">

@@ -1578,3 +1578,30 @@ legend { font-weight: 700; padding: 0 6px; }
   .ps-fontes ul { grid-template-columns: 1fr; }
   .ps-rosca { grid-template-columns: 110px 1fr; svg { width: 110px; height: 110px; } }
 }
+
+/* Pontos de atenção + tempo na vida pública */
+.ps-grade2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+.ps-icone-alerta { background: #ffd6d9; color: #a3151f; }
+.ps-pontos { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px;
+  li { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border-left: 4px solid;
+    span { display: grid; gap: 2px; } small { color: var(--texto-suave); font-size: 0.82rem; line-height: 1.35; } .icone { flex: none; margin-top: 1px; } }
+  [data-tipo='alerta'] { border-color: var(--perigo); background: rgba(214, 40, 57, 0.08); .icone { color: var(--perigo); } }
+  [data-tipo='atencao'] { border-color: #e0a100; background: rgba(238, 192, 67, 0.14); .icone { color: #a87600; } }
+  [data-tipo='ok'] { border-color: #14a370; background: rgba(20, 163, 112, 0.09); .icone { color: #0e8a5f; } } }
+:root[data-tema='escuro'] .ps-pontos [data-tipo='atencao'] .icone { color: var(--destaque); }
+.ps-dica { display: inline-flex; gap: 6px; align-items: center; font-size: 0.85rem; color: var(--link); .icone { font-size: 1.05rem; } }
+.ps-consultas { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+  a { display: flex; gap: 8px; align-items: center; padding: 10px; border-radius: 10px; border: 1px solid var(--borda); color: var(--texto); text-decoration: none; height: 100%;
+    span { display: grid; flex: 1; min-width: 0; } strong { font-size: 0.85rem; } small { font-size: 0.75rem; color: var(--texto-suave); } > .icone:first-child { color: var(--perigo); } .ps-ext { font-size: 0.95rem; color: var(--texto-suave); } &:hover { border-color: var(--perigo); } } }
+.ps-total { margin: 0; font-size: 1rem; strong { font-size: 1.6rem; } }
+.ps-barra-total { display: flex; height: 14px; border-radius: 999px; overflow: hidden; gap: 2px; background: var(--superficie-2); span { flex-basis: 0; } }
+.ps-legenda { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.84rem;
+  li { display: inline-flex; align-items: center; gap: 6px; } i { width: 10px; height: 10px; border-radius: 3px; } }
+.ps-gantt { display: grid; gap: 6px; margin-top: 6px; }
+.ps-gantt-linha { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: center; }
+.ps-gantt-rotulo { font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-gantt-trilha { position: relative; height: 14px; background: var(--superficie-2); border-radius: 999px;
+  > span { position: absolute; top: 0; bottom: 0; border-radius: 999px; min-width: 6px; } }
+.ps-gantt-eixo .ps-gantt-trilha { background: none; height: 16px; small { position: absolute; transform: translateX(-50%); font-size: 0.72rem; color: var(--texto-suave); } }
+@media (max-width: 1100px) { .ps-grade2 { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .ps-consultas { grid-template-columns: 1fr; } .ps-gantt-linha { grid-template-columns: 100px 1fr; } }

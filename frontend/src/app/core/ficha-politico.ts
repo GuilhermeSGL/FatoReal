@@ -516,3 +516,9 @@ export async function totalDiscursos(id: number): Promise<number> {
   const r = await jsonCamara<Pagina<unknown>>(`/deputados/${id}/discursos?dataInicio=${inicioLegislatura()}&itens=1&ordenarPor=dataHoraInicio&ordem=DESC`);
   return totalPeloLink(r);
 }
+
+/** Quantas proposições de autoria do(a) deputado(a) viraram lei (situação "Transformado em Norma Jurídica"). */
+export async function leisDoAutor(id: number): Promise<number> {
+  const r = await jsonCamara<Pagina<unknown>>(`/proposicoes?idDeputadoAutor=${id}&codSituacao=1140&dataApresentacaoInicio=1990-01-01&itens=1`);
+  return totalPeloLink(r);
+}
