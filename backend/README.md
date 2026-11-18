@@ -257,6 +257,19 @@ Devolve `{ "url": "https://wa.me/55...?text=..." }`: o front só abre essa URL (
   Sem ele, a rota responde `503`.
 - **Nada é guardado** (LGPD): os dados só vão na mensagem que a própria pessoa envia.
 
+### Limites de uso (J10)
+
+Duas camadas, para proteger a cota grátis do Gemini **sem bloquear uma sala de aula**
+(numa rede como a do Senac, todos os alunos saem pelo mesmo IP):
+
+| Camada | Padrão | Ao passar do limite | Variável |
+|---|---|---|---|
+| Por IP, contra abuso (`/api/fatobot` e `/api/verificar`) | 60 pedidos/min | `429` *"Muitas perguntas em pouco tempo..."* com `Retry-After` | `LIMITE_POR_IP_MIN` |
+| Cota da IA, para o servidor todo | 14 chamadas/min e 450/dia (abaixo dos 15/min e 500/dia do plano grátis) | **Não recusa**: responde só com as fontes, `motivo_sem_ia: "limite_local"` | `LIMITE_IA_POR_MIN`, `LIMITE_IA_POR_DIA` |
+
+Os contadores ficam em memória (na Vercel, cada instância conta separado). Baseado no limitador por IP
+do Matheus (`backup/matheus-2026-11-17`).
+
 ### Para outras rotas usarem o Gemini: `gerarJson`
 
 ```js
