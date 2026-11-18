@@ -1,4 +1,4 @@
-import { EnquetesService } from '../../core/enquetes.service';
+import { CaixaPublicar } from '../../shared/caixa-publicar';
 import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,7 +13,7 @@ import { PublicacaoCard } from '../../shared/publicacao-card';
 
 @Component({
   selector: 'app-comunidade',
-  imports: [FormsModule, RouterLink, Avatar, Icone, PublicacaoCard],
+  imports: [CaixaPublicar, FormsModule, RouterLink, Avatar, Icone, PublicacaoCard],
   templateUrl: './comunidade.html',
 })
 export class ComunidadePage implements OnInit {
@@ -36,12 +36,6 @@ export class ComunidadePage implements OnInit {
   protected readonly mural = signal<Publicacao[]>([]);
   protected readonly aba = signal<'mural' | 'regras' | 'membros'>('mural');
 
-  protected novoTexto = '';
-  protected novoLink = '';
-  protected mostrarLink = false;
-  protected mostrarEnquete = false;
-  protected opcoesEnquete = ['', ''];
-  private enquetes = inject(EnquetesService);
   protected trackIndice = (i: number) => i;
 
   async ngOnInit() {
@@ -92,31 +86,8 @@ export class ComunidadePage implements OnInit {
     }
   }
 
-  protected async publicar() {
+  protected async aoPublicar() {
     const c = this.comunidade();
-    const texto = this.novoTexto.trim();
-    if (!c || !texto) return;
-    const link = this.novoLink.trim() ? linkSeguro(this.novoLink) : null;
-    if (this.novoLink.trim() && !link) {
-      this.avisos.mostrar('O link precisa começar com http:// ou https://', 'erro');
-      return;
-    }
-    try {
-      const opcoes = this.mostrarEnquete ? this.opcoesEnquete.map((o) => o.trim()).filter(Boolean) : [];
-      if (this.mostrarEnquete && opcoes.length < 2) {
-        this.avisos.mostrar('A enquete precisa de pelo menos 2 opções.', 'erro');
-        return;
-      }
-      const id = await this.service.publicar(c.id, texto, link);
-      if (id !== null && opcoes.length) this.enquetes.criar(id, opcoes);
-      this.novoTexto = this.novoLink = '';
-      this.mostrarLink = false;
-      this.mostrarEnquete = false;
-      this.opcoesEnquete = ['', ''];
-      this.avisos.mostrar('Publicado no mural!');
-      this.mural.set(await this.service.publicacoes(c.id));
-    } catch (e) {
-      this.avisos.erro(e);
-    }
+    if (c) this.mural.set(await this.service.publicacoes(c.id));
   }
 }

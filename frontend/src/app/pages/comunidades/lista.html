@@ -17,8 +17,15 @@
   <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
 }
 
+<nav class="com-temas" aria-label="Filtrar por tema">
+  <button type="button" [attr.aria-pressed]="!tema()" (click)="tema.set('')"><app-icone nome="apps" /> Todas</button>
+  @for (t of temas(); track t) {
+    <button type="button" [attr.aria-pressed]="tema() === t" [style.--c]="corTema[t]" (click)="tema.set(tema() === t ? '' : t)"><app-icone [nome]="iconeTema[t] || 'groups'" /> {{ t }}</button>
+  }
+</nav>
+
 <ul class="grade-cards">
-  @for (c of lista(); track c.id) {
+  @for (c of filtradas(); track c.id) {
     <li>
       <a [routerLink]="['/comunidades', c.slug]" class="card card-comunidade" [style.--cor-tema]="corTema[c.tema]">
         <div class="card-comunidade-capa">

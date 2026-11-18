@@ -1,17 +1,13 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
-import { EnquetesService } from '../../core/enquetes.service';
 import { termoDoDia } from '../../core/glossario';
 import { Comunidade, Publicacao } from '../../core/modelos';
-import { fonteOficial, linkSeguro } from '../../core/util';
 import { avatarComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
-import { Avatar, Icone } from '../../shared/componentes';
-import { Conferindo } from '../../shared/conferindo';
-import { reduzirImagem } from '../../shared/imagem-reduzida';
+import { Icone } from '../../shared/componentes';
+import { CaixaPublicar } from '../../shared/caixa-publicar';
 import { PublicacaoCard } from '../../shared/publicacao-card';
 
 type Aba = 'para-voce' | 'alta' | 'minhas' | 'memes';
@@ -19,13 +15,12 @@ type Aba = 'para-voce' | 'alta' | 'minhas' | 'memes';
 /** Início com cara de rede social: stories, caixa de publicar (foto/meme, enquete, link), abas e feed. */
 @Component({
   selector: 'app-inicio',
-  imports: [FormsModule, RouterLink, Icone, Avatar, PublicacaoCard, Conferindo],
+  imports: [RouterLink, Icone, PublicacaoCard, CaixaPublicar],
   templateUrl: './inicio.html',
 })
 export class InicioPage implements OnInit {
   private comunidades = inject(ComunidadesService);
   private avisos = inject(AvisosService);
-  private enquetes = inject(EnquetesService);
   private router = inject(Router);
   protected auth = inject(AuthService);
 
@@ -72,20 +67,6 @@ export class InicioPage implements OnInit {
     return [...cont.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
   });
 
-  // Nova publicação
-  protected texto = '';
-  protected link = '';
-  protected memeTopo = '';
-  protected memeBase = '';
-  protected opcoes: string[] = ['', ''];
-  protected mostrarLink = false;
-  protected mostrarEnquete = false;
-  protected comunidadeId: number | null = null;
-  protected readonly imagem = signal<string | null>(null);
-  /** Dados da publicação enquanto o FatoBot "confere" (a animação). */
-  protected readonly conferindo = signal<{ texto: string; link: string | null; temImagem: boolean } | null>(null);
-  private envio: Promise<unknown> | null = null;
-
   async ngOnInit() {
     await this.carregar();
   }
@@ -96,7 +77,6 @@ export class InicioPage implements OnInit {
       this.feedCompleto.set(feed);
       this.todas.set(todas);
       this.minhas.set(minhas);
-      if (this.comunidadeId === null && minhas.length) this.comunidadeId = minhas[0].id;
     } catch (e) {
       this.avisos.erro(e);
     }
@@ -124,90 +104,16 @@ export class InicioPage implements OnInit {
     }
   }
 
-  protected focarComposer() {
+  protected focarComposer(caixa: CaixaPublicar) {
     if (!this.auth.logado()) {
       this.router.navigate(['/entrar'], { queryParams: { voltar: '/' } });
       return;
     }
-    const campo = document.getElementById('novo-post');
-    campo?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    campo?.focus();
+    caixa.focar();
   }
 
-  protected async escolherImagem(ev: Event) {
-    const arquivo = (ev.target as HTMLInputElement).files?.[0];
-    (ev.target as HTMLInputElement).value = '';
-    if (!arquivo) return;
-    if (!arquivo.type.startsWith('image/')) {
-      this.avisos.mostrar('Escolha um arquivo de imagem (JPG, PNG, GIF ou WEBP).', 'erro');
-      return;
-    }
-    try {
-      this.imagem.set(await reduzirImagem(arquivo, 900, 900, false));
-    } catch {
-      this.avisos.mostrar('Não deu para abrir essa imagem. Tente outra.', 'erro');
-    }
-  }
-
-  protected tirarImagem() {
-    this.imagem.set(null);
-    this.memeTopo = this.memeBase = '';
-  }
-
-  private avisouLink = false;
-  /** Colou um link de órgão oficial: o FatoBot comenta (uma vez por visita). */
-  protected aoMudarLink(link: string) {
-    const org = fonteOficial(link.trim());
-    if (!org || this.avisouLink) return;
-    this.avisouLink = true;
-    window.dispatchEvent(new CustomEvent('fatobot-dica', { detail: {
-      chave: 'link-oficial', titulo: `Boa, ${this.primeiroNome()}! 👋`,
-      texto: `Esse link é de ${org}, uma fonte oficial. Sua publicação vai sair com o selo “Com fonte”.`,
-    } }));
-  }
-
-  protected podePublicar() {
-    return !!(this.texto.trim() || this.imagem()) && this.minhas().length > 0 && !this.conferindo();
-  }
-
-  protected publicar() {
-    if (!this.podePublicar() || this.comunidadeId === null) return;
-    const texto = this.texto.trim();
-    const link = this.link.trim() ? linkSeguro(this.link) : null;
-    if (this.link.trim() && !link) {
-      this.avisos.mostrar('O link precisa começar com http:// ou https://', 'erro');
-      return;
-    }
-    const opcoes = this.mostrarEnquete ? this.opcoes.map((o) => o.trim()).filter(Boolean) : [];
-    if (this.mostrarEnquete && opcoes.length < 2) {
-      this.avisos.mostrar('A enquete precisa de pelo menos 2 opções.', 'erro');
-      return;
-    }
-    const imagem = this.imagem();
-    const meme = imagem && (this.memeTopo.trim() || this.memeBase.trim()) ? { topo: this.memeTopo.trim(), base: this.memeBase.trim() } : null;
-    this.conferindo.set({ texto, link, temImagem: !!imagem });
-    this.envio = this.comunidades
-      .publicar(Number(this.comunidadeId), texto, link, { imagem_url: imagem, meme })
-      .then((id) => { if (id !== null && opcoes.length) this.enquetes.criar(id, opcoes); });
-    this.envio.catch((e) => {
-      this.conferindo.set(null);
-      this.avisos.erro(e);
-    });
-  }
-
-  /** A animação acabou: espera o envio terminar, limpa a caixa e mostra a publicação no feed. */
-  protected async animacaoAcabou() {
-    try {
-      await this.envio;
-    } catch {
-      return;
-    }
-    this.texto = this.link = this.memeTopo = this.memeBase = '';
-    this.opcoes = ['', ''];
-    this.mostrarLink = this.mostrarEnquete = false;
-    this.imagem.set(null);
+  protected async aoPublicar() {
     this.aba.set('para-voce');
     await this.recarregarFeed();
-    setTimeout(() => this.conferindo.set(null), 2600);
   }
 }

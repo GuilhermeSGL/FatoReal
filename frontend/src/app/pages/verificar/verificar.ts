@@ -1,3 +1,4 @@
+import { Conferindo } from '../../shared/conferindo';
 import { DatePipe } from '@angular/common';
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -34,7 +35,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
 /** Verificação assistida: avaliação preliminar baseada nas fontes consultadas, nunca certificação automática. */
 @Component({
   selector: 'app-verificar',
-  imports: [FormsModule, DatePipe, Icone, FonteDado, AvisoIa, SeloStatus],
+  imports: [Conferindo, FormsModule, DatePipe, Icone, FonteDado, AvisoIa, SeloStatus],
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="fact_check" /> Fato ou Fake?</h1>
@@ -65,6 +66,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
               (dragleave)="arrastando.set(false)" (drop)="$event.preventDefault(); arrastando.set(false); adicionar($event.dataTransfer?.files ?? null)">
               <input type="file" multiple [accept]="aceitos" (change)="adicionar(seletor.files); seletor.value = ''" #seletor />
               <app-icone nome="upload_file" />
+              <span class="zona-bot" aria-hidden="true"><img src="img/fatobot-rosto.svg" alt="" /> Pode soltar, eu confiro!</span>
               <strong>Arraste aqui ou clique para escolher</strong>
               <span class="zona-anexo-tipos">
                 <span><app-icone nome="image" /> Fotos e prints</span>
@@ -73,6 +75,9 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
               </span>
               <small>JPG, PNG, WEBP ou GIF até 10 MB · MP4, WEBM ou MOV até 50 MB · PDF, DOC, DOCX ou TXT até 10 MB</small>
             </label>
+            @if (recebendo(); as r) {
+              <app-conferindo modo="arquivo" [arquivos]="r.nomes" (fim)="aoCarregar(r.id)" />
+            }
             @if (anexos().length) {
               <ul class="lista-anexos">
                 @for (a of anexos(); track a.previa ?? a.arquivo.name + $index; let i = $index) {
@@ -369,7 +374,17 @@ export class VerificarPage implements OnDestroy {
       }
       novos.push({ arquivo, tipo, previa: tipo === 'documento' ? null : URL.createObjectURL(arquivo) });
     }
-    if (novos.length) this.anexos.update((l) => [...l, ...novos]);
+    if (novos.length) {
+      this.anexos.update((l) => [...l, ...novos]);
+      // Animação curta do FatoBot "carregando" o arquivo
+      this.recebendo.set({ id: Date.now(), nomes: novos.map((n) => n.arquivo.name) });
+    }
+  }
+
+  /** Arquivo(s) chegando: mostra a faixa do FatoBot carregando. */
+  protected readonly recebendo = signal<{ id: number; nomes: string[] } | null>(null);
+  protected aoCarregar(id: number) {
+    setTimeout(() => { if (this.recebendo()?.id === id) this.recebendo.set(null); }, 1800);
   }
 
   protected remover(i: number) {

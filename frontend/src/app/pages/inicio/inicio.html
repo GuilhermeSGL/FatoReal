@@ -4,7 +4,7 @@
 
     <!-- Stories: atalhos para publicar, comunidades e o Fato do dia -->
     <nav class="ini-stories" aria-label="Atalhos">
-      <button type="button" class="ini-story ini-story-eu" (click)="focarComposer()">
+      <button type="button" class="ini-story ini-story-eu" (click)="focarComposer(caixa)">
         <span class="ini-anel"><span class="ini-bola"><app-icone nome="add" /></span></span>
         Publicar
       </button>
@@ -23,77 +23,7 @@
     </nav>
 
     <!-- Nova publicação -->
-    <section class="card composer ini-composer" aria-label="Nova publicação">
-      @if (auth.usuario(); as u) {
-        <form (submit)="$event.preventDefault(); publicar()">
-          <div class="composer-linha">
-            <app-avatar [nome]="u.nome" [url]="u.foto_url" [tamanho]="44" />
-            <label for="novo-post" class="sr-only">No que você está pensando?</label>
-            <textarea id="novo-post" name="texto" [(ngModel)]="texto" rows="1" maxlength="2000" [placeholder]="'No que você está pensando, ' + primeiroNome() + '?'" [disabled]="!!conferindo()"></textarea>
-          </div>
-
-          @if (imagem()) {
-            <div class="ini-anexo">
-              <figure class="post-midia" [class.post-meme]="!!(memeTopo || memeBase)">
-                <img [src]="imagem()" alt="Prévia da imagem" />
-                @if (memeTopo) { <figcaption class="meme-topo">{{ memeTopo }}</figcaption> }
-                @if (memeBase) { <figcaption class="meme-base">{{ memeBase }}</figcaption> }
-                <button type="button" class="ini-tirar" (click)="tirarImagem()" aria-label="Tirar imagem"><app-icone nome="close" /></button>
-              </figure>
-              <div class="ini-meme-campos">
-                <small class="texto-suave"><app-icone nome="mood" /> Quer virar meme? Escreva por cima (opcional):</small>
-                <input name="memeTopo" [(ngModel)]="memeTopo" maxlength="60" placeholder="Texto de cima" />
-                <input name="memeBase" [(ngModel)]="memeBase" maxlength="60" placeholder="Texto de baixo" />
-              </div>
-            </div>
-          }
-          @if (mostrarLink) {
-            <div class="composer-extra">
-              <label for="novo-link" class="sr-only">Link da fonte</label>
-              <input id="novo-link" name="link" type="url" [(ngModel)]="link" (ngModelChange)="aoMudarLink($event)" placeholder="https:// link da fonte" />
-            </div>
-          }
-          @if (mostrarEnquete) {
-            <div class="ini-enquete">
-              @for (o of opcoes; track $index; let i = $index) {
-                <input [name]="'op' + i" [(ngModel)]="opcoes[i]" maxlength="60" [placeholder]="'Opção ' + (i + 1)" />
-              }
-              @if (opcoes.length < 4) { <button type="button" class="link-sutil" (click)="opcoes.push('')"><app-icone nome="add" /> Mais uma opção</button> }
-            </div>
-          }
-
-          @if (conferindo(); as c) {
-            <app-conferindo [texto]="c.texto" [link]="c.link" [temImagem]="c.temImagem" (fim)="animacaoAcabou()" />
-          }
-
-          <div class="ini-ferramentas">
-            <label class="ini-ferramenta" style="--c: #16a34a">
-              <input type="file" accept="image/*" class="sr-only" (change)="escolherImagem($event)" />
-              <app-icone nome="image" /> Foto ou meme
-            </label>
-            <button type="button" class="ini-ferramenta" style="--c: #2563eb" (click)="mostrarEnquete = !mostrarEnquete" [attr.aria-pressed]="mostrarEnquete"><app-icone nome="poll" /> Enquete</button>
-            <button type="button" class="ini-ferramenta" style="--c: #ea580c" (click)="mostrarLink = !mostrarLink" [attr.aria-pressed]="mostrarLink"><app-icone nome="link" /> Link com fonte</button>
-            <a class="ini-ferramenta" style="--c: #7c3aed" routerLink="/fato-ou-fake"><app-icone nome="fact_check" /> É fake?</a>
-          </div>
-          <div class="composer-acoes">
-            @if (minhas().length) {
-              <label for="nova-comunidade" class="sr-only">Publicar em</label>
-              <select id="nova-comunidade" name="comunidade" [(ngModel)]="comunidadeId" class="select-discreto">
-                @for (c of minhas(); track c.id) { <option [ngValue]="c.id">Em {{ c.nome }}</option> }
-              </select>
-            } @else {
-              <a routerLink="/comunidades" class="acao-composer"><app-icone nome="group_add" /> Entre numa comunidade para publicar</a>
-            }
-            <button type="submit" class="botao botao-escuro" [disabled]="!podePublicar()">Publicar</button>
-          </div>
-        </form>
-      } @else {
-        <div class="composer-linha">
-          <span class="avatar" style="--tam: 44px"><app-icone nome="person" /></span>
-          <a routerLink="/entrar" class="composer-falso">No que você está pensando? Entre para participar.</a>
-        </div>
-      }
-    </section>
+    <app-caixa-publicar #caixa [comunidades]="minhas()" (publicado)="aoPublicar()" />
 
     <!-- Abas do feed -->
     <nav class="ini-abas" role="tablist" aria-label="Feed">
@@ -162,4 +92,4 @@
 </div>
 
 <!-- Botão flutuante (celular) -->
-<button type="button" class="fab so-celular" aria-label="Nova publicação" (click)="focarComposer()"><app-icone nome="add" /></button>
+<button type="button" class="fab so-celular" aria-label="Nova publicação" (click)="focarComposer(caixa)"><app-icone nome="add" /></button>

@@ -4,6 +4,8 @@ import { Router, RouterLink } from '@angular/router';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Icone } from '../../shared/componentes';
+import { capaComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
+import { gerarSlug } from '../../core/util';
 
 @Component({
   selector: 'app-nova-comunidade',
@@ -27,6 +29,12 @@ export class NovaComunidadePage {
       '4. Não publique conteúdo sabidamente falso.',
   };
   protected readonly enviando = signal(false);
+  protected readonly capa = capaComunidade;
+  protected readonly corTema = COR_TEMA;
+  protected readonly iconeTema = ICONE_TEMA;
+  protected slug() {
+    return gerarSlug(this.dados.nome || 'nova');
+  }
 
   protected async criar() {
     this.enviando.set(true);
