@@ -137,7 +137,16 @@ export interface Publicacao {
   comunidade_nome?: string;
   comunidade_slug?: string;
   comunidade_tema?: string;
+  /** Foto ou imagem do meme (no modo demonstração, imagem reduzida em data URL). */
+  imagem_url?: string | null;
+  /** Meme: textos por cima da imagem. Sempre marcado como "Meme" no card (piada não é informação). */
+  meme?: { topo: string; base: string } | null;
+  /** Checagem do Fato ou Fake compartilhada no feed. */
+  checagem?: { afirmacao: string; estado: string; resumo: string; fonte?: { titulo: string; url: string } | null } | null;
 }
+
+/** Extras opcionais ao publicar. */
+export type ExtrasPublicacao = Pick<Publicacao, 'imagem_url' | 'meme' | 'checagem'>;
 
 export interface Comentario {
   id: number;

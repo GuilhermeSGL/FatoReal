@@ -93,3 +93,47 @@ export const PRIVADAS_EXEMPLO: { de: string; para: string; texto: string; horas:
   { de: 'ex-carla', para: 'eu', horas: 26, lida: true, texto: 'Obrigada por participar! Amanhã vou postar umas dicas de checagem na comunidade Checagem de Fatos.' },
   { de: 'eu', para: 'ex-carla', horas: 25, lida: true, texto: 'Valeu, Carla! Vou acompanhar.' },
 ];
+
+/**
+ * Memes e checagens compartilhadas no modo demonstração (cara de rede social no Início).
+ * Memes: humor sobre o tema, sem atacar políticos reais. Checagens: conteúdo conferido com fonte oficial.
+ */
+export const MEMES_EXEMPLO: {
+  autor: string; comunidade: string; texto: string; horas: number; link_url?: string | null;
+  imagem?: string; meme?: { topo: string; base: string };
+  checagem?: { afirmacao: string; estado: string; resumo: string; fonte: { titulo: string; url: string } };
+}[] = [
+  {
+    autor: 'ex-fernanda', comunidade: 'checagem-de-fatos', horas: 0.6, imagem: 'img/fatobot.svg',
+    meme: { topo: 'Quando chega corrente no zap', base: 'Eu: qual é a fonte?' },
+    texto: 'Todo grupo da família tem um 😂 #ConfereAntesDeCompartilhar',
+  },
+  {
+    autor: 'ex-diego', comunidade: 'eleicoes-e-voto', horas: 1.5,
+    checagem: {
+      afirmacao: 'A urna eletrônica fica conectada à internet durante a votação.', estado: 'Evidências contradizem',
+      resumo: 'A urna eletrônica não tem nenhuma conexão com a internet, nem por cabo nem sem fio.',
+      fonte: { titulo: 'TSE: urna eletrônica', url: 'https://www.tse.jus.br/eleicoes/urna-eletronica' },
+    },
+    texto: 'Recebi isso hoje e fui conferir antes de mandar pra frente 👇 #ConfereAntesDeCompartilhar',
+  },
+  {
+    autor: 'ex-carla', comunidade: 'memes-da-politica', horas: 3, imagem: 'img/capa-checagem-de-fatos.svg',
+    meme: { topo: 'Eu lendo só a manchete', base: 'Eu depois de ler a matéria inteira' },
+    texto: 'A diferença que faz ler até o fim 🤡➡️🧐 #MemesDaPolítica',
+  },
+  {
+    autor: 'ex-ana', comunidade: 'memes-da-politica', horas: 7, imagem: 'img/capa-eleicoes-e-voto.svg',
+    meme: { topo: 'Voto em branco vai pra quem tá ganhando', base: 'Spoiler: não vai pra ninguém' },
+    texto: 'Esse boato volta toda eleição 🙄 Votos brancos e nulos não são contados para nenhum candidato. #Eleições2028',
+  },
+  {
+    autor: 'ex-bruno', comunidade: 'checagem-de-fatos', horas: 11,
+    checagem: {
+      afirmacao: 'Voto em branco vai para o candidato que está ganhando.', estado: 'Evidências contradizem',
+      resumo: 'Votos brancos e nulos não são contados para nenhum candidato.',
+      fonte: { titulo: 'TSE', url: 'https://www.tse.jus.br/' },
+    },
+    texto: 'Usei o Fato ou Fake pra tirar a dúvida da minha avó 😅',
+  },
+];

@@ -42,3 +42,17 @@ export function tempoAtras(iso: string): string {
   if (s < 7 * 86400) return `${Math.floor(s / 86400)} dia(s) atrás`;
   return new Date(iso).toLocaleDateString('pt-BR');
 }
+
+/** Se o link é de um órgão oficial, devolve o nome dele (Câmara, Senado, TSE...). Senão, null. */
+export function fonteOficial(link: string | null | undefined): string | null {
+  if (!link) return null;
+  try {
+    const host = new URL(link).hostname.replace(/^www\d*\./, '');
+    const oficiais: [RegExp, string][] = [[/(^|\.)camara\.leg\.br$/, 'Câmara dos Deputados'], [/(^|\.)senado\.leg\.br$/, 'Senado Federal'], [/(^|\.)tse\.jus\.br$/, 'Tribunal Superior Eleitoral'],
+      [/(^|\.)stf\.jus\.br$/, 'Supremo Tribunal Federal'], [/(^|\.)ibge\.gov\.br$/, 'IBGE'], [/(^|\.)ebc\.com\.br$/, 'Agência Brasil'], [/(^|\.)gov\.br$/, 'Governo federal'],
+      [/\.leg\.br$/, 'Poder Legislativo'], [/\.jus\.br$/, 'Poder Judiciário'], [/\.mp\.br$/, 'Ministério Público']];
+    return oficiais.find(([re]) => re.test(host))?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}

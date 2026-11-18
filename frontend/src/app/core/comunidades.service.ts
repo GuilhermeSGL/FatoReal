@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, inject } from '@angular/core';
 import { AuthService } from './auth.service';
-import { Autor, Comentario, Comunidade, Denuncia, Publicacao, StatusDenuncia } from './modelos';
+import { Autor, Comentario, Comunidade, Denuncia, ExtrasPublicacao, Publicacao, StatusDenuncia } from './modelos';
 import { supabase } from './supabase';
 import { lerDemo, proximoId, salvarDemo } from './demo-store';
 import { gerarSlug } from './util';
-import { GRUPOS_EXEMPLO, PESSOAS_EXEMPLO, PUBLICACOES_EXEMPLO } from './pessoas-demo';
+import { GRUPOS_EXEMPLO, MEMES_EXEMPLO, PESSOAS_EXEMPLO, PUBLICACOES_EXEMPLO } from './pessoas-demo';
 
 type Linha = Record<string, any>;
 
@@ -182,12 +182,15 @@ export class ComunidadesService {
   }
 
   /** Publica no mural e devolve o id da nova publicação. */
-  async publicar(comunidadeId: number, texto: string, link: string | null): Promise<number | null> {
+  async publicar(comunidadeId: number, texto: string, link: string | null, extras: ExtrasPublicacao = {}): Promise<number | null> {
     const u = this.exigirUsuario();
-    if (!supabase) return this.demo.publicar(comunidadeId, texto, link, u);
+    if (!supabase) return this.demo.publicar(comunidadeId, texto, link, u, extras);
+    // Colunas opcionais (imagem_url, meme, checagem): só vão quando preenchidas, para não quebrar bancos sem elas
+    const linha: Linha = { comunidade_id: comunidadeId, autor_id: u.id, texto, link_url: link };
+    for (const [k, v] of Object.entries(extras)) if (v) linha[k] = v;
     const { data, error } = await supabase
       .from('publicacoes')
-      .insert({ comunidade_id: comunidadeId, autor_id: u.id, texto, link_url: link })
+      .insert(linha)
       .select('id')
       .single();
     if (error) throw new Error('Não foi possível publicar. Você precisa ser membro da comunidade.');
@@ -304,6 +307,9 @@ function mapPublicacao(p: Linha, eu?: string): Publicacao {
     comunidade_nome: p['comunidade']?.nome,
     comunidade_slug: p['comunidade']?.slug,
     comunidade_tema: p['comunidade']?.tema,
+    imagem_url: p['imagem_url'] ?? null,
+    meme: p['meme'] ?? null,
+    checagem: p['checagem'] ?? null,
   };
 }
 
@@ -498,6 +504,29 @@ function completarSementes(db: BancoDemo): BancoDemo {
       db.membros.push({ comunidade_id: c.id, usuario: { id: pessoa.id, nome: pessoa.nome, foto_url: pessoa.foto_url }, papel: 'membro' });
     }
   }
+  // Rede social: comunidade de memes, memes e checagens compartilhadas (uma vez por navegador)
+  if (!aplicadas.has('social-3')) {
+    aplicadas.add('social-3');
+    mudou = true;
+    const slugMemes = gerarSlug('Memes da Política');
+    if (!db.comunidades.some((c) => c.slug === slugMemes)) {
+      const id = proximoId(db.comunidades);
+      db.comunidades.push({ id, slug: slugMemes, nome: 'Memes da Política', tema: 'Cidadania', regras: REGRAS_PADRAO, criado_em: new Date().toISOString(),
+        descricao: 'Humor sobre política e desinformação, sem ataques pessoais. Meme é piada: informação continua precisando de fonte.' });
+      db.membros.push({ comunidade_id: id, usuario: EQUIPE, papel: 'moderador' });
+    }
+    for (const m of MEMES_EXEMPLO) {
+      const c = db.comunidades.find((x) => x.slug === m.comunidade);
+      const pessoa = PESSOAS_EXEMPLO.find((x) => x.id === m.autor);
+      if (!c || !pessoa) continue;
+      const autor = { id: pessoa.id, nome: pessoa.nome, foto_url: pessoa.foto_url };
+      if (!db.membros.some((x) => x.comunidade_id === c.id && x.usuario.id === autor.id)) db.membros.push({ comunidade_id: c.id, usuario: autor, papel: 'membro' });
+      db.publicacoes.push({
+        id: proximoId(db.publicacoes), comunidade_id: c.id, autor, verificada: false, removida: false, texto: m.texto, link_url: m.link_url ?? null,
+        criado_em: new Date(Date.now() - m.horas * 3600_000).toISOString(), imagem_url: m.imagem ?? null, meme: m.meme ?? null, checagem: m.checagem ?? null,
+      });
+    }
+  }
   db.sementes = [...aplicadas];
   if (mudou) salvarDemo('social-v2', db);
   return db;
@@ -588,7 +617,7 @@ class DemoSocial {
         };
       });
   }
-  publicar(comunidadeId: number, texto: string, link: string | null, u: Autor) {
+  publicar(comunidadeId: number, texto: string, link: string | null, u: Autor, extras: ExtrasPublicacao = {}) {
     const db = this.db;
     if (!db.membros.some((m) => m.comunidade_id === comunidadeId && m.usuario.id === u.id)) {
       throw new Error('Entre na comunidade para publicar.');
@@ -597,7 +626,7 @@ class DemoSocial {
     db.publicacoes.push({
       id, comunidade_id: comunidadeId, texto, link_url: link,
       autor: { id: u.id, nome: u.nome, foto_url: u.foto_url }, verificada: false, removida: false,
-      criado_em: new Date().toISOString(),
+      criado_em: new Date().toISOString(), ...extras,
     });
     this.salvar(db);
     return id;

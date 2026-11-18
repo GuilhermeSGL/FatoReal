@@ -9,7 +9,7 @@ import { Comentario, Publicacao } from '../core/modelos';
 import { linkSeguro, tempoAtras } from '../core/util';
 import { EnquetesService } from '../core/enquetes.service';
 import { Avatar, Icone } from './componentes';
-import { SeloStatus } from './selo-status';
+import { SeloStatus, seloDoEstado } from './selo-status';
 
 /** Card de publicação no estilo da apresentação: autor, comunidade, texto, link, curtir/comentar/compartilhar/denunciar. */
 @Component({
@@ -33,12 +33,35 @@ import { SeloStatus } from './selo-status';
           </small>
         </div>
         <span class="post-selos">
+          @if (p.meme) { <span class="post-tipo" data-tipo="meme"><app-icone nome="mood" /> Meme</span> }
+          @else if (p.checagem) { <span class="post-tipo" data-tipo="checagem"><app-icone nome="fact_check" /> Checagem</span> }
+          @else if (enquetes.de(p.id)) { <span class="post-tipo" data-tipo="enquete"><app-icone nome="poll" /> Enquete</span> }
           <app-selo [tipo]="p.verificada ? 'verificado' : 'usuario'" />
           @if (ehNovo(p.criado_em)) { <app-selo tipo="novo" /> }
         </span>
       </header>
 
       <p class="post-texto">{{ p.texto }}</p>
+
+      @if (p.imagem_url) {
+        <figure class="post-midia" [class.post-meme]="!!p.meme">
+          <img [src]="p.imagem_url" [alt]="p.meme ? 'Meme: ' + p.meme.topo + ' / ' + p.meme.base : 'Imagem da publicação'" loading="lazy" />
+          @if (p.meme; as m) {
+            @if (m.topo) { <figcaption class="meme-topo">{{ m.topo }}</figcaption> }
+            @if (m.base) { <figcaption class="meme-base">{{ m.base }}</figcaption> }
+          }
+        </figure>
+      }
+
+      @if (p.checagem; as c) {
+        <div class="post-checagem">
+          <span class="post-checagem-k"><app-icone nome="fact_check" /> Conferido no Fato ou Fake</span>
+          <q>{{ c.afirmacao }}</q>
+          <app-selo [tipo]="seloDe(c.estado)" />
+          <p>{{ c.resumo }}</p>
+          @if (c.fonte; as f) { <a [href]="f.url" target="_blank" rel="noopener noreferrer"><app-icone nome="link" /> Fonte: {{ f.titulo }}</a> }
+        </div>
+      }
 
       @if (link(p.link_url); as l) {
         <a class="post-link" [href]="l" target="_blank" rel="noopener noreferrer nofollow ugc">
@@ -136,6 +159,9 @@ import { SeloStatus } from './selo-status';
   `,
 })
 export class PublicacaoCard {
+  protected seloDe(estado: string) {
+    return seloDoEstado(estado);
+  }
   protected ehNovo = (iso: string) => Date.now() - new Date(iso).getTime() < 86400000;
   protected enquetes = inject(EnquetesService);
   protected soma = (v: number[]) => v.reduce((a, b) => a + b, 0);
