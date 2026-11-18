@@ -1,3 +1,5 @@
+import { PerguntarFatobot } from '../../shared/fatobot-bolha';
+import { SeloStatus, seloDoEstado } from '../../shared/selo-status';
 import { HostListener, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -29,7 +31,7 @@ interface Destaque {
 
 @Component({
   selector: 'app-inicio',
-  imports: [FormsModule, RouterLink, Icone, Avatar, PublicacaoCard],
+  imports: [FormsModule, RouterLink, Icone, Avatar, PublicacaoCard, SeloStatus, PerguntarFatobot],
   templateUrl: './inicio.html',
 })
 export class InicioPage implements OnInit {
@@ -158,8 +160,8 @@ export class InicioPage implements OnInit {
     this.carregandoRep.set(false);
   }
 
-  protected rotuloEstado(e: EstadoVerificacao): string {
-    return { 'Evidências sustentam': 'Verdadeiro', 'Evidências contradizem': 'Falso', 'Fora de contexto': 'Fora de contexto', 'Evidência insuficiente': 'Sem evidência', 'Em análise': 'Em análise' }[e];
+  protected seloDe(e: EstadoVerificacao) {
+    return seloDoEstado(e);
   }
 
   private async carregar() {

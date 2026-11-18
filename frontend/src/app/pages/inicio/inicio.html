@@ -192,7 +192,7 @@
         <ul>
           @for (c of checagens(); track c.criado_em + c.afirmacao) {
             <li>
-              <span class="estado estado-p" [attr.data-estado]="c.estado">{{ rotuloEstado(c.estado) }}</span>
+              <app-selo [tipo]="seloDe(c.estado)" />
               <span class="termometro-texto">{{ c.afirmacao }}</span>
               @if (c.fonte; as f) { <a class="termometro-fonte" [href]="f.url" target="_blank" rel="noopener noreferrer">Fonte: {{ f.titulo }}</a> }
             </li>
@@ -208,7 +208,7 @@
         <img src="img/fatobot.svg" alt="Ilustração do FatoBot, o robô assistente" class="robo" />
         <p class="balao">Tire suas dúvidas sobre política, leis e candidatos!</p>
       </div>
-      <a routerLink="/fatobot" class="botao botao-verde botao-bloco">Conversar agora <app-icone nome="arrow_forward" /></a>
+      <button type="button" class="botao botao-verde botao-bloco" perguntarFatobot>Conversar agora <app-icone nome="arrow_forward" /></button>
     </section>
 
     <section class="card bloco">

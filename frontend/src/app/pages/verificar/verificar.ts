@@ -7,6 +7,7 @@ import { linkSeguro } from '../../core/util';
 import { ChecagensService } from '../../core/checagens.service';
 import { compartilharCartao } from '../../shared/cartao-compartilhar';
 import { AvisoIa, FonteDado, Icone } from '../../shared/componentes';
+import { SELOS, SeloStatus, TipoSelo, seloDoEstado } from '../../shared/selo-status';
 
 type TipoAnexo = 'imagem' | 'video' | 'documento';
 
@@ -32,7 +33,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
 /** Verificação assistida: avaliação preliminar baseada nas fontes consultadas, nunca certificação automática. */
 @Component({
   selector: 'app-verificar',
-  imports: [FormsModule, DatePipe, Icone, FonteDado, AvisoIa],
+  imports: [FormsModule, DatePipe, Icone, FonteDado, AvisoIa, SeloStatus],
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="fact_check" /> Verificar informação</h1>
@@ -96,22 +97,57 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
           </div>
         </form>
 
-        @for (it of historico(); track $index) {
-          <article class="card resultado-verificacao">
-            @if (it.afirmacao) { <blockquote>“{{ it.afirmacao }}”</blockquote> }
-            @if (it.link) { <a class="resultado-link" [href]="it.link" target="_blank" rel="noopener noreferrer nofollow"><app-icone nome="link" /> {{ it.link }}</a> }
-            @if (it.anexos.length) {
-              <ul class="resultado-anexos">
-                @for (a of it.anexos; track $index) { <li><app-icone [nome]="iconeTipo[a.tipo]" /> {{ a.nome }} <small>({{ a.tamanho }})</small></li> }
-              </ul>
-            }
-            <span class="estado" [attr.data-estado]="it.resultado.estado">
-              <app-icone [nome]="icone(it.resultado.estado)" /> {{ it.resultado.estado }}
-            </span>
-            <p>{{ it.resultado.explicacao }}</p>
+        <!-- Jornada da evidência (animação enquanto verifica) -->
+        @if (verificando() || etapa() > 0) {
+          <section class="card jornada" aria-live="polite" [attr.aria-busy]="verificando()">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="route" /></span> {{ verificando() ? 'Verificando...' : 'Verificação concluída' }}</h2>
+            <ol class="jornada-passos">
+              @for (e of etapas; track e.titulo; let i = $index) {
+                <li [class.feito]="etapa() > i" [class.atual]="etapa() === i && verificando()">
+                  <span class="jornada-num">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                  <span class="jornada-icone"><app-icone [nome]="e.icone" /></span>
+                  <strong>{{ e.titulo }}</strong>
+                  <small>{{ e.texto }}</small>
+                  <span class="jornada-status">
+                    @if (etapa() > i) { <app-icone nome="check_circle" /> {{ e.feito }} } @else if (etapa() === i && verificando()) { <span class="jornada-giro"></span> Em andamento } @else { Aguardando }
+                  </span>
+                </li>
+              }
+            </ol>
+          </section>
+        }
+
+        @for (it of historico(); track $index; let primeiro = $first) {
+          <article class="card registro" [class.registro-novo]="primeiro">
+            <header class="registro-topo">
+              <div>
+                <p class="sobretitulo">Registro contextualizado</p>
+                <h2>Resultado da verificação</h2>
+              </div>
+              <app-selo [tipo]="selo(it.resultado.estado)" [grande]="true" />
+            </header>
+            <ul class="registro-campos">
+              @if (it.afirmacao) { <li><span class="icone-tile" style="--c: #16a34a"><app-icone nome="format_quote" /></span><span><small>Afirmação</small><strong>“{{ it.afirmacao }}”</strong></span></li> }
+              @if (it.link) { <li><span class="icone-tile" style="--c: #0891b2"><app-icone nome="link" /></span><span><small>Link enviado</small><a [href]="it.link" target="_blank" rel="noopener noreferrer nofollow">{{ it.link }}</a></span></li> }
+              @if (it.anexos.length) {
+                <li><span class="icone-tile" style="--c: #7c3aed"><app-icone nome="attach_file" /></span><span><small>Anexos</small>
+                  <span class="registro-anexos">@for (a of it.anexos; track $index) { <span><app-icone [nome]="iconeTipo[a.tipo]" /> {{ a.nome }} <em>({{ a.tamanho }})</em></span> }</span></span></li>
+              }
+              <li><span class="icone-tile" style="--c: #2563eb"><app-icone nome="account_balance" /></span><span><small>Fonte primária</small><strong>{{ it.resultado.contexto?.fonte || it.resultado.fontes[0]?.titulo || 'Ainda sem fonte encontrada' }}</strong></span></li>
+              <li><span class="icone-tile" style="--c: #9333ea"><app-icone nome="calendar_month" /></span><span><small>Data da consulta</small><strong>{{ it.resultado.consultado_em | date: "dd 'de' MMMM 'de' yyyy, HH:mm" : '' : 'pt-BR' }}</strong></span></li>
+              <li><span class="icone-tile" style="--c: #d97706"><app-icone nome="category" /></span><span><small>Categoria</small><strong>{{ it.resultado.contexto?.categoria || categoria(it.afirmacao) }}</strong></span></li>
+            </ul>
+            <div class="registro-classes" role="list" aria-label="Classificação">
+              @for (c of classes; track c) {
+                <span role="listitem" class="registro-classe" [attr.data-selo]="c" [class.ativa]="selo(it.resultado.estado) === c" [attr.aria-current]="selo(it.resultado.estado) === c">
+                  <app-icone [nome]="selos[c].icone" /> {{ selos[c].texto }}
+                </span>
+              }
+            </div>
+            <p class="registro-explicacao">{{ it.resultado.explicacao }}</p>
             @for (f of it.resultado.fontes; track f.url) { <app-fonte [fonte]="f" rotulo="data" /> }
             <div class="resultado-rodape">
-              <small class="texto-suave">Consultado em {{ it.resultado.consultado_em | date: 'dd/MM/yyyy HH:mm' }}</small>
+              <small class="texto-suave">Avaliação preliminar, baseada só nas fontes consultadas.</small>
               <button type="button" class="botao botao-fantasma botao-p" (click)="compartilhar(it)"><app-icone nome="ios_share" /> Compartilhar card</button>
             </div>
             <app-aviso-ia />
@@ -123,8 +159,8 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
         <section class="card bloco">
           <h2><app-icone nome="rule" /> O que cada resultado quer dizer</h2>
           <dl class="estados">
-            @for (e of estados; track e[0]) {
-              <div><dt><span class="estado" [attr.data-estado]="e[0]"><app-icone [nome]="icone(e[0])" /> {{ e[0] }}</span></dt><dd>{{ e[1] }}</dd></div>
+            @for (c of legenda; track c) {
+              <div><dt><app-selo [tipo]="c" /></dt><dd>{{ selos[c].explicacao }}</dd></div>
             }
           </dl>
         </section>
@@ -153,6 +189,30 @@ export class VerificarPage implements OnDestroy {
   protected readonly rotuloTipo: Record<TipoAnexo, string> = { imagem: 'Foto', video: 'Vídeo', documento: 'Documento' };
   protected readonly iconeTipo: Record<TipoAnexo, string> = { imagem: 'image', video: 'movie', documento: 'description' };
   protected readonly verificando = signal(false);
+  // Jornada da evidência (slide 2): cada etapa acende enquanto a verificação acontece
+  protected readonly etapa = signal(0);
+  protected readonly etapas = [
+    { titulo: 'Recebida', icone: 'inbox', texto: 'Seu pedido foi registrado.', feito: 'Recebida' },
+    { titulo: 'Coleta em fontes oficiais', icone: 'travel_explore', texto: 'Câmara, Senado, TSE e dados públicos.', feito: 'Coleta concluída' },
+    { titulo: 'Análise com IA', icone: 'psychology', texto: 'Compara o conteúdo com as fontes.', feito: 'Análise concluída' },
+    { titulo: 'Conferência', icone: 'fact_check', texto: 'Checa datas, contexto e anexos.', feito: 'Conferida' },
+    { titulo: 'Classificação', icone: 'verified', texto: 'Define o selo do resultado.', feito: 'Classificada' },
+  ];
+  protected readonly selos = SELOS;
+  protected readonly classes: TipoSelo[] = ['verificado', 'confiavel', 'analise', 'sem-contexto', 'insuficiente', 'falso'];
+  protected readonly legenda: TipoSelo[] = ['verificado', 'confiavel', 'analise', 'sem-contexto', 'insuficiente', 'falso'];
+  protected selo(e: EstadoVerificacao): TipoSelo {
+    return seloDoEstado(e);
+  }
+  protected categoria(t: string): string {
+    const x = t.toLowerCase();
+    if (/sa[uú]de|sus|hospital|vacina/.test(x)) return 'Saúde pública';
+    if (/escola|educa|ensino|professor/.test(x)) return 'Educação';
+    if (/imposto|econom|infla|sal[aá]rio|gasto|or[cç]amento/.test(x)) return 'Economia';
+    if (/elei|voto|urna|candidat|tse/.test(x)) return 'Eleições';
+    if (/deputad|senad|c[aâ]mara|congresso|lei|projeto/.test(x)) return 'Política';
+    return 'Não identificada';
+  }
   protected readonly historico = signal<Item[]>([]);
   protected readonly estados: [EstadoVerificacao, string][] = [
     ['Evidências sustentam', 'Fontes primárias ou confiáveis confirmam o essencial da afirmação.'],
@@ -160,17 +220,18 @@ export class VerificarPage implements OnDestroy {
     ['Fora de contexto', 'Há base nos fatos, mas data, local ou sentido foram alterados ou omitidos.'],
     ['Evidência insuficiente', 'Não há fontes suficientes para confirmar nem para negar. Ausência de evidência não é prova de falsidade.'],
     ['Em análise', 'Recebida; aguardando busca de fontes ou revisão humana.'],
+    ['Fonte confiável', 'O conteúdo vem direto de um site oficial.'],
   ];
 
   protected async compartilhar(it: Item) {
     const cores: Record<string, string> = {
-      'Evidências sustentam': '#0e8a5f', 'Evidências contradizem': '#c0262d', 'Fora de contexto': '#b07a00', 'Evidência insuficiente': '#2f6fb0',
+      'Evidências sustentam': '#0e8a5f', 'Evidências contradizem': '#c0262d', 'Fora de contexto': '#b07a00', 'Evidência insuficiente': '#2f6fb0', 'Fonte confiável': '#2563eb',
     };
     try {
       const r = await compartilharCartao({
         rotulo: 'Checagem de informação',
         titulo: it.afirmacao ? `“${it.afirmacao}”` : it.link || 'Conteúdo enviado',
-        selo: { texto: it.resultado.estado, cor: cores[it.resultado.estado] ?? '#0b2a4a' },
+        selo: { texto: SELOS[this.selo(it.resultado.estado)].texto, cor: cores[it.resultado.estado] ?? '#0b2a4a' },
         subtitulo: it.resultado.explicacao,
         fonte: it.resultado.fontes[0]?.titulo,
         nomeArquivo: 'fatoreal-checagem',
@@ -188,6 +249,7 @@ export class VerificarPage implements OnDestroy {
       'Fora de contexto': 'error',
       'Evidência insuficiente': 'help',
       'Em análise': 'hourglass_top',
+      'Fonte confiável': 'shield',
     }[e];
   }
 
@@ -243,8 +305,16 @@ export class VerificarPage implements OnDestroy {
     const link = this.link.trim() ? linkSeguro(this.link.trim()) : null;
     const anexos = this.anexos();
     this.verificando.set(true);
+    this.etapa.set(0);
+    const passo = 750;
+    const relogio = setInterval(() => this.etapa.update((e) => Math.min(e + 1, this.etapas.length - 1)), passo);
     try {
-      const resultado = await this.bot.verificar({ afirmacao, link, anexos: anexos.map((a) => a.arquivo) });
+      const [resultado] = await Promise.all([
+        this.bot.verificar({ afirmacao, link, anexos: anexos.map((a) => a.arquivo) }),
+        new Promise((ok) => setTimeout(ok, passo * this.etapas.length)),
+      ]);
+      clearInterval(relogio);
+      this.etapa.set(this.etapas.length);
       this.checagens.registrar({
         afirmacao: afirmacao || link || anexos.map((a) => a.arquivo.name).join(', '), estado: resultado.estado,
         resumo: resultado.explicacao.slice(0, 160), fonte: resultado.fontes[0] ? { titulo: resultado.fontes[0].titulo, url: resultado.fontes[0].url } : null,
@@ -261,6 +331,7 @@ export class VerificarPage implements OnDestroy {
     } catch (e) {
       this.avisos.erro(e);
     } finally {
+      clearInterval(relogio);
       this.verificando.set(false);
     }
   }

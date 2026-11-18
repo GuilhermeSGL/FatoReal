@@ -1,3 +1,4 @@
+import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NOTICIAS_DESTAQUE } from '../../core/noticias';
@@ -18,7 +19,7 @@ interface FonteNoticia {
  */
 @Component({
   selector: 'app-noticias',
-  imports: [RouterLink, Icone],
+  imports: [RouterLink, Icone, PerguntarFatobot],
   template: `
     <header class="cabecalho-pagina">
       <p class="sobretitulo">Em destaque</p>
@@ -44,7 +45,7 @@ interface FonteNoticia {
                 <p class="noticia-resumo">{{ n.resumo }}</p>
                 <div class="noticia-acoes">
                   <a class="botao" [href]="n.url" target="_blank" rel="noopener noreferrer" [attr.tabindex]="i === atual() ? 0 : -1">Ler a notícia completa <app-icone nome="open_in_new" /></a>
-                  <a class="botao botao-fantasma" routerLink="/fatobot" [queryParams]="{ p: n.pergunta }" [attr.tabindex]="i === atual() ? 0 : -1"><app-icone nome="smart_toy" /> Entender com o FatoBot</a>
+                  <button type="button" class="botao botao-fantasma" [perguntarFatobot]="n.pergunta" [attr.tabindex]="i === atual() ? 0 : -1"><app-icone nome="smart_toy" /> Entender com o FatoBot</button>
                 </div>
               </div>
             </article>

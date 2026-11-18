@@ -134,9 +134,9 @@
 <nav class="nav-inferior" aria-label="Navegação">
   <a routerLink="/" routerLinkActive="ativo" [routerLinkActiveOptions]="{ exact: true }"><app-icone nome="home" />Início</a>
   <a routerLink="/comunidades" routerLinkActive="ativo"><app-icone nome="groups" />Comunidades</a>
-  <a routerLink="/fatobot" routerLinkActive="ativo" class="nav-robo" aria-label="FatoBot">
+  <button type="button" class="nav-robo" perguntarFatobot aria-label="Abrir o FatoBot">
     <img src="img/fatobot-rosto.svg" alt="" width="52" height="52" />
-  </a>
+  </button>
   <a routerLink="/mensagens" routerLinkActive="ativo" class="com-contador"><app-icone nome="chat" />Mensagens
     @if (mensagens.naoLidas()) { <span class="contador">{{ mensagens.naoLidas() }}</span> }
   </a>
@@ -145,6 +145,7 @@
 
 <!-- ===== Pop-ups de aviso ===== -->
 <app-boas-vindas />
+<app-fatobot-bolha />
 
 <div class="avisos" aria-live="polite">
   @for (a of avisos.lista(); track a.id) {

@@ -16,6 +16,8 @@ export interface ResultadoBusca {
   query?: Record<string, string>;
   externo?: string;
   foto?: string | null;
+  /** Selo de status mostrado ao lado do resultado. */
+  selo?: 'verificado' | 'confiavel';
 }
 
 const PAGINAS: ResultadoBusca[] = [
@@ -51,7 +53,7 @@ export class BuscaGeralService {
       .filter((p) => tem(p.nome) || normalizar(p.partido ?? '') === t || normalizar(p.uf ?? '') === t)
       .slice(0, porGrupo)
       .map<ResultadoBusca>((p) => ({
-        tipo: 'politico', titulo: p.nome, detalhe: `${p.cargo} · ${p.partido ?? ''} · ${p.uf ?? ''}`, icone: 'person', foto: p.foto_url,
+        tipo: 'politico', selo: 'confiavel', titulo: p.nome, detalhe: `${p.cargo} · ${p.partido ?? ''} · ${p.uf ?? ''}`, icone: 'person', foto: p.foto_url,
         rota: p.casa === 'senado' ? ['/politicos/senado', p.id] : ['/politicos', p.id],
       }));
     // Busca por partido ou estado: atalho para a lista filtrada
@@ -65,7 +67,7 @@ export class BuscaGeralService {
       tipo: 'termo', titulo: g.termo, detalhe: g.definicao, icone: g.icone, rota: ['/base-da-politica'],
     }));
     const noticias = NOTICIAS_DESTAQUE.filter((n) => tem(n.titulo, n.resumo, n.tema)).slice(0, porGrupo).map<ResultadoBusca>((n) => ({
-      tipo: 'noticia', titulo: n.titulo, detalhe: `${n.fonte} · ${n.data}`, icone: 'newspaper', externo: n.url,
+      tipo: 'noticia', selo: 'verificado', titulo: n.titulo, detalhe: `${n.fonte} · ${n.data}`, icone: 'newspaper', externo: n.url,
     }));
     const paginas = PAGINAS.filter((p) => tem(p.titulo, p.detalhe)).slice(0, porGrupo);
     return [...atalhos, ...politicos, ...comunidades, ...termos, ...noticias, ...paginas];

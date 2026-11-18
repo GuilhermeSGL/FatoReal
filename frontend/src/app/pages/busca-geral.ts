@@ -2,6 +2,7 @@ import { Component, effect, inject, input, signal, untracked } from '@angular/co
 import { RouterLink } from '@angular/router';
 import { BuscaGeralService, ResultadoBusca, TipoResultado } from '../core/busca-geral';
 import { Avatar, Icone } from '../shared/componentes';
+import { SeloStatus } from '../shared/selo-status';
 
 const GRUPOS: { tipo: TipoResultado; titulo: string }[] = [
   { tipo: 'politico', titulo: 'Políticos' },
@@ -14,7 +15,7 @@ const GRUPOS: { tipo: TipoResultado; titulo: string }[] = [
 /** Página de resultados da busca do topo (/busca?q=...). */
 @Component({
   selector: 'app-busca-geral',
-  imports: [RouterLink, Avatar, Icone],
+  imports: [RouterLink, Avatar, Icone, SeloStatus],
   template: `
     <header class="cabecalho-pagina">
       <p class="sobretitulo">Busca</p>
@@ -33,12 +34,14 @@ const GRUPOS: { tipo: TipoResultado; titulo: string }[] = [
               @for (r of doGrupo(g.tipo); track r.titulo) {
                 <li>
                   @if (r.externo) {
-                    <a [href]="r.externo" target="_blank" rel="noopener noreferrer" class="busca-item"><span class="busca-icone"><app-icone [nome]="r.icone" /></span><span><strong>{{ r.titulo }}</strong><small>{{ r.detalhe }}</small></span></a>
+                    <a [href]="r.externo" target="_blank" rel="noopener noreferrer" class="busca-item"><span class="icone-tile" [attr.data-tipo]="r.tipo"><app-icone [nome]="r.icone" /></span><span class="busca-textos"><strong>{{ r.titulo }}</strong><small>{{ r.detalhe }}</small></span>@if (r.selo) { <app-selo [tipo]="r.selo" /> }<app-icone nome="chevron_right" class="busca-seta" /></a>
                   } @else {
                     <a [routerLink]="r.rota" [queryParams]="r.query" class="busca-item">
                       @if (r.tipo === 'politico') { <app-avatar class="avatar-oficial" [nome]="r.titulo" [url]="r.foto" [tamanho]="36" /> }
-                      @else { <span class="busca-icone"><app-icone [nome]="r.icone" /></span> }
-                      <span><strong>{{ r.titulo }}</strong><small>{{ r.detalhe }}</small></span>
+                      @else { <span class="icone-tile" [attr.data-tipo]="r.tipo"><app-icone [nome]="r.icone" /></span> }
+                      <span class="busca-textos"><strong>{{ r.titulo }}</strong><small>{{ r.detalhe }}</small></span>
+                      @if (r.selo) { <app-selo [tipo]="r.selo" /> }
+                      <app-icone nome="chevron_right" class="busca-seta" />
                     </a>
                   }
                 </li>

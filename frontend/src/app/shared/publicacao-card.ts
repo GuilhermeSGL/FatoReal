@@ -9,11 +9,12 @@ import { Comentario, Publicacao } from '../core/modelos';
 import { linkSeguro, tempoAtras } from '../core/util';
 import { EnquetesService } from '../core/enquetes.service';
 import { Avatar, Icone } from './componentes';
+import { SeloStatus } from './selo-status';
 
 /** Card de publicação no estilo da apresentação: autor, comunidade, texto, link, curtir/comentar/compartilhar/denunciar. */
 @Component({
   selector: 'app-publicacao',
-  imports: [FormsModule, RouterLink, Avatar, Icone],
+  imports: [FormsModule, RouterLink, Avatar, Icone, SeloStatus],
   template: `
     @let p = pub();
     <article class="post" [class.post-verificado]="p.verificada">
@@ -31,9 +32,9 @@ import { Avatar, Icone } from './componentes';
             }
           </small>
         </div>
-        <span class="post-tipo" [class.post-tipo-verificado]="p.verificada">
-          <app-icone [nome]="p.verificada ? 'verified' : 'person'" />
-          {{ p.verificada ? 'Informação verificada' : 'Publicação de usuário' }}
+        <span class="post-selos">
+          <app-selo [tipo]="p.verificada ? 'verificado' : 'usuario'" />
+          @if (ehNovo(p.criado_em)) { <app-selo tipo="novo" /> }
         </span>
       </header>
 
@@ -135,6 +136,7 @@ import { Avatar, Icone } from './componentes';
   `,
 })
 export class PublicacaoCard {
+  protected ehNovo = (iso: string) => Date.now() - new Date(iso).getTime() < 86400000;
   protected enquetes = inject(EnquetesService);
   protected soma = (v: number[]) => v.reduce((a, b) => a + b, 0);
   protected pct = (n: number, t: number) => (t ? Math.round((n / t) * 100) : 0);

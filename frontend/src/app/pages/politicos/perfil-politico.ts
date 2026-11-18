@@ -1,5 +1,6 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AlertaJuridico, Politico, TipoAlerta } from '../../core/modelos';
@@ -22,7 +23,7 @@ type Aba = 'geral' | 'projetos' | 'votacoes' | 'gastos' | 'discursos' | 'carreir
 
 @Component({
   selector: 'app-perfil-politico',
-  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone, ProjetoAcoes],
+  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone, ProjetoAcoes, PerguntarFatobot],
   templateUrl: './perfil-politico.html',
 })
 export class PerfilPoliticoPage implements OnInit {

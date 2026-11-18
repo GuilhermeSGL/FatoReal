@@ -13,7 +13,7 @@ export interface Checagem {
 }
 
 /** Exemplos do modo demonstração: afirmações comuns, com a resposta correta e a fonte oficial. */
-const EXEMPLOS: Checagem[] = [
+export const EXEMPLOS: Checagem[] = [
   {
     afirmacao: 'Dá para votar pela internet nas eleições.', estado: 'Evidências contradizem',
     resumo: 'No Brasil, o voto é presencial, na urna eletrônica da seção eleitoral.',

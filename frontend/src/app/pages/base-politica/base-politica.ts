@@ -1,5 +1,5 @@
+import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, computed, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { GLOSSARIO } from '../../core/glossario';
 import { Icone } from '../../shared/componentes';
 
@@ -17,7 +17,7 @@ interface Trilha {
 /** Base da Política: área educativa para quem está começando. Tom didático e apartidário. */
 @Component({
   selector: 'app-base-politica',
-  imports: [RouterLink, Icone],
+  imports: [Icone, PerguntarFatobot],
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="school" /> Base da Política</h1>
@@ -54,9 +54,9 @@ interface Trilha {
             <h3>{{ g.termo }}</h3>
             <p class="glossario-def">{{ g.definicao }}</p>
             <div class="glossario-pratica"><strong><app-icone nome="lightbulb" /> Na prática</strong><span>{{ g.exemplo }}</span></div>
-            <a class="glossario-bot" routerLink="/fatobot" [queryParams]="{ p: 'O que é ' + g.termo + ' e como funciona no Brasil?' }" [attr.tabindex]="i >= atual() && i < atual() + visiveis() ? 0 : -1">
+            <button type="button" class="glossario-bot" [perguntarFatobot]="'O que é ' + g.termo + ' e como funciona no Brasil?'" [attr.tabindex]="i >= atual() && i < atual() + visiveis() ? 0 : -1">
               <app-icone nome="smart_toy" /> Perguntar ao FatoBot
-            </a>
+            </button>
           </li>
         }
       </ul>
@@ -107,7 +107,7 @@ interface Trilha {
     <div class="card aviso-participar">
       <app-icone nome="smart_toy" />
       <p>Ficou com dúvida? Pergunte ao FatoBot: ele explica em linguagem simples e mostra de onde veio a informação.</p>
-      <a routerLink="/fatobot" class="botao botao-verde">Perguntar ao FatoBot</a>
+      <button type="button" class="botao botao-verde" perguntarFatobot>Perguntar ao FatoBot</button>
     </div>
   `,
 })

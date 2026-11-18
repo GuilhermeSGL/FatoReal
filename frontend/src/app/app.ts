@@ -11,13 +11,14 @@ import { AcessibilidadeService } from './core/acessibilidade.service';
 import { tempoAtras } from './core/util';
 import { Avatar, AvisoDemo, Icone } from './shared/componentes';
 import { BoasVindas } from './shared/boas-vindas';
+import { FatoBotBolha, PerguntarFatobot } from './shared/fatobot-bolha';
 
 type Contador = 'comunidades' | 'mensagens';
 
 /** Casca do app, como na apresentação: barra superior escura, menu lateral, painel claro e navegação inferior no celular. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot],
   templateUrl: './app.html',
 })
 export class App {
@@ -42,7 +43,6 @@ export class App {
     { rota: '/base-da-politica', icone: 'school', texto: 'Base da Política' },
     { rota: '/fato-ou-fake', icone: 'quiz', texto: 'Fato ou Fake' },
     { rota: '/comunidades', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
-    { rota: '/fatobot', icone: 'smart_toy', texto: 'IA FatoBot' },
     { rota: '/verificar', icone: 'fact_check', texto: 'Verificar Informação' },
     { rota: '/mensagens', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
   ];
@@ -54,7 +54,6 @@ export class App {
     { rota: '/congresso', texto: 'Congresso', exato: false },
     { rota: '/fato-ou-fake', texto: 'Fato ou Fake', exato: false },
     { rota: '/comunidades', texto: 'Comunidades', exato: false },
-    { rota: '/fatobot', texto: 'IA', exato: false },
     { rota: '/base-da-politica', texto: 'Base da Política', exato: false },
   ];
 
