@@ -57,6 +57,7 @@ No Windows, o PowerShell precisou de `Set-ExecutionPolicy -Scope CurrentUser Rem
 - `/subir` — confere o build e faz commit + push na `luiz/frontend`.
 
 ## Pendências
+- **Trello:** o Luiz vai ligar o conector do Trello no claude.ai (em 18/11 ele já estava adicionado, faltava o login). Assim que estiver ligado, ler o quadro atual "PI Senac - FATO REAL" inteiro (listas, cartões, checklists) e guardar um resumo, porque o Trello vai ser refeito.
 - Ligar o Supabase de verdade (URL e chave `anon` em `frontend/.env` e na Vercel). Modelo do arquivo: `frontend/.env.exemplo`. **Chaves e senhas nunca vão para o repositório.**
 - Juntar o front com a API do João (`POST /api/fatobot` e `POST /api/verificar`, contratos em `frontend/README.md`), que está na `joao/backend`.
 - Deploy na Vercel (configuração na branch `deploy-vercel`).
