@@ -81,7 +81,7 @@ interface FonteNoticia {
     <div class="card aviso-participar">
       <app-icone nome="fact_check" />
       <p>Viu uma notícia em outro lugar e ficou na dúvida? Confira antes de compartilhar.</p>
-      <a routerLink="/verificar" class="botao botao-verde">Verificar uma informação</a>
+      <a routerLink="/fato-ou-fake" class="botao botao-verde">Verificar uma informação</a>
     </div>
   `,
 })

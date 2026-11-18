@@ -41,10 +41,10 @@ export class App {
     { rota: '/politicos', icone: 'person', texto: 'Candidatos' },
     { rota: '/congresso', icone: 'account_balance', texto: 'Congresso' },
     { rota: '/base-da-politica', icone: 'school', texto: 'Base da Política' },
-    { rota: '/fato-ou-fake', icone: 'quiz', texto: 'Fato ou Fake' },
     { rota: '/comunidades', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
-    { rota: '/verificar', icone: 'fact_check', texto: 'Verificar Informação' },
+    { rota: '/fato-ou-fake', icone: 'fact_check', texto: 'Fato ou Fake' },
     { rota: '/mensagens', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
+    { rota: '/perfil', icone: 'account_circle', texto: 'Meu perfil' },
   ];
 
   protected readonly abas = [

@@ -24,7 +24,7 @@ const PAGINAS: ResultadoBusca[] = [
   { tipo: 'pagina', titulo: 'Candidatos', detalhe: 'Deputados e senadores de A a Z', icone: 'person', rota: ['/politicos'] },
   { tipo: 'pagina', titulo: 'Ranking de gastos', detalhe: 'Cota parlamentar por estado', icone: 'leaderboard', rota: ['/politicos/gastos'] },
   { tipo: 'pagina', titulo: 'Comparar deputados', detalhe: 'Dois deputados lado a lado', icone: 'compare_arrows', rota: ['/politicos/comparar'] },
-  { tipo: 'pagina', titulo: 'Verificar informação', detalhe: 'Checar texto, link, foto ou vídeo', icone: 'fact_check', rota: ['/verificar'] },
+  { tipo: 'pagina', titulo: 'Fato ou Fake', detalhe: 'Verificar texto, link, foto ou vídeo', icone: 'fact_check', rota: ['/fato-ou-fake'] },
   { tipo: 'pagina', titulo: 'Base da Política', detalhe: 'Glossário e como uma lei nasce', icone: 'school', rota: ['/base-da-politica'] },
   { tipo: 'pagina', titulo: 'Notícias', detalhe: 'Notícias em destaque com fonte', icone: 'newspaper', rota: ['/noticias'] },
   { tipo: 'pagina', titulo: 'FatoBot', detalhe: 'Pergunte para a IA', icone: 'smart_toy', rota: ['/fatobot'] },

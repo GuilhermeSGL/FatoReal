@@ -142,7 +142,7 @@
     <!-- ===== Feed ===== -->
     <section class="pp-feed">
       @if (ehMeu()) {
-        <form class="card composer" (submit)="$event.preventDefault(); publicar()">
+        <form id="publicar" class="card composer" (submit)="$event.preventDefault(); publicar()">
           <div class="composer-linha">
             <app-avatar [nome]="p.nome" [url]="p.foto_url" [tamanho]="48" />
             <label for="pp-texto" class="sr-only">O que você quer compartilhar?</label>

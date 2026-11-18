@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, HostListener, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
@@ -34,6 +34,7 @@ export class PerfilPage {
   private perfis = inject(PerfisService);
   private comunidadesService = inject(ComunidadesService);
   private avisos = inject(AvisosService);
+  private rota = inject(ActivatedRoute);
 
   /** Vem da URL /pessoas/:id. Vazio em /perfil. */
   readonly id = input<string>();
@@ -73,6 +74,15 @@ export class PerfilPage {
       { titulo: 'Conectado', icone: 'person_add', requisito: 'Seguir 3 pessoas', ok: this.seguindo().length >= 3 },
     ];
     if (this.perfil()?.moderador) lista.unshift({ titulo: 'Moderação', icone: 'shield_person', requisito: 'Ser moderador(a)', ok: true });
+    if (this.ehMeu()) {
+      let total = 0;
+      try {
+        total = JSON.parse(localStorage.getItem('fatoreal-fato-ou-fake') ?? '{}').total ?? 0;
+      } catch {
+        /* sem armazenamento */
+      }
+      lista.push({ titulo: 'Caçador de fake news', icone: 'policy', requisito: 'Acertar 5 no modo desafio do Fato ou Fake', ok: total >= 5 });
+    }
     return lista;
   });
   protected readonly conquistasFeitas = computed(() => this.conquistas().filter((c) => c.ok).length);
@@ -179,6 +189,9 @@ export class PerfilPage {
     this.seguindo.set(valor(seguindo, []));
     this.sugestoes.set(valor(sugestoes, []));
     if (meu) {
+      this.rota.fragment.subscribe((f) => {
+        if (f === 'publicar') setTimeout(() => { const t = document.getElementById('pp-texto'); t?.scrollIntoView({ block: 'center' }); t?.focus(); }, 300);
+      });
       const minhas = await this.comunidadesService.minhas().catch(() => []);
       this.minhas.set(minhas);
       if (!this.comunidadeEscolhida && minhas[0]) this.comunidadeEscolhida = String(minhas[0].id);

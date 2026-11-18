@@ -1806,3 +1806,33 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
   .bolha-painel { right: 8px; left: 8px; width: auto; bottom: 86px; height: calc(100vh - 170px); }
 }
 @media (prefers-reduced-motion: reduce) { .bolha-botao::after, .bolha-painel, .bolha-dica { animation: none !important; } }
+
+/* ===== Fato ou Fake: cartões de fatos rápidos ===== */
+.fatos-topo { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.fatos-desafio { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+.fatos-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.fato-card { --c: #64748b; position: relative; display: grid; gap: 8px; align-content: start; padding: 16px; border-radius: 16px; border: 1px solid var(--borda); background: var(--superficie-2); min-height: 150px; animation: registro-entra 0.4s ease both; overflow: hidden;
+  &.revelado[data-fato='true'] { --c: #16a34a; } &.revelado[data-fato='false'] { --c: #dc2626; }
+  &.revelado { border-color: color-mix(in srgb, var(--c) 45%, var(--borda)); background: linear-gradient(180deg, color-mix(in srgb, var(--c) 8%, var(--superficie-2)), var(--superficie-2)); }
+  &.errou { box-shadow: inset 0 0 0 2px color-mix(in srgb, #dc2626 40%, transparent); } &.acertou { box-shadow: inset 0 0 0 2px color-mix(in srgb, #16a34a 45%, transparent); } }
+:root[data-tema='escuro'] .fato-card.revelado[data-fato='true'] { --c: #4ade80; }
+:root[data-tema='escuro'] .fato-card.revelado[data-fato='false'] { --c: #f87171; }
+.fato-frase { margin: 0; font-weight: 700; font-size: 1rem; line-height: 1.4; }
+.fato-carimbo { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px 4px 8px; border: 3px solid var(--c); color: var(--c); border-radius: 10px; font-weight: 900; font-size: 1.1rem; letter-spacing: 0.08em; transform: rotate(-4deg); animation: carimbo 0.35s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+  .icone { font-variation-settings: 'FILL' 1; } }
+@keyframes carimbo { from { transform: rotate(-4deg) scale(1.8); opacity: 0; } }
+.fato-exp { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--texto-suave); }
+.fato-fonte { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; color: var(--link); .icone { font-size: 0.95rem; } }
+.fato-resultado { font-weight: 700; color: var(--c); }
+.fato-botoes { display: flex; gap: 8px; margin-top: auto;
+  button { flex: 1; display: inline-flex; justify-content: center; align-items: center; gap: 4px; padding: 10px; border-radius: 12px; border: 2px solid; background: transparent; font: inherit; font-weight: 800; cursor: pointer; }
+  .fato-sim { border-color: #16a34a; color: #16a34a; &:hover { background: rgba(22, 163, 74, 0.1); } }
+  .fato-nao { border-color: #dc2626; color: #dc2626; &:hover { background: rgba(220, 38, 38, 0.1); } } }
+.fatos-placar { display: flex; align-items: center; gap: 6px; font-weight: 700; margin: 0; .icone { color: #d97706; } }
+.jornada-fato { margin-top: 14px; display: grid; gap: 8px; > span { display: inline-flex; align-items: center; gap: 6px; font-size: 0.88rem; .icone { color: #d97706; } } }
+.fato-card-largo { min-height: 0; .fato-carimbo { display: none; } .fato-exp { display: none; } &.revelado { .fato-carimbo { display: inline-flex; } .fato-exp { display: block; } } }
+/* Meu perfil na lateral */
+.lateral-perfil { display: grid; gap: 10px; padding: 12px; margin: 0 0 10px; border-radius: 16px; border: 1px solid var(--moldura-borda); background: var(--moldura-2);
+  small { color: var(--moldura-suave); font-size: 0.8rem; line-height: 1.35; } .botao { justify-content: center; } }
+.lateral-perfil-pessoa { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--moldura-titulo); span { display: grid; min-width: 0; } strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } &:hover small { color: var(--link); } }
+.lateral-perfil-visitante { strong { color: var(--moldura-titulo); } .link-sutil { justify-self: center; font-size: 0.85rem; } }

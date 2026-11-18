@@ -1,10 +1,11 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AvisosService } from '../../core/avisos.service';
 import { EstadoVerificacao, FatoBotService, ResultadoVerificacao } from '../../core/fatobot.service';
 import { linkSeguro } from '../../core/util';
 import { ChecagensService } from '../../core/checagens.service';
+import { AFIRMACOES, Afirmacao, rodadaDaSemana, semanaDoAno } from '../../core/fato-ou-fake';
 import { compartilharCartao } from '../../shared/cartao-compartilhar';
 import { AvisoIa, FonteDado, Icone } from '../../shared/componentes';
 import { SELOS, SeloStatus, TipoSelo, seloDoEstado } from '../../shared/selo-status';
@@ -36,8 +37,8 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
   imports: [FormsModule, DatePipe, Icone, FonteDado, AvisoIa, SeloStatus],
   template: `
     <header class="cabecalho-pagina">
-      <h1><app-icone nome="fact_check" /> Verificar informação</h1>
-      <p>Recebeu uma afirmação, um link, um print, um vídeo ou um documento sobre política? Envie aqui antes de compartilhar. A resposta é uma avaliação preliminar, baseada só nas fontes consultadas.</p>
+      <h1><app-icone nome="fact_check" /> Fato ou Fake?</h1>
+      <p>Recebeu uma mensagem, um link, um print ou um vídeo sobre política? Cole aqui antes de compartilhar e veja se é fato ou fake. A resposta é uma avaliação preliminar, baseada só nas fontes consultadas.</p>
     </header>
 
     <div class="layout-comunidade">
@@ -114,6 +115,16 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
                 </li>
               }
             </ol>
+            @if (verificando() && fatoDaVez(); as f) {
+              <div class="jornada-fato">
+                <span class="texto-suave"><app-icone nome="lightbulb" /> Enquanto verificamos, um fato rápido:</span>
+                <article class="fato-card fato-card-largo" [class.revelado]="fatoRevelado()" [attr.data-fato]="f.fato">
+                  <p class="fato-frase">“{{ f.texto }}”</p>
+                  <span class="fato-carimbo"><app-icone [nome]="f.fato ? 'check_circle' : 'cancel'" /> {{ f.fato ? 'FATO' : 'FAKE' }}</span>
+                  <p class="fato-exp">{{ resumo(f.explicacao) }}</p>
+                </article>
+              </div>
+            }
           </section>
         }
 
@@ -153,6 +164,34 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
             <app-aviso-ia />
           </article>
         }
+        <!-- Fatos rápidos: leitura automática; o desafio é opcional -->
+        <section class="card fatos-rapidos">
+          <header class="fatos-topo">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="bolt" /></span> Fatos rápidos da semana</h2>
+            <label class="fatos-desafio"><input type="checkbox" [checked]="desafio()" (change)="alternarDesafio()" /> Modo desafio <small class="texto-suave">(esconde as respostas)</small></label>
+          </header>
+          <p class="texto-p">{{ desafio() ? 'Toque em Fato ou Fake em cada cartão. Acertando 5, você ganha o selo "Caçador de fake news" no seu perfil.' : 'Boatos e verdades que circulam por aí, já checados com fonte oficial. Mudam toda segunda-feira.' }}</p>
+          <div class="fatos-grade">
+            @for (f of rodada; track f.id; let i = $index) {
+              @let r = respostas()[f.id];
+              <article class="fato-card" [class.revelado]="!desafio() || r !== undefined" [attr.data-fato]="f.fato" [class.acertou]="desafio() && r === f.fato" [class.errou]="desafio() && r !== undefined && r !== f.fato" [style.animation-delay.ms]="i * 120">
+                <p class="fato-frase">“{{ f.texto }}”</p>
+                @if (!desafio() || r !== undefined) {
+                  <span class="fato-carimbo"><app-icone [nome]="f.fato ? 'check_circle' : 'cancel'" /> {{ f.fato ? 'FATO' : 'FAKE' }}</span>
+                  @if (desafio()) { <small class="fato-resultado">{{ r === f.fato ? 'Você acertou!' : 'Não foi dessa vez.' }}</small> }
+                  <p class="fato-exp">{{ resumo(f.explicacao) }}</p>
+                  <a class="fato-fonte" [href]="f.fonte.url" target="_blank" rel="noopener noreferrer"><app-icone nome="verified" /> {{ f.fonte.titulo }}</a>
+                } @else {
+                  <div class="fato-botoes">
+                    <button type="button" class="fato-sim" (click)="responder(f.id, true)"><app-icone nome="check_circle" /> Fato</button>
+                    <button type="button" class="fato-nao" (click)="responder(f.id, false)"><app-icone nome="cancel" /> Fake</button>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+          @if (desafio()) { <p class="fatos-placar"><app-icone nome="emoji_events" /> {{ acertos() }} de {{ rodada.length }} nesta semana · {{ totalAcertos() }} acertos no total</p> }
+        </section>
       </div>
 
       <aside class="coluna-direita">
@@ -198,6 +237,54 @@ export class VerificarPage implements OnDestroy {
     { titulo: 'Conferência', icone: 'fact_check', texto: 'Checa datas, contexto e anexos.', feito: 'Conferida' },
     { titulo: 'Classificação', icone: 'verified', texto: 'Define o selo do resultado.', feito: 'Classificada' },
   ];
+  // ---------- Fatos rápidos ----------
+  protected readonly rodada: Afirmacao[] = rodadaDaSemana();
+  private readonly semana = semanaDoAno();
+  protected readonly desafio = signal(false);
+  protected readonly respostas = signal<Record<number, boolean>>(this.lerJogo().semana === this.semana ? this.lerJogo().respostas : {});
+  protected readonly totalAcertos = signal<number>(this.lerJogo().total ?? 0);
+  protected readonly acertos = computed(() => this.rodada.filter((f) => this.respostas()[f.id] === f.fato).length);
+  protected readonly fatoDaVez = signal<Afirmacao | null>(null);
+  protected readonly fatoRevelado = signal(false);
+  private relogioFato?: ReturnType<typeof setInterval>;
+
+  private lerJogo(): { semana: number; respostas: Record<number, boolean>; total: number } {
+    try {
+      return { semana: 0, respostas: {}, total: 0, ...JSON.parse(localStorage.getItem('fatoreal-fato-ou-fake') ?? '{}') };
+    } catch {
+      return { semana: 0, respostas: {}, total: 0 };
+    }
+  }
+  protected alternarDesafio() {
+    this.desafio.update((d) => !d);
+  }
+  protected responder(id: number, fato: boolean) {
+    const certo = this.rodada.find((f) => f.id === id)?.fato === fato;
+    this.respostas.update((r) => ({ ...r, [id]: fato }));
+    if (certo) this.totalAcertos.update((t) => t + 1);
+    try {
+      localStorage.setItem('fatoreal-fato-ou-fake', JSON.stringify({ semana: this.semana, respostas: this.respostas(), total: this.totalAcertos() }));
+    } catch {
+      /* sem armazenamento */
+    }
+  }
+  /** Primeira frase da explicação, para leitura rápida. */
+  protected resumo(t: string) {
+    const i = t.search(/\.\s/);
+    return i > 40 ? t.slice(0, i + 1) : t;
+  }
+  private mostrarFatos() {
+    const lista = [...AFIRMACOES].sort(() => Math.random() - 0.5);
+    let k = 0;
+    const proximo = () => {
+      this.fatoRevelado.set(false);
+      this.fatoDaVez.set(lista[k++ % lista.length]);
+      setTimeout(() => this.fatoRevelado.set(true), 1300);
+    };
+    proximo();
+    this.relogioFato = setInterval(proximo, 3800);
+  }
+
   protected readonly selos = SELOS;
   protected readonly classes: TipoSelo[] = ['verificado', 'confiavel', 'analise', 'sem-contexto', 'insuficiente', 'falso'];
   protected readonly legenda: TipoSelo[] = ['verificado', 'confiavel', 'analise', 'sem-contexto', 'insuficiente', 'falso'];
@@ -296,6 +383,7 @@ export class VerificarPage implements OnDestroy {
   }
 
   ngOnDestroy() {
+    clearInterval(this.relogioFato);
     for (const a of this.anexos()) if (a.previa) URL.revokeObjectURL(a.previa);
   }
 
@@ -306,8 +394,9 @@ export class VerificarPage implements OnDestroy {
     const anexos = this.anexos();
     this.verificando.set(true);
     this.etapa.set(0);
-    const passo = 750;
+    const passo = 1100;
     const relogio = setInterval(() => this.etapa.update((e) => Math.min(e + 1, this.etapas.length - 1)), passo);
+    this.mostrarFatos();
     try {
       const [resultado] = await Promise.all([
         this.bot.verificar({ afirmacao, link, anexos: anexos.map((a) => a.arquivo) }),
@@ -332,6 +421,7 @@ export class VerificarPage implements OnDestroy {
       this.avisos.erro(e);
     } finally {
       clearInterval(relogio);
+      clearInterval(this.relogioFato);
       this.verificando.set(false);
     }
   }
