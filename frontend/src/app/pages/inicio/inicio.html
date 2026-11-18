@@ -50,7 +50,7 @@
           @if (mostrarLink) {
             <div class="composer-extra">
               <label for="novo-link" class="sr-only">Link da fonte</label>
-              <input id="novo-link" name="link" type="url" [(ngModel)]="link" placeholder="https:// link da fonte" />
+              <input id="novo-link" name="link" type="url" [(ngModel)]="link" (ngModelChange)="aoMudarLink($event)" placeholder="https:// link da fonte" />
             </div>
           }
           @if (mostrarEnquete) {

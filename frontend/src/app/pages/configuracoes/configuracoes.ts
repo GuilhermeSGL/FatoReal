@@ -5,6 +5,7 @@ import { AvisosService } from '../../core/avisos.service';
 import { modoDemo } from '../../core/supabase';
 import { AcessibilidadeService } from '../../core/acessibilidade.service';
 import { Icone } from '../../shared/componentes';
+import { FatoBotConversa } from '../../core/fatobot-conversa.service';
 
 @Component({
   selector: 'app-configuracoes',
@@ -28,6 +29,19 @@ import { Icone } from '../../shared/componentes';
         <label class="opcao-alternar">
           <input type="checkbox" [checked]="a11y.contraste()" (change)="a11y.alternarContraste()" />
           <span><strong>Alto contraste</strong><small>Textos mais fortes, bordas visíveis e links sublinhados.</small></span>
+        </label>
+      </section>
+
+      <section class="card" id="fatobot">
+        <h2><app-icone nome="smart_toy" /> FatoBot</h2>
+        <p class="texto-suave">O assistente que acompanha você em todas as páginas.</p>
+        <label class="opcao-alternar">
+          <input type="checkbox" [checked]="bot.dicasLigadas()" (change)="bot.definir('dicas', !bot.dicasLigadas())" />
+          <span><strong>Dicas do FatoBot</strong><small>De vez em quando ele mostra uma dica sobre a página em que você está.</small></span>
+        </label>
+        <label class="opcao-alternar">
+          <input type="checkbox" [checked]="bot.falarRespostas()" (change)="bot.definir('voz', !bot.falarRespostas())" />
+          <span><strong>Responder em voz alta</strong><small>Quando você pergunta pelo microfone, ele lê a resposta.</small></span>
         </label>
       </section>
 
@@ -71,6 +85,7 @@ import { Icone } from '../../shared/componentes';
 export class ConfiguracoesPage {
   protected auth = inject(AuthService);
   protected a11y = inject(AcessibilidadeService);
+  protected bot = inject(FatoBotConversa);
   private avisos = inject(AvisosService);
   private router = inject(Router);
   protected readonly demo = modoDemo;

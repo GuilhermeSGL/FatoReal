@@ -7,7 +7,7 @@ import { ComunidadesService } from '../../core/comunidades.service';
 import { EnquetesService } from '../../core/enquetes.service';
 import { termoDoDia } from '../../core/glossario';
 import { Comunidade, Publicacao } from '../../core/modelos';
-import { linkSeguro } from '../../core/util';
+import { fonteOficial, linkSeguro } from '../../core/util';
 import { avatarComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
 import { Conferindo } from '../../shared/conferindo';
@@ -152,6 +152,18 @@ export class InicioPage implements OnInit {
   protected tirarImagem() {
     this.imagem.set(null);
     this.memeTopo = this.memeBase = '';
+  }
+
+  private avisouLink = false;
+  /** Colou um link de órgão oficial: o FatoBot comenta (uma vez por visita). */
+  protected aoMudarLink(link: string) {
+    const org = fonteOficial(link.trim());
+    if (!org || this.avisouLink) return;
+    this.avisouLink = true;
+    window.dispatchEvent(new CustomEvent('fatobot-dica', { detail: {
+      chave: 'link-oficial', titulo: `Boa, ${this.primeiroNome()}! 👋`,
+      texto: `Esse link é de ${org}, uma fonte oficial. Sua publicação vai sair com o selo “Com fonte”.`,
+    } }));
   }
 
   protected podePublicar() {

@@ -2146,3 +2146,25 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
   .lat-quiz-botoes button { background: transparent; color: inherit; border-color: currentColor; }
 }
 .post-checagem .selo-status { background: #fff; }
+
+/* FatoBot: balão de dica por página, microfone e "ouvindo" */
+.bolha-fala { position: fixed; right: 100px; bottom: 36px; z-index: 249; width: 280px; display: grid; gap: 6px; padding: 14px 16px 10px; border-radius: 18px 18px 4px 18px; background: var(--superficie); color: var(--texto); border: 1px solid var(--borda); box-shadow: var(--sombra), 0 12px 30px rgba(0, 0, 0, 0.18); font-size: 0.88rem; line-height: 1.4; animation: registro-entra 0.4s ease;
+  strong { font-size: 0.95rem; padding-right: 18px; } }
+.bolha-fala-botoes { display: flex; gap: 6px; margin-top: 4px;
+  button { padding: 7px 12px; border-radius: 999px; border: 0; font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; } }
+.bolha-fala-sim { background: var(--primaria); color: var(--primaria-texto); }
+.bolha-fala-nao { background: var(--superficie-2); color: var(--texto-suave); }
+.bolha-desligar { justify-self: start; font-size: 0.72rem !important; color: var(--texto-suave) !important; }
+.bolha-mic-rapido { position: fixed; right: 18px; bottom: 82px; z-index: 251; width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--painel); background: #e11d48; color: #fff; display: grid; place-items: center; cursor: pointer; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
+  .icone { font-size: 1.05rem; } &:hover { transform: scale(1.08); } }
+.bolha-mic { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--borda); background: var(--superficie-2); color: #e11d48; display: grid; place-items: center; cursor: pointer;
+  &.ativo { background: #e11d48; color: #fff; border-color: #e11d48; animation: mic-pulsa 1.2s infinite; } }
+@keyframes mic-pulsa { 50% { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0.15); } }
+.bolha-ouvindo { margin: 0 12px; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, #e11d48 10%, var(--superficie)); color: #be123c; font-size: 0.82rem; font-weight: 700; display: flex; gap: 8px; align-items: center; }
+.bolha-erro-voz { color: var(--perigo); font-weight: 600; }
+.bolha-onda { display: inline-flex; gap: 2px; align-items: center; height: 14px;
+  i { width: 3px; border-radius: 2px; background: currentColor; animation: onda 0.9s ease-in-out infinite; height: 40%; }
+  i:nth-child(2) { animation-delay: 0.15s; } i:nth-child(3) { animation-delay: 0.3s; } i:nth-child(4) { animation-delay: 0.45s; } }
+@keyframes onda { 50% { height: 100%; } }
+@media (max-width: 760px) { .bolha-fala, .bolha-mic-rapido { display: none; } }
+@media (prefers-reduced-motion: reduce) { .bolha-fala, .bolha-mic.ativo, .bolha-onda i { animation: none !important; } }
