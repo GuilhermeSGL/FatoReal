@@ -41,8 +41,8 @@ export class BuscaPage implements OnInit {
   protected readonly explorar = [
     { titulo: 'Congresso em ação', texto: 'Agenda, votações e leis', icone: 'account_balance', rota: '/congresso', imagem: 'img/destaque-congresso.svg' },
     { titulo: 'Ranking de gastos', texto: 'Mapa da cota por estado', icone: 'payments', rota: '/politicos/gastos', imagem: 'img/capa-contas-publicas.svg' },
-    { titulo: 'Presença', texto: 'Quem vai às votações', icone: 'how_to_vote', rota: '/politicos/ranking', imagem: 'img/capa-eleicoes-e-voto.svg' },
-    { titulo: 'Comparar', texto: 'Dois políticos lado a lado', icone: 'compare_arrows', rota: '/politicos/comparar', imagem: 'img/capa-camara-e-senado-em-pauta.svg' },
+    { titulo: 'Presença', texto: 'Quem vai às votações', icone: 'how_to_vote', rota: '/politicos/ranking', imagem: 'img/capa-camara-e-senado-em-pauta.svg' },
+    { titulo: 'Eleições', texto: 'Contagem, como votar e comparar', icone: 'ballot', rota: '/eleicoes', imagem: 'img/capa-eleicoes-e-voto.svg' },
   ];
   /** Cor do anel da foto: sempre a mesma para o mesmo partido (só enfeite, não indica nada). */
   protected corPartido(sigla: string | null | undefined): string {

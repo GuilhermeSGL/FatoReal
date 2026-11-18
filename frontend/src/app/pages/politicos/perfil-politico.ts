@@ -496,6 +496,35 @@ export class PerfilPoliticoPage implements OnInit {
       return u;
     }
   }
+  protected readonly mesesNomes = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  /** Gráfico de barras dos gastos por mês (só deputados; dado da Câmara). */
+  protected readonly gastosMes = computed(() => {
+    const d = this.detalhes()?.despesas;
+    if (this.casa() === 'senado' || !d?.porMes?.some((v) => v > 0)) return null;
+    return { ano: d.ano, total: d.total, parcial: d.parcial, meses: d.porMes, max: Math.max(...d.porMes) };
+  });
+  /** Cartões coloridos do painel do mandato. */
+  protected readonly estatisticas = computed(() => {
+    const sen = this.casa() === 'senado';
+    const d = this.detalhes();
+    const s = this.senador();
+    const moeda = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+    const lista = [
+      { rotulo: sen ? 'matérias de autoria' : 'proposições apresentadas', icone: 'description', cor: '#4f46e5',
+        carregando: sen ? this.carregandoFicha() : this.carregandoDetalhes(), valor: String(sen ? (s?.autorias?.length ?? '—') : (d?.totalProposicoes ?? '—')) },
+      { rotulo: 'presença nas votações', icone: 'how_to_reg', cor: '#15803d',
+        carregando: sen ? this.carregandoFicha() : this.carregandoVotacoes(), valor: this.presenca() !== null ? this.presenca() + '%' : '—' },
+      { rotulo: sen ? 'discursos no último ano' : 'discursos na legislatura', icone: 'record_voice_over', cor: '#be123c',
+        carregando: false, valor: String(sen ? (s?.discursos?.length ?? '—') : (this.discursosTotal() ?? '—')) },
+    ];
+    if (!sen) {
+      lista.push(
+        { rotulo: 'comissões atuais', icone: 'groups', cor: '#0369a1', carregando: this.carregandoDetalhes(), valor: d ? String(d.comissoes.length) : '—' },
+        { rotulo: d?.despesas ? `cota usada em ${d.despesas.ano}` : 'cota parlamentar', icone: 'payments', cor: '#d97706', carregando: this.carregandoDetalhes(), valor: d?.despesas ? moeda(d.despesas.total) : '—' },
+      );
+    }
+    return lista;
+  });
   protected readonly presenca = computed<number | null>(() => {
     if (this.casa() !== 'senado') return this.votacoes()?.presenca ?? null;
     const r = this.rosca();

@@ -121,43 +121,50 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
       </section>
     }
 
-    <h2 class="nt-secao">Continue lendo</h2>
+    <h2 class="nt-secao">Rolando agora <small>postagens das fontes oficiais</small></h2>
     <div class="nt-feed-area">
-      <div class="nt-feed">
+      <div class="nt-feed nt-posts">
         @for (item of feed(); track $index) {
           @if (item.tipo === 'checagem') {
-                <article class="nt-checagem">
-                  <span class="nt-k"><app-icone nome="fact_check" /> Checado pelo Fato Real</span>
-                  <p class="nt-checagem-frase">“{{ item.a.texto }}”</p>
-                  <span class="nt-carimbo" [class.fato]="item.a.fato"><app-icone [nome]="item.a.fato ? 'check_circle' : 'cancel'" /> {{ item.a.fato ? 'FATO' : 'FAKE' }}</span>
-                  <p>{{ item.a.explicacao }}</p>
-                  <div class="nt-acoes">
-                    <a [href]="item.a.fonte.url" target="_blank" rel="noopener noreferrer"><app-icone nome="link" /> {{ item.a.fonte.titulo }}</a>
-                    <a routerLink="/fato-ou-fake"><app-icone nome="quiz" /> Jogar Fato ou Fake</a>
-                  </div>
-                </article>
+            <article class="nt-post nt-post-checagem">
+              <header class="nt-post-topo">
+                <img src="img/fatobot-rosto.svg" alt="" class="nt-post-av" />
+                <span><strong>Fato Real <app-icone nome="verified" class="nt-post-selo" /></strong><small>Checagem · fato ou fake?</small></span>
+              </header>
+              <p class="nt-checagem-frase">“{{ item.a.texto }}”</p>
+              <span class="nt-carimbo" [class.fato]="item.a.fato"><app-icone [nome]="item.a.fato ? 'check_circle' : 'cancel'" /> {{ item.a.fato ? 'FATO' : 'FAKE' }}</span>
+              <p>{{ item.a.explicacao }}</p>
+              <footer class="nt-post-acoes">
+                <a [href]="item.a.fonte.url" target="_blank" rel="noopener noreferrer"><app-icone nome="link" /> {{ item.a.fonte.titulo }}</a>
+                <a routerLink="/fato-ou-fake"><app-icone nome="quiz" /> Jogar Fato ou Fake</a>
+              </footer>
+            </article>
           } @else {
-                <article class="nt-item" [class.compacta]="item.tipo === 'compacta'" [style.--c]="cat(item.n).cor">
-                  @if (imagem(item.n); as img) { <img [src]="img" alt="" loading="lazy" /> }
-                  @else { <span class="nt-sem-imagem"><app-icone [nome]="cat(item.n).icone" /></span> }
-                  <div>
-                    <span class="nt-k"><app-icone [nome]="cat(item.n).icone" /> {{ item.n.categoria }} · {{ item.n.fonte }} · {{ item.n.data }}</span>
-                    <h3><a [href]="item.n.url" target="_blank" rel="noopener noreferrer">{{ item.n.titulo }}</a></h3>
-                    @if (item.tipo === 'grande') {
-                      @if (item.n.resumo) { <p>{{ item.n.resumo }}</p> }
-                      <div class="nt-acoes">
-                        <a [href]="item.n.url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Ler na fonte</a>
-                        @if (item.n.pergunta) { <button type="button" [perguntarFatobot]="item.n.pergunta"><app-icone nome="smart_toy" /> Entender com o FatoBot</button> }
-                      </div>
-                    }
-                  </div>
-                </article>
+            @let f = fonteDe(item.n);
+            <article class="nt-post" [style.--c]="cat(item.n).cor">
+              <header class="nt-post-topo">
+                <span class="nt-post-av nt-post-av-icone"><app-icone [nome]="f.icone" /></span>
+                <span><strong>{{ item.n.fonte }} <app-icone nome="verified" class="nt-post-selo" /></strong><small>{{ f.orgao }} · {{ item.n.data }}</small></span>
+                <span class="nt-post-cat"><app-icone [nome]="cat(item.n).icone" /> {{ item.n.categoria }}</span>
+              </header>
+              <h3><a [href]="item.n.url" target="_blank" rel="noopener noreferrer">{{ item.n.titulo }}</a></h3>
+              @if (item.n.resumo) { <p>{{ item.n.resumo }}</p> }
+              @if (imagem(item.n); as img) { <a [href]="item.n.url" target="_blank" rel="noopener noreferrer" class="nt-post-img" tabindex="-1"><img [src]="img" alt="" loading="lazy" /></a> }
+              <footer class="nt-post-acoes">
+                <a [href]="item.n.url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Ler na fonte</a>
+                @if (item.n.pergunta) { <button type="button" [perguntarFatobot]="item.n.pergunta"><app-icone nome="smart_toy" /> Entender</button> }
+                <button type="button" (click)="compartilhar(item.n)"><app-icone nome="share" /> Compartilhar</button>
+              </footer>
+            </article>
           }
         } @empty {
           <p class="nt-vazio"><app-icone nome="inbox" /> Ainda não há mais notícias de {{ filtro() }}. <button type="button" class="link-sutil" (click)="filtrar(null)">Ver todas</button></p>
         }
         @if (temMais()) {
-          <button type="button" class="botao botao-fantasma nt-mais" (click)="limite.set(limite() + 8)"><app-icone nome="expand_more" /> Carregar mais notícias</button>
+          <div #maisAbaixo class="nt-carregando"><span class="bolha-digitando"><span></span><span></span><span></span></span> Carregando mais postagens...</div>
+          <button type="button" class="botao botao-fantasma nt-mais" (click)="carregarMais()"><app-icone nome="expand_more" /> Carregar mais</button>
+        } @else if (feed().length) {
+          <p class="nt-fim"><app-icone nome="task_alt" /> Você viu todas as notícias da lista de hoje.</p>
         }
       </div>
 
@@ -256,6 +263,37 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
     return n.imagem ?? infoCategoria(n.categoria).imagem;
   }
 
+  /** Fonte da notícia no formato de "perfil" do post (ícone e órgão). */
+  protected fonteDe(n: Noticia): FonteNoticia {
+    const nome = n.fonte.toLowerCase();
+    return this.fontes.find((f) => nome.includes(f.nome.toLowerCase()) || f.nome.toLowerCase().includes(nome))
+      ?? { nome: n.fonte, orgao: 'Fonte oficial', icone: 'newspaper', url: n.url };
+  }
+
+  protected async compartilhar(n: Noticia) {
+    try {
+      if (navigator.share) await navigator.share({ title: n.titulo, url: n.url });
+      else await navigator.clipboard.writeText(`${n.titulo} ${n.url}`);
+    } catch {
+      /* pessoa cancelou */
+    }
+  }
+
+  protected carregarMais() {
+    this.limite.update((l) => l + 6);
+  }
+
+  /** Rolou até o fim do feed: carrega mais postagens sozinho. */
+  private readonly maisAbaixo = viewChild<ElementRef<HTMLElement>>('maisAbaixo');
+  private observador?: IntersectionObserver;
+  private readonly vigia = effect(() => {
+    const el = this.maisAbaixo()?.nativeElement;
+    this.observador?.disconnect();
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    this.observador = new IntersectionObserver((e) => { if (e[0]?.isIntersecting) setTimeout(() => this.carregarMais(), 500); }, { rootMargin: '200px' });
+    this.observador.observe(el);
+  });
+
   protected filtrar(c: Categoria | null) {
     this.filtro.set(c);
     this.limite.set(8);
@@ -275,6 +313,7 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.observador?.disconnect();
     clearInterval(this.timer);
   }
 

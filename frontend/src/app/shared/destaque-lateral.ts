@@ -5,7 +5,7 @@ import { AFIRMACOES } from '../core/fato-ou-fake';
 import { Icone } from './componentes';
 
 /** 1º turno das eleições municipais de 2028: primeiro domingo de outubro (Constituição, art. 29, II). */
-const ELEICAO_2028 = new Date(2028, 9, 1);
+export const ELEICAO_2028 = new Date(2028, 9, 1);
 
 /**
  * "Enquanto você rola": cartões variados logo abaixo do menu lateral, que vão trocando conforme a pessoa
@@ -19,10 +19,10 @@ const ELEICAO_2028 = new Date(2028, 9, 1);
       <p class="lat-k">Enquanto você rola</p>
 
       @if (dias() > 0) {
-        <a class="lat-cartao lat-eleicao" href="https://www.tse.jus.br/servicos-eleitorais/autoatendimento-eleitoral" target="_blank" rel="noopener noreferrer">
+        <a class="lat-cartao lat-eleicao" routerLink="/eleicoes">
           <small><app-icone nome="event" /> Você sabia?</small>
           <strong>Faltam {{ dias() }} dias para a eleição municipal de 2028</strong>
-          <span>Tire ou regularize seu título no TSE <app-icone nome="arrow_forward" /></span>
+          <span>Prazos, como votar e comparar <app-icone nome="arrow_forward" /></span>
         </a>
       }
 

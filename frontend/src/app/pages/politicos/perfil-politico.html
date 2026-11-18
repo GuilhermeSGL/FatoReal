@@ -27,28 +27,6 @@
             <div><dt>Gênero</dt><dd>{{ genero() || '—' }}</dd></div>
           </dl>
         </div>
-        <aside class="ps-resumo" aria-label="Resumo do mandato">
-          <h2>Resumo do mandato</h2>
-          <ul>
-            <li>
-              <app-icone nome="description" />
-              @if (casa() === 'senado' ? carregandoFicha() : carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
-              @else { <strong>{{ casa() === 'senado' ? (senador()?.autorias?.length ?? '—') : (detalhes()?.totalProposicoes ?? '—') }}</strong> }
-              <small>{{ casa() === 'senado' ? 'matérias de autoria' : 'proposições apresentadas' }}</small>
-            </li>
-            <li>
-              <app-icone nome="task_alt" />
-              @if (casa() === 'senado' ? carregandoFicha() : carregandoVotacoes()) { <span class="esqueleto esqueleto-numero"></span> }
-              @else { <strong>{{ presenca() !== null ? presenca() + '%' : '—' }}</strong> }
-              <small>presença nas votações recentes</small>
-            </li>
-            <li>
-              <app-icone nome="record_voice_over" />
-              <strong>{{ casa() === 'senado' ? (senador()?.discursos?.length ?? '—') : (discursosTotal() ?? '—') }}</strong>
-              <small>{{ casa() === 'senado' ? 'discursos no último ano' : 'discursos na legislatura' }}</small>
-            </li>
-          </ul>
-        </aside>
       </div>
       <div class="perfil-acoes ps-acoes">
         <button type="button" class="botao botao-verde" [perguntarFatobot]="perguntaIa()"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</button>
@@ -56,12 +34,61 @@
           <app-icone [nome]="seguidos.sigo(p) ? 'notifications_active' : 'person_add'" /> {{ seguidos.sigo(p) ? 'Seguindo' : 'Seguir' }}
         </button>
         @if (casa() !== 'senado') {
-          <a class="botao botao-fantasma" routerLink="/politicos/comparar" [queryParams]="{ a: p.id }"><app-icone nome="compare_arrows" /> Comparar</a>
+          <a class="botao botao-fantasma" routerLink="/eleicoes/comparar" [queryParams]="{ a: p.id }"><app-icone nome="compare_arrows" /> Comparar</a>
         }
         <button type="button" class="botao botao-fantasma" (click)="compartilhar(p)" [disabled]="gerandoCartao()"><app-icone nome="ios_share" /> {{ gerandoCartao() ? 'Gerando...' : 'Compartilhar card' }}</button>
         <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ casa() === 'senado' ? 'Página no Senado' : 'Página na Câmara' }}</a>
       </div>
     </header>
+
+    <!-- Painel do mandato (estilo do slide 10): números grandes e gráficos, só com dados oficiais -->
+    <section class="pf-painel" aria-label="Resumo do mandato">
+      <h2 class="sr-only">Resumo do mandato</h2>
+      <div class="pf-stats">
+        @for (st of estatisticas(); track st.rotulo) {
+          <div class="pf-stat" [style.--cor]="st.cor">
+            <span class="pf-stat-icone"><app-icone [nome]="st.icone" /></span>
+            @if (st.carregando) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ st.valor }}</strong> }
+            <small>{{ st.rotulo }}</small>
+          </div>
+        }
+      </div>
+      <div class="pf-graficos">
+        @if (gastosMes(); as g) {
+          <figure class="card pf-grafico pf-meses">
+            <figcaption><strong>Gastos da cota mês a mês</strong><small>{{ g.ano }}{{ g.parcial ? ' (parcial)' : '' }} · total {{ g.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</small></figcaption>
+            <div class="pf-barras" role="img" [attr.aria-label]="'Gastos por mês em ' + g.ano">
+              @for (v of g.meses; track $index; let i = $index) {
+                <span class="pf-col" tabindex="0" [attr.data-dica]="mesesNomes[i] + ': ' + (v | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR')">
+                  <span class="pf-barra" [style.height.%]="g.max ? (v / g.max) * 100 : 0" [class.zero]="!v"></span>
+                  <small>{{ mesesNomes[i].slice(0, 1) }}</small>
+                </span>
+              }
+            </div>
+            <a class="pf-fonte" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="verified" /> Fonte: Câmara dos Deputados</a>
+          </figure>
+        }
+        <figure class="card pf-grafico pf-anel-card">
+          <figcaption><strong>Presença nas votações</strong><small>últimas votações nominais do plenário</small></figcaption>
+          @if (presenca() !== null) {
+            <div class="pf-anel" [style.--p]="presenca()" role="img" [attr.aria-label]="'Presença de ' + presenca() + '%'"><strong>{{ presenca() }}%</strong></div>
+            <small class="texto-suave">Faltar pode ter motivo justo (licença, missão oficial).</small>
+          } @else {
+            <div class="pf-anel pf-anel-vazio"><strong>{{ (casa() === 'senado' ? carregandoFicha() : carregandoVotacoes()) ? '...' : 'sem dados' }}</strong></div>
+          }
+        </figure>
+        @if (detalhes()?.despesas?.porTipo?.length) {
+          <figure class="card pf-grafico">
+            <figcaption><strong>Para onde foi a cota</strong><small>maiores tipos de gasto</small></figcaption>
+            <ul class="pf-tipos">
+              @for (t of detalhes()!.despesas!.porTipo.slice(0, 4); track t.tipo) {
+                <li><span>{{ t.tipo }}</span><span class="pf-tipo-trilha"><span [style.width.%]="(t.valor / maiorGasto()) * 100"></span></span><strong>{{ t.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></li>
+              }
+            </ul>
+          </figure>
+        }
+      </div>
+    </section>
 
     <!-- Polêmicas e problemas na Justiça -->
     @if (!carregandoAlertas()) {

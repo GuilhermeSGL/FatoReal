@@ -99,8 +99,9 @@ interface Item {
             } @else {
               <a [routerLink]="['/pessoas', it.pessoa!.id]" class="conversa-pessoa"><app-avatar [nome]="it.nome" [url]="it.pessoa!.foto_url" [tamanho]="40" /><strong>{{ it.nome }}</strong></a>
             }
+            <button type="button" class="botao-icone msg-fechar so-desktop" aria-label="Fechar conversa" title="Fechar conversa" (click)="aberto.set(null)"><app-icone nome="close_fullscreen" /></button>
           </header>
-          <ol class="chat-mensagens">
+          <ol class="chat-mensagens msg-fundo">
             @if (it.tipo === 'grupo') {
               @for (m of mensagensGrupo(); track m.id; let i = $index) {
                 @let minha = m.autor.id === meuId();

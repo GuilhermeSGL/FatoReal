@@ -115,7 +115,7 @@ export interface DetalhesPolitico {
   proposicoes: { id: number; titulo: string; ementa: string; url: string }[];
   totalProposicoes: number | null;
   desdeLegislatura: string;
-  despesas: { ano: number; total: number; lancamentos: number; parcial: boolean; porTipo: { tipo: string; valor: number }[] } | null;
+  despesas: { ano: number; total: number; lancamentos: number; parcial: boolean; porTipo: { tipo: string; valor: number }[]; porMes?: number[] } | null;
 }
 
 /** Cada parte é buscada separadamente: se uma falhar, as outras continuam aparecendo. */
@@ -185,12 +185,17 @@ export async function despesasDoAno(id: number): Promise<DetalhesPolitico['despe
     }
     if (!itens.length) continue;
     const porTipo = new Map<string, number>();
-    for (const i of itens) porTipo.set(i.tipoDespesa, (porTipo.get(i.tipoDespesa) ?? 0) + (i.valorLiquido ?? 0));
+    const porMes = Array<number>(12).fill(0);
+    for (const i of itens) {
+      porTipo.set(i.tipoDespesa, (porTipo.get(i.tipoDespesa) ?? 0) + (i.valorLiquido ?? 0));
+      if (i.mes && i.mes >= 1 && i.mes <= 12) porMes[i.mes - 1] += i.valorLiquido ?? 0;
+    }
     return {
       ano,
       total: itens.reduce((t, i) => t + (i.valorLiquido ?? 0), 0),
       lancamentos: itens.length,
       parcial: !!url,
+      porMes,
       porTipo: [...porTipo]
         .map(([tipo, valor]) => ({ tipo: tipoLegivel(tipo), valor }))
         .sort((a, b) => b.valor - a.valor)
@@ -481,5 +486,5 @@ interface DeputadoDetalhe {
 
 interface OrgaoCamara { siglaOrgao: string; nomeOrgao?: string; nomePublicacao?: string; titulo?: string; dataFim?: string | null }
 interface ProposicaoCamara { id: number; siglaTipo: string; numero: number; ano: number; ementa: string }
-interface DespesaCamara { tipoDespesa: string; valorLiquido: number }
+interface DespesaCamara { tipoDespesa: string; valorLiquido: number; mes?: number }
 interface LinkCamara { rel: string; href: string }
