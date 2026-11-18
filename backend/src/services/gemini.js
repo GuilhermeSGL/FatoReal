@@ -146,7 +146,8 @@ function montarMensagem(texto, evidencias, rotulo = 'PERGUNTA DO USUÁRIO', tag 
   const lista = evidencias
     .map(
       (e, i) =>
-        `[${i + 1}] ${limparTextoUsuario(e.texto)} (Fonte: ${limparTextoUsuario(e.fonte)}, consultado em ${e.consultadoEm})`
+        `[${i + 1}] ${limparTextoUsuario(e.texto)} (Fonte: ${limparTextoUsuario(e.fonte)}` +
+        (e.consultadoEm ? `, consultado em ${e.consultadoEm})` : ')')
     )
     .join('\n');
   return `EVIDÊNCIAS:\n${lista}\n\n${rotulo}:\n<${tag}>${limparTextoUsuario(texto)}</${tag}>`;
