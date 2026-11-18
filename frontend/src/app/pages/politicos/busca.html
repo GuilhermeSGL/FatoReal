@@ -138,8 +138,9 @@
     <div class="mapa-layout">
       <div>
         <h2 class="titulo-secao">{{ rotuloCargo() }} por estado</h2>
-        <p class="texto-p">Toque em um estado. Quanto mais forte a cor, mais {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados' }}.</p>
-        <app-mapa-brasil [valores]="porEstado()" [selecionado]="uf()" [rotulo]="cargo() === 'Senador(a)' ? 'senadores' : 'deputados'" (escolher)="escolherNoMapa($event)" />
+        <p class="texto-p">Toque em um estado. Cada cor é uma região; passe o mouse para ver quantos {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados' }} ele tem.</p>
+        <app-mapa-estados [selecionado]="uf()" [destaque]="meuEstado()" [textos]="textosMapa()" (escolher)="escolherNoMapa($event)" />
+        <small class="gst-credito">Mapa: SVG Maps (CC BY 4.0)</small>
       </div>
       <aside class="mapa-painel">
         @if (uf()) {

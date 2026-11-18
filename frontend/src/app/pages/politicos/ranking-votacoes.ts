@@ -1,4 +1,3 @@
-import { NavPoliticos } from '../../shared/nav-politicos';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -10,9 +9,9 @@ type Ordem = 'mais-presentes' | 'menos-presentes' | 'mais-fieis' | 'mais-indepen
 
 @Component({
   selector: 'app-ranking-votacoes',
-  imports: [FormsModule, RouterLink, Avatar, Icone, NavPoliticos],
+  imports: [FormsModule, RouterLink, Avatar, Icone],
   template: `
-    <app-nav-politicos />
+    <a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para Políticos</a>
         <header class="cabecalho-pagina">
       <p class="sobretitulo">Ranking</p>
       <h1>Presença e fidelidade ao partido</h1>

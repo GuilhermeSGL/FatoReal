@@ -1,4 +1,3 @@
-import { NavPoliticos } from '../../shared/nav-politicos';
 import { CurrencyPipe } from '@angular/common';
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -26,9 +25,9 @@ const VALIDADE = 12 * 3600_000;
  */
 @Component({
   selector: 'app-gastos',
-  imports: [FormsModule, RouterLink, CurrencyPipe, Avatar, Icone, NavPoliticos, MapaEstados],
+  imports: [FormsModule, RouterLink, CurrencyPipe, Avatar, Icone, MapaEstados],
   template: `
-    <app-nav-politicos />
+    <a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para Políticos</a>
 
     <section class="gst-hero">
       <img src="img/capa-contas-publicas.svg" alt="" />

@@ -32,7 +32,7 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 - Ícones em quadradinhos coloridos (`.icone-tile`, `.ps-icone`), cartões com título + ícone (`.ps-cartao`, `.ps-titulo`).
 - O FatoBot é uma **bolinha flutuante** (`shared/fatobot-bolha.ts`) que acompanha a pessoa; não volta para o menu lateral.
 - **Navegação lateral:** Início, Notícias, **Políticos** (nunca "Candidatos": a seção cobre todos os cargos), Base da Política, Comunidades; embaixo Meu Perfil e Mensagens; no rodapé da lateral, o **espaço dinâmico** (`core/destaques-laterais.ts`). Ícones coloridos por seção.
-- **Congresso** é uma aba dentro de Políticos (`shared/nav-politicos.ts`); **Fato ou Fake** é o botão "Verificar" da barra de cima; notificações ficam no sino.
+- **Congresso** é uma aba dentro de Políticos (`shared/nav-politicos.ts`, abas: Todos os políticos + Congresso em ação). **Ranking de gastos, Presença e Comparar** não são abas: abrem pelos cartões "Explore" da página de Políticos (com "Voltar para Políticos"). Comparar deve ir para uma futura área de **Eleições**. Mapa do Brasil clicável: `shared/mapa-estados.ts`; **Fato ou Fake** é o botão "Verificar" da barra de cima; notificações ficam no sino.
 - Trabalhar **por blocos**: só mexer na seção combinada e validar com o Luiz antes de passar para a próxima.
 - Perfil de político segue a estrutura do slide 10 (cabeçalho com resumo do mandato, cartões, linha do tempo, fontes). Perfil de pessoa segue a mesma base, no estilo Orkut + LinkedIn.
 

@@ -7,7 +7,8 @@ import { verificadosDe } from '../../core/registros-verificados';
 import { modoDemo } from '../../core/supabase';
 import { UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
-import { MapaBrasil, nomeEstado } from '../../shared/mapa-brasil';
+import { nomeEstado } from '../../shared/mapa-brasil';
+import { MapaEstados } from '../../shared/mapa-estados';
 import { NavPoliticos } from '../../shared/nav-politicos';
 import { AuthService } from '../../core/auth.service';
 
@@ -17,7 +18,7 @@ const POR_VEZ = 48;
 /** Políticos: todos os representantes de cada cargo, em ordem alfabética, com busca, filtros e cartões por cargo. */
 @Component({
   selector: 'app-busca',
-  imports: [FormsModule, RouterLink, Icone, Avatar, MapaBrasil, NavPoliticos],
+  imports: [FormsModule, RouterLink, Icone, Avatar, MapaEstados, NavPoliticos],
   templateUrl: './busca.html',
 })
 export class BuscaPage implements OnInit {
@@ -39,7 +40,8 @@ export class BuscaPage implements OnInit {
   ];
   protected readonly explorar = [
     { titulo: 'Congresso em ação', texto: 'Agenda, votações e leis', icone: 'account_balance', rota: '/congresso', imagem: 'img/destaque-congresso.svg' },
-    { titulo: 'Rankings', texto: 'Gastos e presença', icone: 'leaderboard', rota: '/politicos/gastos', imagem: 'img/capa-contas-publicas.svg' },
+    { titulo: 'Ranking de gastos', texto: 'Mapa da cota por estado', icone: 'payments', rota: '/politicos/gastos', imagem: 'img/capa-contas-publicas.svg' },
+    { titulo: 'Presença', texto: 'Quem vai às votações', icone: 'how_to_vote', rota: '/politicos/ranking', imagem: 'img/capa-eleicoes-e-voto.svg' },
     { titulo: 'Comparar', texto: 'Dois políticos lado a lado', icone: 'compare_arrows', rota: '/politicos/comparar', imagem: 'img/capa-camara-e-senado-em-pauta.svg' },
   ];
   /** Cor do anel da foto: sempre a mesma para o mesmo partido (só enfeite, não indica nada). */
@@ -102,6 +104,11 @@ export class BuscaPage implements OnInit {
   protected readonly visao = signal<'lista' | 'mapa'>('lista');
   protected readonly nomeEstado = nomeEstado;
   /** Quantas pessoas do cargo atual há em cada estado (para o mapa). */
+  /** Texto do balão do mapa: quantos nomes do cargo cada estado tem. */
+  protected readonly textosMapa = computed(() => {
+    const rot = this.cargo() === 'Senador(a)' ? 'senadores' : 'deputados';
+    return Object.fromEntries(Object.entries(this.porEstado()).map(([u, n]) => [u, `${n} ${rot}`]));
+  });
   protected readonly porEstado = computed(() => {
     const mapa: Record<string, number> = {};
     for (const p of this.todos()) if (p.uf) mapa[p.uf] = (mapa[p.uf] ?? 0) + 1;
