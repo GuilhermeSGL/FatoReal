@@ -3,8 +3,9 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { modoDemo } from '../../core/supabase';
-import { TemaService } from '../../core/tema.service';
+import { AcessibilidadeService } from '../../core/acessibilidade.service';
 import { Icone } from '../../shared/componentes';
+import { FatoBotConversa } from '../../core/fatobot-conversa.service';
 
 @Component({
   selector: 'app-configuracoes',
@@ -12,20 +13,36 @@ import { Icone } from '../../shared/componentes';
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="settings" /> Configurações</h1>
-      <p>Aparência, conta e privacidade.</p>
+      <p>Conta e privacidade.</p>
     </header>
 
     <div class="grade-2">
       <section class="card">
-        <h2><app-icone nome="palette" /> Aparência</h2>
-        <div class="opcoes-tema" role="radiogroup" aria-label="Tema">
-          <button type="button" role="radio" [attr.aria-checked]="tema.tema() === 'claro'" [class.ativo]="tema.tema() === 'claro'" (click)="definir('claro')">
-            <app-icone nome="light_mode" /> Claro
-          </button>
-          <button type="button" role="radio" [attr.aria-checked]="tema.tema() === 'escuro'" [class.ativo]="tema.tema() === 'escuro'" (click)="definir('escuro')">
-            <app-icone nome="dark_mode" /> Escuro
-          </button>
+        <h2><app-icone nome="accessibility_new" /> Acessibilidade</h2>
+        <p class="texto-suave">Ajuste a leitura do site. Fica salvo neste navegador.</p>
+        <span class="rotulo">Tamanho da letra</span>
+        <div class="opcoes-fonte" role="radiogroup" aria-label="Tamanho da letra">
+          <button type="button" role="radio" [attr.aria-checked]="a11y.fonte() === 'normal'" (click)="a11y.definirFonte('normal')"><span style="font-size: 0.9rem">A</span> Normal</button>
+          <button type="button" role="radio" [attr.aria-checked]="a11y.fonte() === 'grande'" (click)="a11y.definirFonte('grande')"><span style="font-size: 1.1rem">A</span> Grande</button>
+          <button type="button" role="radio" [attr.aria-checked]="a11y.fonte() === 'maior'" (click)="a11y.definirFonte('maior')"><span style="font-size: 1.3rem">A</span> Maior</button>
         </div>
+        <label class="opcao-alternar">
+          <input type="checkbox" [checked]="a11y.contraste()" (change)="a11y.alternarContraste()" />
+          <span><strong>Alto contraste</strong><small>Textos mais fortes, bordas visíveis e links sublinhados.</small></span>
+        </label>
+      </section>
+
+      <section class="card" id="fatobot">
+        <h2><app-icone nome="smart_toy" /> FatoBot</h2>
+        <p class="texto-suave">O assistente que acompanha você em todas as páginas.</p>
+        <label class="opcao-alternar">
+          <input type="checkbox" [checked]="bot.dicasLigadas()" (change)="bot.definir('dicas', !bot.dicasLigadas())" />
+          <span><strong>Dicas do FatoBot</strong><small>De vez em quando ele mostra uma dica sobre a página em que você está.</small></span>
+        </label>
+        <label class="opcao-alternar">
+          <input type="checkbox" [checked]="bot.falarRespostas()" (change)="bot.definir('voz', !bot.falarRespostas())" />
+          <span><strong>Responder em voz alta</strong><small>Quando você pergunta pelo microfone, ele lê a resposta.</small></span>
+        </label>
       </section>
 
       <section class="card">
@@ -33,9 +50,9 @@ import { Icone } from '../../shared/componentes';
         @if (auth.usuario(); as u) {
           <p class="texto-suave">Conectado como <strong>{{ u.nome }}</strong> ({{ u.email }}).</p>
           <ul class="lista-links">
-            <li><a routerLink="/perfil"><app-icone nome="edit" /> Editar perfil e foto</a></li>
+            <li><a routerLink="/perfil/editar"><app-icone nome="edit" /> Editar perfil e foto</a></li>
             <li><a routerLink="/recuperar-senha"><app-icone nome="key" /> Trocar senha</a></li>
-            <li><a routerLink="/perfil"><app-icone nome="delete" /> Excluir minha conta</a></li>
+            <li><a routerLink="/perfil/editar"><app-icone nome="delete" /> Excluir minha conta</a></li>
           </ul>
           <button type="button" class="botao botao-fantasma" (click)="sair()"><app-icone nome="logout" /> Sair</button>
         } @else {
@@ -67,14 +84,11 @@ import { Icone } from '../../shared/componentes';
 })
 export class ConfiguracoesPage {
   protected auth = inject(AuthService);
-  protected tema = inject(TemaService);
+  protected a11y = inject(AcessibilidadeService);
+  protected bot = inject(FatoBotConversa);
   private avisos = inject(AvisosService);
   private router = inject(Router);
   protected readonly demo = modoDemo;
-
-  protected definir(t: 'claro' | 'escuro') {
-    if (this.tema.tema() !== t) this.tema.alternar();
-  }
 
   protected async sair() {
     await this.auth.sair();

@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, HostListener, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
@@ -8,9 +8,13 @@ import { Autor, Comunidade, PerfilPublico, Publicacao } from '../../core/modelos
 import { CAPAS, PerfisService } from '../../core/perfis.service';
 import { avatarComunidade, COR_TEMA, ICONE_TEMA } from '../../core/visual';
 import { Avatar, Icone } from '../../shared/componentes';
+import { RedesSociais, REDES, linkDaRede } from '../../shared/redes-sociais';
+import { FormsModule } from '@angular/forms';
+import { imagemSegura, linkSeguro } from '../../core/util';
 import { PublicacaoCard } from '../../shared/publicacao-card';
 
-type Aba = 'publicacoes' | 'curtidas' | 'comunidades';
+type Aba = 'publicacoes' | 'curtidas';
+type Filtro = 'todas' | 'verificadas' | 'usuario';
 
 interface Conquista {
   titulo: string;
@@ -19,10 +23,10 @@ interface Conquista {
   ok: boolean;
 }
 
-/** Perfil no estilo X/Twitter. Serve para "/perfil" (o meu) e "/pessoas/:id" (de outra pessoa). */
+/** Perfil no estilo Orkut + LinkedIn (mesma estrutura do perfil dos políticos). Serve para "/perfil" (o meu) e "/pessoas/:id" (de outra pessoa). */
 @Component({
   selector: 'app-perfil',
-  imports: [RouterLink, DatePipe, Avatar, Icone, PublicacaoCard],
+  imports: [RouterLink, DatePipe, FormsModule, Avatar, Icone, PublicacaoCard, RedesSociais],
   templateUrl: './perfil.html',
 })
 export class PerfilPage {
@@ -30,6 +34,7 @@ export class PerfilPage {
   private perfis = inject(PerfisService);
   private comunidadesService = inject(ComunidadesService);
   private avisos = inject(AvisosService);
+  private rota = inject(ActivatedRoute);
 
   /** Vem da URL /pessoas/:id. Vazio em /perfil. */
   readonly id = input<string>();
@@ -69,9 +74,79 @@ export class PerfilPage {
       { titulo: 'Conectado', icone: 'person_add', requisito: 'Seguir 3 pessoas', ok: this.seguindo().length >= 3 },
     ];
     if (this.perfil()?.moderador) lista.unshift({ titulo: 'Moderação', icone: 'shield_person', requisito: 'Ser moderador(a)', ok: true });
+    if (this.ehMeu()) {
+      let total = 0;
+      try {
+        total = JSON.parse(localStorage.getItem('fatoreal-fato-ou-fake') ?? '{}').total ?? 0;
+      } catch {
+        /* sem armazenamento */
+      }
+      lista.push({ titulo: 'Caçador de fake news', icone: 'policy', requisito: 'Acertar 5 no modo desafio do Fato ou Fake', ok: total >= 5 });
+    }
     return lista;
   });
   protected readonly conquistasFeitas = computed(() => this.conquistas().filter((c) => c.ok).length);
+
+  // ---------- Cabeçalho ----------
+  protected readonly capaImagem = computed(() => imagemSegura(this.perfil()?.capa_url ?? null));
+  protected readonly nivel = computed(() => {
+    const n = this.conquistasFeitas();
+    return n >= 5 ? 'Referência' : n >= 3 ? 'Engajado(a)' : n >= 1 ? 'Participante' : 'Iniciante';
+  });
+  protected readonly verificadas = computed(() => this.publicacoes().filter((p) => p.verificada).length);
+  protected readonly temRedes = computed(() => REDES.some((r) => !!linkDaRede(r.chave, this.perfil()?.redes?.[r.chave])));
+  /** Amigos no estilo Orkut: quem segue e é seguido, depois os demais. */
+  protected readonly amigos = computed(() => {
+    const vistos = new Set<string>();
+    const mutuos = this.seguidores().filter((s) => this.seguindo().some((x) => x.id === s.id));
+    return [...mutuos, ...this.seguindo(), ...this.seguidores()].filter((a) => !vistos.has(a.id) && !!vistos.add(a.id));
+  });
+
+  // ---------- "Perfil pronto para as comunidades" ----------
+  protected readonly passos = computed(() => {
+    const p = this.perfil();
+    return [
+      { nome: 'Foto de perfil', ok: !!p?.foto_url },
+      { nome: 'Capa', ok: !!p?.capa_url || (!!p?.capa && p.capa !== 'verde') },
+      { nome: 'Bio', ok: !!p?.bio },
+      { nome: 'Cidade e estado', ok: !!p?.cidade && !!p?.uf },
+      { nome: 'Profissão', ok: !!p?.profissao },
+      { nome: 'Interesses', ok: (p?.interesses?.length ?? 0) > 0 },
+      { nome: 'Uma rede social', ok: this.temRedes() },
+    ];
+  });
+  protected readonly completo = computed(() => Math.round((this.passos().filter((x) => x.ok).length / this.passos().length) * 100));
+
+  // ---------- Feed ----------
+  protected readonly filtro = signal<Filtro>('todas');
+  protected readonly feed = computed(() => {
+    const f = this.filtro();
+    return this.publicacoes().filter((p) => f === 'todas' || (f === 'verificadas' ? p.verificada : !p.verificada));
+  });
+  protected readonly minhas = signal<Comunidade[]>([]);
+  protected novoTexto = '';
+  protected novoLink = '';
+  protected comunidadeEscolhida = '';
+  protected readonly publicando = signal(false);
+
+  protected async publicar() {
+    const texto = this.novoTexto.trim();
+    const id = Number(this.comunidadeEscolhida);
+    if (!texto || !id) return;
+    const link = this.novoLink.trim() ? linkSeguro(this.novoLink) : null;
+    if (this.novoLink.trim() && !link) return this.avisos.mostrar('O link precisa começar com https://', 'erro');
+    this.publicando.set(true);
+    try {
+      await this.comunidadesService.publicar(id, texto, link);
+      this.novoTexto = this.novoLink = '';
+      this.avisos.mostrar('Publicado!');
+      this.recarregar();
+    } catch (e) {
+      this.avisos.erro(e);
+    } finally {
+      this.publicando.set(false);
+    }
+  }
 
   constructor() {
     // Recarrega quando muda a pessoa (URL) ou quando a conta entra/sai
@@ -113,6 +188,14 @@ export class PerfilPage {
     this.seguidores.set(valor(seguidores, []));
     this.seguindo.set(valor(seguindo, []));
     this.sugestoes.set(valor(sugestoes, []));
+    if (meu) {
+      this.rota.fragment.subscribe((f) => {
+        if (f === 'publicar') setTimeout(() => { const t = document.getElementById('pp-texto'); t?.scrollIntoView({ block: 'center' }); t?.focus(); }, 300);
+      });
+      const minhas = await this.comunidadesService.minhas().catch(() => []);
+      this.minhas.set(minhas);
+      if (!this.comunidadeEscolhida && minhas[0]) this.comunidadeEscolhida = String(minhas[0].id);
+    }
     this.carregando.set(false);
   }
 

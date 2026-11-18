@@ -6,11 +6,15 @@ import { AvisosService } from '../../core/avisos.service';
 import { CAPAS } from '../../core/perfis.service';
 import { imagemSegura, linkSeguro, UFS } from '../../core/util';
 import { Avatar, Icone } from '../../shared/componentes';
+import { REDES, RedesSociais, linkDaRede } from '../../shared/redes-sociais';
+import { reduzirImagem } from '../../shared/imagem-reduzida';
+import { COR_TEMA, ICONE_TEMA } from '../../core/visual';
+import { Redes } from '../../core/modelos';
 
 /** Página própria para editar o perfil (com prévia ao vivo) e cuidar da conta. */
 @Component({
   selector: 'app-perfil-editar',
-  imports: [FormsModule, RouterLink, Avatar, Icone],
+  imports: [FormsModule, RouterLink, Avatar, Icone, RedesSociais],
   template: `
     @if (auth.usuario(); as u) {
       <div class="perfil-editar">
@@ -21,13 +25,18 @@ import { Avatar, Icone } from '../../shared/componentes';
 
         <form #f="ngForm" (ngSubmit)="f.valid && salvar()">
           <!-- Prévia ao vivo -->
-          <section class="card perfil-x-cabecalho perfil-editar-previa" aria-label="Prévia do perfil">
-            <div class="perfil-x-capa" [style.background]="capas[capa()].fundo"></div>
-            <div class="perfil-x-corpo">
-              <div class="perfil-x-linha"><app-avatar class="perfil-x-foto" [nome]="nome() || u.nome" [url]="previaFoto()" [tamanho]="104" /></div>
-              <p class="perfil-x-nome">{{ nome() || 'Seu nome' }}</p>
-              @if (bio()) { <p class="perfil-x-bio">{{ bio() }}</p> }
-              @if (cidade() || uf()) { <p class="texto-suave"><app-icone nome="location_on" /> {{ cidade() }}{{ cidade() && uf() ? ', ' : '' }}{{ uf() }}</p> }
+          <section class="card perfil-pessoa perfil-editar-previa" aria-label="Prévia do perfil">
+            <div class="pp-capa" [style.background]="previaCapa() ? 'center / cover no-repeat url(' + previaCapa() + ')' : capas[capa()].fundo"></div>
+            <div class="pp-corpo">
+              <div class="pp-topo">
+                <app-avatar class="pp-foto" [nome]="nome() || u.nome" [url]="previaFoto()" [tamanho]="110" />
+                <div class="pp-id">
+                  <h1>{{ nome() || 'Seu nome' }}</h1>
+                  <p class="pp-linha">@if (profissao()) { <span>{{ profissao() }}</span> } @if (cidade() || uf()) { <span><app-icone nome="location_on" /> {{ cidade() }}{{ cidade() && uf() ? ', ' : '' }}{{ uf() }}</span> }</p>
+                  @if (bio()) { <p class="pp-bio">{{ bio() }}</p> }
+                  <app-redes [redes]="redesLimpas()" />
+                </div>
+              </div>
             </div>
           </section>
 
@@ -45,10 +54,31 @@ import { Avatar, Icone } from '../../shared/componentes';
                 }
               </fieldset>
             }
-            <div class="campo-form">
-              <label for="e-foto">Foto (link da imagem, opcional)</label>
-              <input id="e-foto" name="foto" type="url" [ngModel]="foto()" (ngModelChange)="foto.set($event)" placeholder="https://..." />
+            <div class="envio-imagens">
+              <div class="envio-imagem">
+                <span class="rotulo">Foto de perfil</span>
+                <div class="envio-linha">
+                  <app-avatar [nome]="nome() || u.nome" [url]="previaFoto()" [tamanho]="64" />
+                  <label class="botao botao-fantasma botao-p"><app-icone nome="add_a_photo" /> Enviar foto<input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="enviar($event, 'foto')" /></label>
+                  @if (foto()) { <button type="button" class="link-discreto" (click)="foto.set('')">Remover</button> }
+                </div>
+              </div>
+              @if (auth.aceita('capa_url')) {
+                <div class="envio-imagem">
+                  <span class="rotulo">Imagem de capa</span>
+                  <div class="envio-linha">
+                    <span class="envio-capa" [style.background]="previaCapa() ? 'center / cover url(' + previaCapa() + ')' : capas[capa()].fundo"></span>
+                    <label class="botao botao-fantasma botao-p"><app-icone nome="wallpaper" /> Enviar capa<input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" (change)="enviar($event, 'capa')" /></label>
+                    @if (capaUrl()) { <button type="button" class="link-discreto" (click)="capaUrl.set('')">Usar cor</button> }
+                  </div>
+                </div>
+              }
             </div>
+            <details class="campo-form">
+              <summary class="texto-p">Prefere colar um link de imagem?</summary>
+              <label for="e-foto">Link da foto</label>
+              <input id="e-foto" name="foto" type="url" [ngModel]="foto().startsWith('data:') ? '' : foto()" (ngModelChange)="foto.set($event)" placeholder="https://..." />
+            </details>
           </section>
 
           <section class="card">
@@ -62,6 +92,22 @@ import { Avatar, Icone } from '../../shared/componentes';
                 <label for="e-bio">Bio <small class="texto-suave">({{ bio().length }}/160)</small></label>
                 <textarea id="e-bio" name="bio" rows="3" maxlength="160" [ngModel]="bio()" (ngModelChange)="bio.set($event)" placeholder="Conte em uma frase quem você é e o que te interessa em política."></textarea>
               </div>
+            }
+            @if (auth.aceita('profissao')) {
+              <div class="campo-form">
+                <label for="e-prof">Profissão ou ocupação</label>
+                <input id="e-prof" name="profissao" maxlength="60" [ngModel]="profissao()" (ngModelChange)="profissao.set($event)" placeholder="Ex.: Estudante de Direito, Professora, Técnico em TI" />
+              </div>
+            }
+            @if (auth.aceita('interesses')) {
+              <fieldset class="campo-form">
+                <legend>Temas de interesse</legend>
+                <div class="bv-temas">
+                  @for (t of temas; track t) {
+                    <button type="button" [attr.aria-pressed]="interesses().includes(t)" [class.ativo]="interesses().includes(t)" [style.--cor]="corTema[t]" (click)="alternarInteresse(t)"><app-icone [nome]="iconeTema[t]" /> {{ t }}</button>
+                  }
+                </div>
+              </fieldset>
             }
             @if (auth.aceita('cidade') || auth.aceita('uf')) {
               <div class="linha-campos">
@@ -85,6 +131,23 @@ import { Avatar, Icone } from '../../shared/componentes';
             }
           </section>
 
+          @if (auth.aceita('redes')) {
+            <section class="card">
+              <h2 class="titulo-secao">Redes sociais</h2>
+              <p class="texto-p">Aparecem como ícones clicáveis no seu perfil. Use o nome de usuário ou cole o link. No WhatsApp, coloque o número com DDD.</p>
+              <div class="redes-campos">
+                @for (r of redes; track r.chave) {
+                  <div class="campo-form">
+                    <label [for]="'e-' + r.chave">{{ r.nome }}</label>
+                    <input [id]="'e-' + r.chave" [name]="r.chave" maxlength="120" [ngModel]="valoresRedes()[r.chave] ?? ''" (ngModelChange)="mudarRede(r.chave, $event)" [placeholder]="r.dica" autocomplete="off" />
+                    @if (valoresRedes()[r.chave] && !linkRede(r.chave)) { <small class="erro-campo">Não reconhecemos esse {{ r.chave === 'whatsapp' ? 'número' : 'usuário ou link' }}.</small> }
+                  </div>
+                }
+              </div>
+              <p class="texto-p"><app-icone nome="lock" /> Só coloque o WhatsApp se quiser que qualquer pessoa possa te chamar.</p>
+            </section>
+          }
+
           <div class="perfil-editar-acoes">
             <a routerLink="/perfil" class="botao botao-fantasma">Cancelar</a>
             <button type="submit" class="botao" [disabled]="f.invalid || salvando()">{{ salvando() ? 'Salvando...' : 'Salvar alterações' }}</button>
@@ -96,7 +159,7 @@ import { Avatar, Icone } from '../../shared/componentes';
           <dl class="lista-campos">
             <dt>E-mail</dt><dd>{{ u.email }} <small class="texto-suave">(não aparece no perfil)</small></dd>
           </dl>
-          <p class="texto-suave">Guardamos só seu nome, e-mail, foto, bio, cidade e o que você publica (LGPD). Você pode sair ou excluir sua conta quando quiser.</p>
+          <p class="texto-suave">Guardamos só o que você preenche aqui (nome, e-mail, foto, capa, bio, cidade, profissão, interesses e redes) e o que você publica (LGPD). Você pode sair ou excluir sua conta quando quiser.</p>
           <div class="acoes-linha">
             <button class="botao botao-fantasma" type="button" (click)="sair()"><app-icone nome="logout" /> Sair</button>
             <button class="botao botao-perigo" type="button" (click)="confirmando.set(true)"><app-icone nome="delete" /> Excluir minha conta</button>
@@ -132,11 +195,51 @@ export class PerfilEditarPage {
   protected readonly uf = signal(this.u?.uf ?? '');
   protected readonly capa = signal(this.u?.capa && CAPAS[this.u.capa] ? this.u.capa : 'verde');
   protected readonly previaFoto = computed(() => imagemSegura(this.foto().trim()));
+  protected readonly profissao = signal(this.u?.profissao ?? '');
+  protected readonly interesses = signal<string[]>(this.u?.interesses ?? []);
+  protected readonly capaUrl = signal(this.u?.capa_url ?? '');
+  protected readonly previaCapa = computed(() => imagemSegura(this.capaUrl().trim()));
+  protected readonly valoresRedes = signal<Redes>({ ...(this.u?.redes ?? {}) });
+  protected readonly redes = REDES;
+  protected readonly temas = Object.keys(ICONE_TEMA);
+  protected readonly iconeTema = ICONE_TEMA;
+  protected readonly corTema = COR_TEMA;
+  /** Só as redes com valor válido (para a prévia e para salvar). */
+  protected readonly redesLimpas = computed<Redes>(() => {
+    const r: Redes = {};
+    for (const x of REDES) {
+      const v = this.valoresRedes()[x.chave]?.trim();
+      if (v && linkDaRede(x.chave, v)) r[x.chave] = v;
+    }
+    return r;
+  });
+
+  protected linkRede(c: keyof Redes) {
+    return linkDaRede(c, this.valoresRedes()[c]);
+  }
+  protected mudarRede(c: keyof Redes, v: string) {
+    this.valoresRedes.update((r) => ({ ...r, [c]: v }));
+  }
+  protected alternarInteresse(t: string) {
+    this.interesses.update((l) => (l.includes(t) ? l.filter((x) => x !== t) : [...l, t]));
+  }
+  protected async enviar(e: Event, tipo: 'foto' | 'capa') {
+    const input = e.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
+    input.value = '';
+    if (!arquivo) return;
+    try {
+      if (tipo === 'foto') this.foto.set(await reduzirImagem(arquivo, 400, 400));
+      else this.capaUrl.set(await reduzirImagem(arquivo, 1200, 360));
+    } catch (err) {
+      this.avisos.erro(err);
+    }
+  }
   protected readonly salvando = signal(false);
   protected readonly confirmando = signal(false);
 
   protected async salvar() {
-    const foto = this.foto().trim() ? linkSeguro(this.foto()) : null;
+    const foto = this.foto().trim() ? (this.foto().startsWith('data:') ? imagemSegura(this.foto()) : linkSeguro(this.foto())) : null;
     if (this.foto().trim() && !foto) {
       this.avisos.mostrar('O link da foto precisa começar com https://', 'erro');
       return;
@@ -150,6 +253,10 @@ export class PerfilEditarPage {
         cidade: this.cidade().trim() || null,
         uf: this.uf() || null,
         capa: this.capa(),
+        profissao: this.profissao().trim() || null,
+        interesses: this.interesses().length ? this.interesses() : null,
+        redes: Object.keys(this.redesLimpas()).length ? this.redesLimpas() : null,
+        capa_url: this.previaCapa() || null,
       });
       this.avisos.mostrar('Perfil atualizado!');
       this.router.navigateByUrl('/perfil');

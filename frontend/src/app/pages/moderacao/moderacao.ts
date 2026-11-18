@@ -50,7 +50,16 @@ import { Icone } from '../../shared/componentes';
           }
         </li>
       } @empty {
-        <li class="card vazio">Nenhuma denúncia {{ filtro() === 'aberta' ? 'aberta' : 'registrada' }}.</li>
+        <li class="card mod-vazio">
+          <span class="mod-vazio-icone"><app-icone nome="verified_user" /></span>
+          <h2>{{ filtro() === 'aberta' ? 'Tudo em ordem por aqui!' : 'Nenhuma decisão registrada ainda' }}</h2>
+          <p class="texto-suave">{{ filtro() === 'aberta' ? 'Nenhuma denúncia esperando análise.' : 'Quando a moderação decidir uma denúncia, ela aparece aqui com o motivo.' }}</p>
+          <div class="mod-passos">
+            <div><app-icone nome="flag" /><strong>1. Alguém denuncia</strong><small>Uma publicação ou comentário que parece violar as regras.</small></div>
+            <div><app-icone nome="travel_explore" /><strong>2. Você analisa</strong><small>Lê o conteúdo, confere as fontes e as regras da comunidade.</small></div>
+            <div><app-icone nome="gavel" /><strong>3. Você decide</strong><small>Remove ou mantém, sempre registrando o motivo. A IA nunca decide sozinha.</small></div>
+          </div>
+        </li>
       }
     </ul>
   `,

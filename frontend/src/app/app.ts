@@ -6,21 +6,27 @@ import { AvisosService } from './core/avisos.service';
 import { MensagensService } from './core/mensagens.service';
 import { NotificacoesService } from './core/notificacoes.service';
 import { TemaService } from './core/tema.service';
+import { BuscaGeralService, ResultadoBusca } from './core/busca-geral';
+import { AcessibilidadeService } from './core/acessibilidade.service';
 import { tempoAtras } from './core/util';
 import { Avatar, AvisoDemo, Icone } from './shared/componentes';
+import { BoasVindas } from './shared/boas-vindas';
+import { DestaqueLateral } from './shared/destaque-lateral';
+import { FatoBotBolha, PerguntarFatobot } from './shared/fatobot-bolha';
 
 type Contador = 'comunidades' | 'mensagens';
 
 /** Casca do app, como na apresentação: barra superior escura, menu lateral, painel claro e navegação inferior no celular. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral],
   templateUrl: './app.html',
 })
 export class App {
   protected auth = inject(AuthService);
   protected avisos = inject(AvisosService);
   protected tema = inject(TemaService);
+  private acessibilidade = inject(AcessibilidadeService);
   protected notificacoes = inject(NotificacoesService);
   protected mensagens = inject(MensagensService);
   private router = inject(Router);
@@ -28,25 +34,33 @@ export class App {
   protected readonly menuAberto = signal(false);
   protected readonly notifAberto = signal(false);
   protected readonly tempo = tempoAtras;
-  protected readonly iconesNotif = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail' };
+  protected readonly iconesNotif = { curtida: 'thumb_up', comentario: 'chat_bubble', mensagem: 'mail', politico: 'account_balance' };
 
-  protected readonly menu: { rota: string; icone: string; texto: string; exato?: boolean; contador?: Contador }[] = [
-    { rota: '/', icone: 'home', texto: 'Início', exato: true },
-    { rota: '/noticias', icone: 'newspaper', texto: 'Notícias' },
-    { rota: '/politicos', icone: 'person', texto: 'Candidatos' },
-    { rota: '/base-da-politica', icone: 'school', texto: 'Base da Política' },
-    { rota: '/comunidades', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
-    { rota: '/fatobot', icone: 'smart_toy', texto: 'IA FatoBot' },
-    { rota: '/verificar', icone: 'fact_check', texto: 'Verificar Informação' },
-    { rota: '/mensagens', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
+  /** Navegação principal (com a cor de cada seção, como no desenho original). */
+  protected readonly menu: { rota: string; cor: string; icone: string; texto: string; exato?: boolean; contador?: Contador; tambem?: string[] }[] = [
+    { rota: '/', cor: '#00c27a', icone: 'home', texto: 'Início', exato: true },
+    { rota: '/noticias', cor: '#1e6bff', icone: 'newspaper', texto: 'Notícias' },
+    { rota: '/politicos', cor: '#7c4dff', icone: 'account_balance', texto: 'Políticos', tambem: ['/congresso'] },
+    { rota: '/base-da-politica', cor: '#ffb000', icone: 'school', texto: 'Base da Política' },
+    { rota: '/comunidades', cor: '#ff7a1a', icone: 'groups', texto: 'Comunidades', contador: 'comunidades' },
   ];
+  /** Parte de baixo da navegação: o que é da pessoa. */
+  protected readonly menuPessoal: { rota: string; cor: string; icone: string; texto: string; contador?: Contador }[] = [
+    { rota: '/perfil', cor: '#1e6bff', icone: 'account_circle', texto: 'Meu Perfil' },
+    { rota: '/mensagens', cor: '#ff3d7f', icone: 'chat', texto: 'Mensagens', contador: 'mensagens' },
+  ];
+  /** Rota atual, para manter "Políticos" ativo também em /congresso. */
+  protected readonly rotaAtual = signal('');
+  protected ativoTambem(item: { tambem?: string[] }) {
+    return !!item.tambem?.some((r) => this.rotaAtual().startsWith(r));
+  }
 
   protected readonly abas = [
     { rota: '/', texto: 'Início', exato: true },
-    { rota: '/politicos', texto: 'Candidatos', exato: false },
+    { rota: '/politicos', texto: 'Políticos', exato: false },
     { rota: '/noticias', texto: 'Notícias', exato: false },
+    { rota: '/fato-ou-fake', texto: 'Fato ou Fake', exato: false },
     { rota: '/comunidades', texto: 'Comunidades', exato: false },
-    { rota: '/fatobot', texto: 'IA', exato: false },
     { rota: '/base-da-politica', texto: 'Base da Política', exato: false },
   ];
 
@@ -54,12 +68,15 @@ export class App {
     // Atualiza os números vermelhos ao trocar de página e ao entrar/sair da conta
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe(() => {
       this.menuAberto.set(false);
+      this.rotaAtual.set(this.router.url);
       this.notifAberto.set(false);
       this.notificacoes.atualizar();
+      this.mensagens.atualizarContagem();
     });
     effect(() => {
       this.auth.usuario();
       this.notificacoes.atualizar();
+      this.mensagens.atualizarContagem();
     });
   }
 
@@ -89,8 +106,55 @@ export class App {
     this.notificacoes.marcarComoVistas();
   }
 
+  // ---------- Busca do topo com sugestões ----------
+  private buscaGeral = inject(BuscaGeralService);
+  protected readonly sugestoes = signal<ResultadoBusca[]>([]);
+  protected readonly sugestoesAbertas = signal(false);
+  protected readonly sugestaoAtiva = signal(-1);
+  private esperaBusca?: ReturnType<typeof setTimeout>;
+  private pedidoBusca = 0;
+
+  protected digitarBusca(termo: string) {
+    clearTimeout(this.esperaBusca);
+    this.esperaBusca = setTimeout(async () => {
+      const meu = ++this.pedidoBusca;
+      const r = await this.buscaGeral.buscar(termo, 3);
+      if (meu !== this.pedidoBusca) return;
+      this.sugestoes.set(r.slice(0, 8));
+      this.sugestaoAtiva.set(-1);
+      this.sugestoesAbertas.set(r.length > 0);
+    }, 220);
+  }
+
+  protected moverSugestao(passo: number) {
+    const n = this.sugestoes().length;
+    if (!n) return;
+    this.sugestoesAbertas.set(true);
+    this.sugestaoAtiva.update((i) => (i + passo + n) % n);
+  }
+
+  protected enterBusca(e: Event, campo: HTMLInputElement) {
+    const r = this.sugestoes()[this.sugestaoAtiva()];
+    if (this.sugestoesAbertas() && r) {
+      e.preventDefault();
+      this.abrirSugestao(r, campo);
+    }
+  }
+
+  protected abrirSugestao(r: ResultadoBusca, campo: HTMLInputElement) {
+    this.sugestoesAbertas.set(false);
+    campo.blur();
+    if (r.externo) window.open(r.externo, '_blank', 'noopener');
+    else this.router.navigate(r.rota ?? ['/'], { queryParams: r.query });
+  }
+
+  protected fecharSugestoesDepois() {
+    setTimeout(() => this.sugestoesAbertas.set(false), 150);
+  }
+
   protected buscar(termo: string): void {
-    this.router.navigate(['/politicos'], { queryParams: termo.trim() ? { q: termo.trim() } : {} });
+    this.sugestoesAbertas.set(false);
+    if (termo.trim()) this.router.navigate(['/busca'], { queryParams: { q: termo.trim() } });
   }
 
   protected async sair(): Promise<void> {

@@ -1,89 +1,230 @@
-<header class="cabecalho-pagina">
-  <p class="sobretitulo">Candidatos</p>
-  <h1>Deputados federais</h1>
-  <p>Consulte quem representa cada estado na Câmara dos Deputados: partido, comissões, proposições e gastos, sempre com a fonte oficial.</p>
-</header>
+<div class="pol-palco">
+<app-nav-politicos />
 
-<form class="card filtros" role="search" (submit)="$event.preventDefault(); pesquisar()">
-  <div class="campo-form campo-largo">
-    <label for="f-nome">Nome</label>
-    <div class="campo-com-icone">
-      <app-icone nome="search" />
-      <input id="f-nome" name="termo" type="search" [(ngModel)]="termo" (ngModelChange)="aoDigitar()" placeholder="Digite pelo menos 3 letras" autocomplete="off" />
+<!-- ===== Cabeçalho com busca em destaque ===== -->
+<section class="pol-topo">
+  <img class="pol-fatobot" src="img/fatobot.svg" alt="" />
+  <div class="pol-titulo">
+    <p class="sobretitulo">Políticos</p>
+    <h1>Conheça quem representa você</h1>
+    <p class="pol-confianca"><app-icone nome="verified_user" /> Dados oficiais da Câmara dos Deputados e do Senado Federal · cada informação com a fonte e a data da consulta</p>
+  </div>
+
+  <form class="pol-busca" role="search" (submit)="$event.preventDefault(); focoBusca.set(false)">
+    <label for="f-nome" class="sr-only">Pesquisar político</label>
+    <app-icone nome="search" class="pol-busca-lupa" />
+    <input id="f-nome" name="termo" type="search" [ngModel]="termo()" (ngModelChange)="termo.set($event); mudouFiltro()" (focus)="focoBusca.set(true)" (blur)="fecharSugestoesDepois()"
+      [placeholder]="'Buscar ' + rotuloCargo().toLowerCase() + ' pelo nome'" autocomplete="off" role="combobox" aria-controls="pol-sugestoes" [attr.aria-expanded]="focoBusca() && sugestoes().length > 0" />
+    @if (termo()) { <button type="button" class="pol-busca-limpar" (click)="termo.set(''); mudouFiltro()" aria-label="Apagar busca"><app-icone nome="close" /></button> }
+    <button type="button" class="pol-filtros-botao" [class.ativo]="filtrosAbertos()" (click)="filtrosAbertos.set(!filtrosAbertos())" [attr.aria-expanded]="filtrosAbertos()" aria-controls="pol-filtros">
+      <app-icone nome="tune" /> Filtros @if (qtdFiltros()) { <span class="pol-filtros-qtd">{{ qtdFiltros() }}</span> }
+    </button>
+    @if (focoBusca() && sugestoes().length) {
+      <ul id="pol-sugestoes" class="pol-sugestoes" role="listbox">
+        @for (p of sugestoes(); track p.id) {
+          <li role="option"><a [routerLink]="linkPerfil(p)" (mousedown)="$event.preventDefault()" (click)="focoBusca.set(false)">
+            <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="36" />
+            <span><strong>{{ p.nome }}</strong><small>{{ p.partido }} · {{ p.uf }} · {{ p.cargo || cargo() }}</small></span>
+            <app-icone nome="north_east" />
+          </a></li>
+        }
+      </ul>
+    }
+  </form>
+
+  <!-- Painel de filtros (abre quando precisa) -->
+  @if (filtrosAbertos()) {
+    <section id="pol-filtros" class="pol-painel" aria-label="Filtros">
+      <div class="pol-painel-grupo">
+        <span class="pol-painel-rotulo"><app-icone nome="location_on" /> Estado</span>
+        <div class="pol-painel-linha">
+          <select [ngModel]="uf()" (ngModelChange)="uf.set($event); mudouFiltro()" aria-label="Estado">
+            <option value="">Todos os estados</option>
+            @for (u of ufs; track u) { <option [value]="u">{{ u }} · {{ nomeEstado(u) }}</option> }
+          </select>
+          @if (meuEstado() && uf() !== meuEstado()) { <button type="button" class="pol-chip" (click)="uf.set(meuEstado()); mudouFiltro()"><app-icone nome="my_location" /> Meu estado ({{ meuEstado() }})</button> }
+        </div>
+      </div>
+      <div class="pol-painel-grupo">
+        <span class="pol-painel-rotulo"><app-icone nome="flag" /> Partido</span>
+        <div class="pol-painel-linha pol-chips">
+          @for (s of partidosPopulares(); track s) {
+            <button type="button" class="pol-chip" [attr.aria-pressed]="partido() === s" (click)="partido.set(partido() === s ? '' : s); mudouFiltro()">{{ s }}</button>
+          }
+          <select [ngModel]="partido()" (ngModelChange)="partido.set($event); mudouFiltro()" aria-label="Outro partido" class="pol-select-p">
+            <option value="">Outros...</option>
+            @for (s of partidos(); track s) { <option [value]="s">{{ s }}</option> }
+          </select>
+        </div>
+      </div>
+      <div class="pol-painel-grupo">
+        <span class="pol-painel-rotulo"><app-icone nome="sort" /> Ordenar por</span>
+        <div class="pol-painel-linha pol-chips">
+          <button type="button" class="pol-chip" [attr.aria-pressed]="ordem() === 'az'" (click)="ordenar('az')">Nome A–Z</button>
+          <button type="button" class="pol-chip" [attr.aria-pressed]="ordem() === 'za'" (click)="ordenar('za')">Nome Z–A</button>
+          <button type="button" class="pol-chip" [attr.aria-pressed]="ordem() === 'partido'" (click)="ordenar('partido')">Partido</button>
+          <button type="button" class="pol-chip" [attr.aria-pressed]="ordem() === 'estado'" (click)="ordenar('estado')">Estado</button>
+        </div>
+      </div>
+      <div class="pol-painel-grupo">
+        <span class="pol-painel-rotulo"><app-icone nome="visibility" /> Ver como</span>
+        <div class="pol-painel-linha pol-chips">
+          <button type="button" class="pol-chip" [attr.aria-pressed]="visao() === 'lista'" (click)="visao.set('lista')"><app-icone nome="grid_view" /> Lista</button>
+          <button type="button" class="pol-chip" [attr.aria-pressed]="visao() === 'mapa'" (click)="visao.set('mapa')" [disabled]="semFonte()"><app-icone nome="map" /> Mapa do Brasil</button>
+        </div>
+      </div>
+      <footer class="pol-painel-rodape">
+        <button type="button" class="link-discreto" (click)="limpar()">Limpar tudo</button>
+        <button type="button" class="botao botao-p" (click)="filtrosAbertos.set(false)">Ver {{ resultados().length }} {{ resultados().length === 1 ? 'resultado' : 'resultados' }}</button>
+      </footer>
+    </section>
+  }
+</section>
+
+<!-- ===== Escolha o cargo (cartões grandes) ===== -->
+<h2 class="pol-secao">Escolha o cargo <small>Toque para ver todos os nomes</small></h2>
+<section class="pol-cargos" aria-label="Cargo" role="tablist">
+  @for (c of cargosPrincipais; track c.nome) {
+    <button type="button" role="tab" class="pol-cargo" [style.--c]="c.cor" [attr.aria-selected]="cargo() === c.nome" [class.sem-dados]="!temDados(c.nome)" (click)="escolherCargo(c.nome)">
+      <app-icone [nome]="c.icone" class="pol-cargo-icone" />
+      <app-icone [nome]="c.icone" class="pol-cargo-fundo" />
+      @if (cargo() === c.nome) { <app-icone nome="check_circle" class="pol-cargo-ok" /> }
+      <strong>{{ c.rotulo }}</strong>
+      <small>@if (!temDados(c.nome)) { em breve } @else if (totais()[c.nome]) { {{ totais()[c.nome] }} nomes } @else { carregando... }</small>
+    </button>
+  }
+  <div class="pol-outros">
+    <strong>Outros cargos</strong>
+    @for (c of cargosOutros; track c.nome) {
+      <button type="button" role="tab" [attr.aria-selected]="cargo() === c.nome" (click)="escolherCargo(c.nome)">
+        <app-icone [nome]="c.icone" /> {{ c.rotulo }} @if (!temDados(c.nome)) { <em>em breve</em> }
+      </button>
+    }
+  </div>
+</section>
+
+<!-- ===== Explore ===== -->
+<h2 class="pol-secao">Explore</h2>
+<section class="pol-explore">
+  @for (x of explorar; track x.rota) {
+    <a class="pol-explore-card" [routerLink]="x.rota">
+      <img [src]="x.imagem" alt="" loading="lazy" />
+      <app-icone [nome]="x.icone" />
+      <span><strong>{{ x.titulo }}</strong><small>{{ x.texto }}</small></span>
+    </a>
+  }
+</section>
+
+<!-- ===== Filtros ativos + contagem ===== -->
+@if (!semFonte()) {
+  <div class="pol-resultados-topo">
+    <p class="pol-contagem" aria-live="polite">
+      @if (carregando()) { Carregando a lista... }
+      @else if (!erro()) { <strong>{{ resultados().length }}</strong> {{ rotuloCargo().toLowerCase() }} @if (letra()) { com a letra <strong>{{ letra() }}</strong> } }
+    </p>
+    <div class="pol-ativos">
+      @if (termo()) { <button type="button" class="pol-ativo" (click)="termo.set(''); mudouFiltro()">“{{ termo() }}” <app-icone nome="close" /></button> }
+      @if (uf()) { <button type="button" class="pol-ativo" (click)="uf.set(''); mudouFiltro()">{{ nomeEstado(uf()) }} <app-icone nome="close" /></button> }
+      @if (partido()) { <button type="button" class="pol-ativo" (click)="partido.set(''); mudouFiltro()">{{ partido() }} <app-icone nome="close" /></button> }
+      @if (letra()) { <button type="button" class="pol-ativo" (click)="letra.set(''); mudouFiltro()">Letra {{ letra() }} <app-icone nome="close" /></button> }
+      @if (ordem() !== 'az') { <button type="button" class="pol-ativo" (click)="ordenar('az')">Ordem: {{ ordem() === 'za' ? 'Z–A' : ordem() === 'partido' ? 'partido' : 'estado' }} <app-icone nome="close" /></button> }
+      @if (temFiltro() || ordem() !== 'az') { <button type="button" class="link-discreto" (click)="limpar()">Limpar</button> }
     </div>
   </div>
-  <div class="campo-form">
-    <label for="f-partido">Partido</label>
-    <input id="f-partido" name="partido" type="text" list="lista-partidos" [(ngModel)]="partido" (ngModelChange)="aoDigitar()" placeholder="Todos" maxlength="20" autocomplete="off" />
-    <datalist id="lista-partidos">
-      @for (s of partidos(); track s) { <option [value]="s"></option> }
-    </datalist>
-  </div>
-  <div class="campo-form">
-    <label for="f-uf">Estado</label>
-    <select id="f-uf" name="uf" [(ngModel)]="uf" (ngModelChange)="pesquisar()">
-      <option value="">Todos</option>
-      @for (u of ufs; track u) {
-        <option [value]="u">{{ u }}</option>
-      }
-    </select>
-  </div>
-  @if (temFiltro) {
-    <button class="botao botao-fantasma" type="button" (click)="limpar()"><app-icone nome="close" /> Limpar filtros</button>
-  }
-</form>
+}
 
-<p class="status-lista" aria-live="polite">
-  @if (carregando()) {
-    Buscando...
-  } @else if (!erro()) {
-    {{ resultados().length }}{{ temMais() ? '+' : '' }} {{ resultados().length === 1 ? 'deputado encontrado' : 'deputados encontrados' }}
-  }
-</p>
+@if (!semFonte() && visao() === 'mapa') {
+  <section class="card mapa-card">
+    <div class="mapa-layout">
+      <div>
+        <h2 class="titulo-secao">{{ rotuloCargo() }} por estado</h2>
+        <p class="texto-p">Toque em um estado. Cada cor é uma região; passe o mouse para ver quantos {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados' }} ele tem.</p>
+        <app-mapa-estados [selecionado]="uf()" [destaque]="meuEstado()" [textos]="textosMapa()" (escolher)="escolherNoMapa($event)" />
+        <small class="gst-credito">Mapa: SVG Maps (CC BY 4.0)</small>
+      </div>
+      <aside class="mapa-painel">
+        @if (uf()) {
+          <p class="sobretitulo">{{ uf() }}</p>
+          <h3>{{ nomeEstado(uf()) }}</h3>
+          <p class="mapa-numero"><strong>{{ porEstado()[uf()] || 0 }}</strong> {{ cargo() === 'Senador(a)' ? 'senadores' : 'deputados federais' }}</p>
+          @if (partidosDoEstado().length) {
+            <ul class="mapa-partidos">
+              @for (pp of partidosDoEstado().slice(0, 6); track pp[0]) {
+                <li><span>{{ pp[0] }}</span><span class="mapa-barra"><span [style.width.%]="(pp[1] / partidosDoEstado()[0][1]) * 100"></span></span><strong>{{ pp[1] }}</strong></li>
+              }
+            </ul>
+          }
+          <button type="button" class="botao" (click)="verListaDoEstado()"><app-icone nome="list" /> Ver os nomes de {{ uf() }}</button>
+        } @else {
+          <p class="texto-suave">Escolha um estado no mapa para ver quantos representantes ele tem e de quais partidos.</p>
+        }
+      </aside>
+    </div>
+  </section>
+}
 
 @if (erro()) {
-  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
+  <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }} <button type="button" class="botao botao-fantasma" (click)="carregar()">Tentar de novo</button></div>
 }
 
-<ul class="grade-politicos">
-  @if (carregando() && !resultados().length) {
-    @for (e of esqueletos; track $index) {
-      <li class="card card-politico" aria-hidden="true">
-        <span class="esqueleto esqueleto-foto-p"></span>
-        <span class="esqueleto-linhas"><span class="esqueleto" style="width: 70%"></span><span class="esqueleto" style="width: 40%"></span></span>
-      </li>
-    }
+@if (semFonte()) {
+  <div class="card vazio aviso-cargo">
+    <app-icone nome="database" />
+    <strong>{{ rotuloCargo() }}: dados ainda não importados</strong>
+    <span>Não existe uma API pública que o site consiga consultar direto para este cargo. A lista entra quando a equipe importar os dados oficiais do TSE para o banco (tabela <code>politicos</code>, coluna <code>cargo</code>).</span>
+    <a class="botao botao-fantasma" href="https://divulgacandcontas.tse.jus.br/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Consultar no TSE (DivulgaCandContas)</a>
+  </div>
+} @else if (visao() === 'lista') {
+  @if (carregando()) {
+    <ul class="grade-politicos pol-grade">
+      @for (e of esqueletos; track $index) {
+        <li class="card card-politico" aria-hidden="true">
+          <span class="esqueleto esqueleto-foto-p"></span>
+          <span class="esqueleto-linhas"><span class="esqueleto" style="width: 70%"></span><span class="esqueleto" style="width: 40%"></span></span>
+        </li>
+      }
+    </ul>
   }
-  @for (p of resultados(); track p.id) {
-    <li>
-      <a [routerLink]="['/politicos', p.id]" class="card card-politico">
-        <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="64" />
-        <span class="card-politico-texto">
-          <strong>{{ p.nome }}</strong>
-          <span class="card-politico-partido">{{ p.partido || 'Partido n/d' }} · {{ p.uf || 'UF n/d' }}</span>
-          <small>{{ p.cargo || 'Deputado(a) Federal' }}</small>
-        </span>
-        <app-icone nome="chevron_right" class="card-politico-seta" />
-      </a>
-    </li>
+
+  @for (g of grupos(); track g.letra) {
+    <section class="grupo-letra" [attr.aria-label]="g.letra">
+      @if (ordem() === 'partido' || ordem() === 'estado') { <h2 class="grupo-letra-titulo">{{ g.letra }}</h2> }
+      <ul class="grade-politicos pol-grade">
+        @for (p of g.pessoas; track p.id) {
+          <li>
+            <a [routerLink]="linkPerfil(p)" class="card card-politico pol-card" [style.--c]="corPartido(p.partido)">
+              <app-avatar class="avatar-oficial pol-foto" [nome]="p.nome" [url]="p.foto_url" [tamanho]="62" />
+              <span class="card-politico-texto">
+                <strong>{{ p.nome }}</strong>
+                <span class="pol-card-meta"><span class="pol-sigla">{{ p.partido || 'S/P' }}</span> {{ p.uf ? nomeEstado(p.uf) : 'UF n/d' }}</span>
+                <small>{{ p.cargo || cargo() }}</small>
+                @if (totalRegistros(p); as n) {
+                  <span class="etiqueta-polemica"><app-icone nome="report" /> {{ n }} {{ n === 1 ? 'registro' : 'registros' }} de polêmica</span>
+                }
+              </span>
+              <app-icone nome="chevron_right" class="card-politico-seta" />
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
   } @empty {
     @if (!carregando() && !erro()) {
-      <li class="card vazio">
+      <div class="card vazio">
         <app-icone nome="person_search" />
-        <strong>Nenhum deputado encontrado</strong>
+        <strong>Ninguém encontrado</strong>
         <span>Confira a grafia do nome ou remova algum filtro.</span>
-        @if (temFiltro) { <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar filtros</button> }
-      </li>
+        @if (temFiltro()) { <button class="botao botao-fantasma" type="button" (click)="limpar()">Limpar filtros</button> }
+      </div>
     }
   }
-</ul>
 
-@if (temMais() && !carregando()) {
-  <div class="carregar-mais">
-    <button class="botao botao-fantasma" type="button" (click)="carregarMais()" [disabled]="carregandoMais()">
-      {{ carregandoMais() ? 'Carregando...' : 'Carregar mais deputados' }}
-    </button>
-  </div>
+  @if (resultados().length > visiveis().length) {
+    <div class="carregar-mais">
+      <button class="botao botao-fantasma" type="button" (click)="mostrarMais()">Mostrar mais ({{ resultados().length - visiveis().length }} restantes)</button>
+    </div>
+  }
 }
 
-<p class="nota-fontes"><app-icone nome="verified" /> Dados da <a href="https://dadosabertos.camara.leg.br" target="_blank" rel="noopener noreferrer">API de Dados Abertos da Câmara dos Deputados</a></p>
+<p class="nota-fontes"><app-icone nome="verified" /> Fotos oficiais da Câmara dos Deputados e do Senado Federal. Deputados federais: API de Dados Abertos da Câmara. Senadores: Dados Abertos do Senado Federal. Os demais cargos entram com os dados oficiais do TSE.</p>
+</div>

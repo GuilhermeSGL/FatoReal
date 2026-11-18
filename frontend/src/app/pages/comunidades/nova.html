@@ -1,5 +1,6 @@
 <a routerLink="/comunidades" class="link-voltar"><app-icone nome="arrow_back" /> Comunidades</a>
 
+<div class="nova-grade">
 <section class="card formulario">
   <h1>Criar comunidade</h1>
   <p class="texto-suave">No piloto, todas as comunidades são abertas: qualquer pessoa com conta pode entrar.</p>
@@ -29,3 +30,24 @@
     </button>
   </form>
 </section>
+
+<aside class="nova-previa" aria-label="Prévia da comunidade">
+  <p class="nova-previa-k"><app-icone nome="visibility" /> Prévia: é assim que vai aparecer</p>
+  <div class="card card-comunidade" [style.--cor-tema]="corTema[dados.tema]">
+    <div class="card-comunidade-capa">
+      @if (capa(slug(), dados.tema); as img) { <img [src]="img" alt="" /> } @else { <app-icone [nome]="iconeTema[dados.tema] || 'groups'" class="capa-marca" /> }
+    </div>
+    <div class="card-comunidade-corpo">
+      <span class="card-comunidade-avatar capa-icone"><app-icone [nome]="iconeTema[dados.tema] || 'groups'" /></span>
+      <strong>{{ dados.nome || 'Nome da comunidade' }}</strong>
+      <span class="tag-verde tag-p">{{ dados.tema }}</span>
+      <p>{{ dados.descricao || 'A descrição aparece aqui. Conte em uma frase sobre o que a comunidade conversa.' }}</p>
+      <small class="texto-suave"><app-icone nome="group" /> 1 membro (você)</small>
+    </div>
+  </div>
+  <div class="card nova-previa-regras">
+    <strong><app-icone nome="gavel" /> Regras</strong>
+    <p>{{ dados.regras }}</p>
+  </div>
+</aside>
+</div>

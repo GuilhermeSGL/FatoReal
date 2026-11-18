@@ -8,7 +8,7 @@ import { lerDemo, salvarDemo } from './demo-store';
  * LGPD: coletamos só nome, e-mail e (opcional) foto. Nada de opinião política.
  */
 
-const CAMPOS_EXTRAS = ['bio', 'cidade', 'uf', 'capa'];
+const CAMPOS_EXTRAS = ['bio', 'cidade', 'uf', 'capa', 'profissao', 'interesses', 'redes', 'capa_url'];
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly usuario = signal<Usuario | null>(null);
@@ -32,7 +32,9 @@ export class AuthService {
 
   private async iniciar(): Promise<void> {
     if (!supabase) {
-      this.usuario.set(lerDemo<Usuario | null>('usuario', null));
+      // Modo demonstração: quem não pôs foto ganha um avatar ilustrado (fictício), escolhido pelo id
+      const u = lerDemo<Usuario | null>('usuario', null);
+      this.usuario.set(u && !u.foto_url ? { ...u, foto_url: avatarIlustrado(u.id) } : u);
       return;
     }
     const { data } = await supabase.auth.getSession();
@@ -65,6 +67,10 @@ export class AuthService {
       cidade: data?.cidade ?? null,
       uf: data?.uf ?? null,
       capa: data?.capa ?? null,
+      profissao: data?.profissao ?? null,
+      interesses: data?.interesses ?? null,
+      redes: data?.redes ?? null,
+      capa_url: data?.capa_url ?? null,
       criado_em: data?.criado_em ?? null,
     });
   }
@@ -125,6 +131,10 @@ export class AuthService {
     cidade?: string | null;
     uf?: string | null;
     capa?: string | null;
+    profissao?: string | null;
+    interesses?: string[] | null;
+    redes?: Usuario['redes'];
+    capa_url?: string | null;
   }): Promise<void> {
     const atual = this.usuario();
     if (!atual) return;
@@ -151,7 +161,7 @@ export class AuthService {
   }
 
   private salvarDemo(u: Usuario): void {
-    this.usuario.set(u);
+    this.usuario.set(u.foto_url ? u : { ...u, foto_url: avatarIlustrado(u.id) });
     salvarDemo('usuario', u);
     salvarDemo('ultimo-usuario', u);
   }
@@ -167,4 +177,11 @@ function traduzirErro(msg: string): string {
   if (m.includes('password')) return 'A senha precisa ter pelo menos 6 caracteres.';
   if (m.includes('rate limit')) return 'Muitas tentativas. Espere alguns minutos e tente de novo.';
   return 'Não foi possível concluir. Tente novamente.';
+}
+
+/** Avatar ilustrado de exemplo (public/img/avatares), sempre o mesmo para o mesmo id. Só no modo demonstração. */
+export function avatarIlustrado(id: string): string {
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return `img/avatares/a${(h % 16) + 1}.svg`;
 }

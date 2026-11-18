@@ -7,12 +7,14 @@ import { AvisosService } from '../core/avisos.service';
 import { ComunidadesService } from '../core/comunidades.service';
 import { Comentario, Publicacao } from '../core/modelos';
 import { linkSeguro, tempoAtras } from '../core/util';
+import { EnquetesService } from '../core/enquetes.service';
 import { Avatar, Icone } from './componentes';
+import { SeloStatus, seloDoEstado } from './selo-status';
 
 /** Card de publicação no estilo da apresentação: autor, comunidade, texto, link, curtir/comentar/compartilhar/denunciar. */
 @Component({
   selector: 'app-publicacao',
-  imports: [FormsModule, RouterLink, Avatar, Icone],
+  imports: [FormsModule, RouterLink, Avatar, Icone, SeloStatus],
   template: `
     @let p = pub();
     <article class="post" [class.post-verificado]="p.verificada">
@@ -30,13 +32,36 @@ import { Avatar, Icone } from './componentes';
             }
           </small>
         </div>
-        <span class="post-tipo" [class.post-tipo-verificado]="p.verificada">
-          <app-icone [nome]="p.verificada ? 'verified' : 'person'" />
-          {{ p.verificada ? 'Informação verificada' : 'Publicação de usuário' }}
+        <span class="post-selos">
+          @if (p.meme) { <span class="post-tipo" data-tipo="meme"><app-icone nome="mood" /> Meme</span> }
+          @else if (p.checagem) { <span class="post-tipo" data-tipo="checagem"><app-icone nome="fact_check" /> Checagem</span> }
+          @else if (enquetes.de(p.id)) { <span class="post-tipo" data-tipo="enquete"><app-icone nome="poll" /> Enquete</span> }
+          <app-selo [tipo]="p.verificada ? 'verificado' : 'usuario'" />
+          @if (ehNovo(p.criado_em)) { <app-selo tipo="novo" /> }
         </span>
       </header>
 
       <p class="post-texto">{{ p.texto }}</p>
+
+      @if (p.imagem_url) {
+        <figure class="post-midia" [class.post-meme]="!!p.meme">
+          <img [src]="p.imagem_url" [alt]="p.meme ? 'Meme: ' + p.meme.topo + ' / ' + p.meme.base : 'Imagem da publicação'" loading="lazy" />
+          @if (p.meme; as m) {
+            @if (m.topo) { <figcaption class="meme-topo">{{ m.topo }}</figcaption> }
+            @if (m.base) { <figcaption class="meme-base">{{ m.base }}</figcaption> }
+          }
+        </figure>
+      }
+
+      @if (p.checagem; as c) {
+        <div class="post-checagem">
+          <span class="post-checagem-k"><app-icone nome="fact_check" /> Conferido no Fato ou Fake</span>
+          <q>{{ c.afirmacao }}</q>
+          <app-selo [tipo]="seloDe(c.estado)" />
+          <p>{{ c.resumo }}</p>
+          @if (c.fonte; as f) { <a [href]="f.url" target="_blank" rel="noopener noreferrer"><app-icone nome="link" /> Fonte: {{ f.titulo }}</a> }
+        </div>
+      }
 
       @if (link(p.link_url); as l) {
         <a class="post-link" [href]="l" target="_blank" rel="noopener noreferrer nofollow ugc">
@@ -44,6 +69,20 @@ import { Avatar, Icone } from './componentes';
           <span><strong>{{ dominio(l) }}</strong><small>{{ l }}</small></span>
           <app-icone nome="open_in_new" />
         </a>
+      }
+
+      @if (enquetes.de(p.id); as e) {
+        @let total = soma(e.votos);
+        <div class="enquete" role="group" [attr.aria-label]="'Enquete: ' + total + ' voto(s)'">
+          @for (o of e.opcoes; track $index; let i = $index) {
+            <button type="button" class="enquete-opcao" [class.votada]="e.meuVoto === i" [attr.aria-pressed]="e.meuVoto === i" (click)="enquetes.votar(p.id, i)">
+              @if (e.meuVoto !== undefined) { <span class="enquete-barra" [style.width.%]="pct(e.votos[i], total)"></span> }
+              <span class="enquete-texto">@if (e.meuVoto === i) { <app-icone nome="check_circle" /> } {{ o }}</span>
+              @if (e.meuVoto !== undefined) { <strong>{{ pct(e.votos[i], total) }}%</strong> }
+            </button>
+          }
+          <small class="texto-suave">{{ total }} voto(s) · {{ e.meuVoto === undefined ? 'toque numa opção para votar' : 'toque de novo para desfazer' }}</small>
+        </div>
       }
 
       <div class="post-contagem">
@@ -120,6 +159,13 @@ import { Avatar, Icone } from './componentes';
   `,
 })
 export class PublicacaoCard {
+  protected seloDe(estado: string) {
+    return seloDoEstado(estado);
+  }
+  protected ehNovo = (iso: string) => Date.now() - new Date(iso).getTime() < 86400000;
+  protected enquetes = inject(EnquetesService);
+  protected soma = (v: number[]) => v.reduce((a, b) => a + b, 0);
+  protected pct = (n: number, t: number) => (t ? Math.round((n / t) * 100) : 0);
   protected auth = inject(AuthService);
   private service = inject(ComunidadesService);
   private avisos = inject(AvisosService);

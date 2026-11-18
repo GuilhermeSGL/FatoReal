@@ -1,5 +1,8 @@
-import { AfterViewInit, Component, ElementRef, HostListener, computed, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { rolarSuave } from '../../shared/rolar-suave';
+import { Faixa } from '../../shared/faixa';
+import { PerguntarFatobot } from '../../shared/fatobot-bolha';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, computed, signal, viewChild } from '@angular/core';
+import { GLOSSARIO } from '../../core/glossario';
 import { Icone } from '../../shared/componentes';
 
 interface Topico {
@@ -16,38 +19,75 @@ interface Trilha {
 /** Base da Política: área educativa para quem está começando. Tom didático e apartidário. */
 @Component({
   selector: 'app-base-politica',
-  imports: [RouterLink, Icone],
+  imports: [Icone, PerguntarFatobot, Faixa],
   template: `
-    <header class="cabecalho-pagina">
-      <h1><app-icone nome="school" /> Base da Política</h1>
-      <p>Aprender política sem precisar já entender de política. Explicações curtas sobre como o Brasil funciona, com link para a fonte oficial.</p>
-    </header>
+    <app-faixa sobretitulo="Aprender" icone="school" titulo="Base da Política" imagem="img/capa-juventude-e-participacao.svg" [cores]="['#78350f', '#b45309', '#f59e0b']"
+      texto="Aprender política sem precisar já entender de política. Explicações curtas sobre como o Brasil funciona, com link para a fonte oficial." />
 
-    <section class="card glossario-carrossel" aria-roledescription="carrossel" aria-labelledby="titulo-glossario">
+    <section class="card glossario-carrossel" aria-roledescription="carrossel" aria-labelledby="titulo-glossario"
+      (mouseenter)="pausado.set(true)" (mouseleave)="pausado.set(false)" (focusin)="aoFocar($event)" (focusout)="pausado.set(false)">
       <div class="glossario-topo">
-        <h2 id="titulo-glossario"><app-icone nome="menu_book" /> Glossário</h2>
+        <div>
+          <h2 id="titulo-glossario"><app-icone nome="menu_book" /> Glossário</h2>
+          <p class="glossario-sub">{{ glossario.length }} termos que aparecem no noticiário político, explicados em uma frase.</p>
+        </div>
         <div class="glossario-controles">
-          <span class="glossario-contador" aria-live="polite">{{ visiveis() > 1 ? atual() + 1 + '–' + (atual() + visiveis()) : atual() + 1 }} de {{ glossario.length }}</span>
+          <span class="glossario-contador" aria-live="polite">{{ visiveis() > 1 && termos().length > 1 ? atual() + 1 + '–' + min(atual() + visiveis(), termos().length) : atual() + 1 }} de {{ termos().length }}</span>
           <button type="button" class="botao-seta" (click)="ir(atual() - 1)" [disabled]="atual() === 0" aria-label="Termo anterior"><app-icone nome="chevron_left" /></button>
           <button type="button" class="botao-seta" (click)="ir(atual() + 1)" [disabled]="atual() >= ultimaPosicao()" aria-label="Próximo termo"><app-icone nome="chevron_right" /></button>
         </div>
       </div>
+
+      <div class="glossario-filtros" role="tablist" aria-label="Filtrar por categoria">
+        @for (c of categorias; track c) {
+          <button type="button" role="tab" [attr.aria-selected]="categoria() === c" (click)="filtrar(c)">{{ c }}</button>
+        }
+      </div>
+
       <ul #trilho class="glossario-trilho" (scroll)="aoRolar()" tabindex="0" aria-label="Termos do glossário" (keydown.arrowRight)="$event.preventDefault(); ir(atual() + 1)" (keydown.arrowLeft)="$event.preventDefault(); ir(atual() - 1)">
-        @for (g of glossario; track g[0]; let i = $index) {
-          <li class="glossario-item" [attr.aria-label]="(i + 1) + ' de ' + glossario.length">
-            <span class="glossario-letra" aria-hidden="true">{{ g[0].charAt(0) }}</span>
-            <dl><dt>{{ g[0] }}</dt><dd>{{ g[1] }}</dd></dl>
+        @for (g of termos(); track g.termo; let i = $index) {
+          <li class="glossario-item" [attr.aria-label]="(i + 1) + ' de ' + termos().length" [attr.data-cor]="i % 3">
+            <div class="glossario-cabeca">
+              <span class="glossario-icone" aria-hidden="true"><app-icone [nome]="g.icone" /></span>
+              <span class="glossario-categoria">{{ g.categoria }}</span>
+            </div>
+            <h3>{{ g.termo }}</h3>
+            <p class="glossario-def">{{ g.definicao }}</p>
+            <div class="glossario-pratica"><strong><app-icone nome="lightbulb" /> Na prática</strong><span>{{ g.exemplo }}</span></div>
+            <button type="button" class="glossario-bot" [perguntarFatobot]="'O que é ' + g.termo + ' e como funciona no Brasil?'" [attr.tabindex]="i >= atual() && i < atual() + visiveis() ? 0 : -1">
+              <app-icone nome="smart_toy" /> Perguntar ao FatoBot
+            </button>
           </li>
         }
       </ul>
       <div class="glossario-pontos" role="tablist" aria-label="Escolher termo">
         @for (i of posicoes(); track i) {
-          <button type="button" role="tab" [attr.aria-selected]="i === atual()" [attr.aria-label]="'A partir de ' + glossario[i][0]" (click)="ir(i)"></button>
+          <button type="button" role="tab" [attr.aria-selected]="i === atual()" [attr.aria-label]="'A partir de ' + termos()[i].termo" (click)="ir(i)">
+            <span [style.animation-play-state]="pausado() ? 'paused' : 'running'"></span>
+          </button>
         }
       </div>
       <p class="fonte">
         <app-icone nome="verified" /> <span>Fonte: Constituição Federal de 1988 (<a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer">planalto.gov.br</a>)</span>
       </p>
+    </section>
+
+    <section class="card linha-lei" aria-labelledby="titulo-linha">
+      <h2 id="titulo-linha"><app-icone nome="timeline" /> Como uma lei nasce</h2>
+      <p class="glossario-sub">O caminho de um projeto de lei federal, do começo ao Diário Oficial.</p>
+      <ol #linha class="linha-passos">
+        @for (passo of passosLei; track passo.titulo; let i = $index) {
+          <li class="linha-passo" [style.--atraso]="i * 90 + 'ms'">
+            <span class="linha-marcador"><app-icone [nome]="passo.icone" /></span>
+            <div class="linha-conteudo">
+              <span class="linha-numero">Passo {{ i + 1 }}</span>
+              <h3>{{ passo.titulo }}</h3>
+              <p>{{ passo.texto }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+      <p class="fonte"><app-icone nome="verified" /> <span>Fonte: Constituição Federal, arts. 61 a 69 (<a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer">planalto.gov.br</a>)</span></p>
     </section>
 
     <div class="trilhas">
@@ -67,21 +107,84 @@ interface Trilha {
     <div class="card aviso-participar">
       <app-icone nome="smart_toy" />
       <p>Ficou com dúvida? Pergunte ao FatoBot: ele explica em linguagem simples e mostra de onde veio a informação.</p>
-      <a routerLink="/fatobot" class="botao botao-verde">Perguntar ao FatoBot</a>
+      <button type="button" class="botao botao-verde" perguntarFatobot>Perguntar ao FatoBot</button>
     </div>
   `,
 })
-export class BasePoliticaPage implements AfterViewInit {
+export class BasePoliticaPage implements AfterViewInit, OnDestroy {
   private readonly trilho = viewChild.required<ElementRef<HTMLUListElement>>('trilho');
+  private readonly linha = viewChild<ElementRef<HTMLOListElement>>('linha');
+  private observador?: IntersectionObserver;
+
+  /** Passos do processo legislativo federal (Constituição, arts. 61 a 69). */
+  protected readonly passosLei = [
+    { icone: 'edit_document', titulo: 'Alguém apresenta o projeto', texto: 'Deputados, senadores, o presidente, alguns tribunais, a Procuradoria-Geral da República ou os próprios cidadãos (com assinaturas de 1% do eleitorado) podem propor uma lei.' },
+    { icone: 'groups', titulo: 'As comissões analisam', texto: 'Grupos de parlamentares estudam o tema, ouvem especialistas e verificam se o texto respeita a Constituição. Podem mudar o projeto.' },
+    { icone: 'how_to_vote', titulo: 'O plenário vota', texto: 'Quando precisa, o projeto vai para a votação de todos os deputados (ou senadores). Se for aprovado, segue adiante.' },
+    { icone: 'sync_alt', titulo: 'A outra Casa revisa', texto: 'O que a Câmara aprova vai para o Senado, e vice-versa. Se a segunda Casa mudar o texto, ele volta para a primeira decidir.' },
+    { icone: 'approval', titulo: 'O presidente sanciona ou veta', texto: 'O presidente tem 15 dias úteis para aprovar (sanção) ou recusar (veto), no todo ou em parte. Se não fizer nada, vale como sanção.' },
+    { icone: 'gavel', titulo: 'O Congresso pode derrubar o veto', texto: 'Deputados e senadores, em sessão conjunta, podem derrubar o veto com a maioria absoluta de cada Casa.' },
+    { icone: 'newspaper', titulo: 'A lei é publicada', texto: 'A lei é promulgada e publicada no Diário Oficial da União. A partir da data prevista no texto, passa a valer para todos.' },
+  ];
   /** Índice do primeiro termo visível. */
   protected readonly atual = signal(0);
   /** Quantos termos cabem na tela ao mesmo tempo (3 no computador, 1 no celular). */
   protected readonly visiveis = signal(1);
-  protected readonly ultimaPosicao = computed(() => Math.max(0, this.glossario.length - this.visiveis()));
+  protected readonly categoria = signal('Todos');
+  protected readonly termos = computed(() =>
+    this.categoria() === 'Todos' ? this.glossario : this.glossario.filter((g) => g.categoria === this.categoria()),
+  );
+  protected readonly ultimaPosicao = computed(() => Math.max(0, this.termos().length - this.visiveis()));
+  protected readonly min = Math.min;
   protected readonly posicoes = computed(() => Array.from({ length: this.ultimaPosicao() + 1 }, (_, i) => i));
+
+  /** Carrossel "vivo": avança sozinho a cada 3 s; pausa com o mouse em cima ou com o foco do teclado. */
+  protected readonly pausado = signal(false);
+  private timer?: ReturnType<typeof setInterval>;
+  private decorrido = 0;
+  private static readonly INTERVALO = 3;
 
   ngAfterViewInit() {
     this.medir();
+    // Linha do tempo: cada passo aparece quando entra na tela
+    const lista = this.linha()?.nativeElement;
+    if (lista && 'IntersectionObserver' in window) {
+      this.observador = new IntersectionObserver(
+        (entradas) => entradas.forEach((e) => e.isIntersecting && e.target.classList.add('visivel')),
+        { threshold: 0.25 },
+      );
+      lista.querySelectorAll('.linha-passo').forEach((el) => this.observador!.observe(el));
+    } else {
+      lista?.querySelectorAll('.linha-passo').forEach((el) => el.classList.add('visivel'));
+    }
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    this.timer = setInterval(() => {
+      if (this.pausado() || document.hidden) {
+        this.decorrido = 0;
+        return;
+      }
+      if (++this.decorrido >= BasePoliticaPage.INTERVALO) this.ir(this.atual() >= this.ultimaPosicao() ? 0 : this.atual() + 1);
+    }, 1000);
+  }
+
+  ngOnDestroy() {
+    this.observador?.disconnect();
+    clearInterval(this.timer);
+  }
+
+  protected filtrar(c: string) {
+    this.categoria.set(c);
+    this.atual.set(0);
+    this.decorrido = 0;
+    setTimeout(() => {
+      this.trilho().nativeElement.scrollTo({ left: 0 });
+      this.medir();
+    });
+  }
+
+  /** Pausa quando a pessoa navega pelo teclado (Tab); um clique com o mouse não trava o carrossel. */
+  protected aoFocar(e: FocusEvent) {
+    if ((e.target as HTMLElement).matches(':focus-visible')) this.pausado.set(true);
   }
 
   @HostListener('window:resize')
@@ -96,7 +199,9 @@ export class BasePoliticaPage implements AfterViewInit {
   protected ir(i: number) {
     const lista = this.trilho().nativeElement;
     const destino = Math.max(0, Math.min(i, this.ultimaPosicao()));
-    lista.scrollTo({ left: destino * this.passo(lista), behavior: 'smooth' });
+    rolarSuave(lista, destino * this.passo(lista), 380);
+    this.atual.set(destino);
+    this.decorrido = 0;
   }
 
   /** Atualiza o contador conforme a pessoa arrasta ou rola o carrossel. */
@@ -143,19 +248,6 @@ export class BasePoliticaPage implements AfterViewInit {
     },
   ];
 
-  protected readonly glossario: [string, string][] = [
-    ['Projeto de lei (PL)', 'Proposta de nova lei ou de mudança em uma lei existente.'],
-    ['PEC', 'Proposta de Emenda à Constituição. Precisa ser aprovada em dois turnos em cada Casa do Congresso, por pelo menos três quintos dos votos.'],
-    ['Medida provisória', 'Ato do presidente com força de lei imediata, em casos de relevância e urgência. Perde a validade se o Congresso não a aprovar em até 60 dias, prorrogáveis por mais 60.'],
-    ['Sanção e veto', 'Sanção é a aprovação de um projeto pelo chefe do Executivo; veto é a recusa, total ou parcial.'],
-    ['Plenário', 'Reunião de todos os parlamentares de uma Casa para votar.'],
-    ['Comissão', 'Grupo menor de parlamentares que analisa projetos sobre um tema antes do plenário.'],
-    ['CPI', 'Comissão Parlamentar de Inquérito. Investiga um fato determinado, por prazo certo, e é criada com a assinatura de um terço dos membros da Casa.'],
-    ['Lei complementar', 'Lei que regulamenta assuntos que a Constituição manda tratar dessa forma. Precisa de maioria absoluta para ser aprovada.'],
-    ['Quórum', 'Número mínimo de parlamentares presentes, ou de votos, exigido para abrir uma votação ou aprovar uma proposta.'],
-    ['Legislatura', 'Período de quatro anos de trabalho do Congresso, que coincide com o mandato dos deputados federais.'],
-    ['Emenda parlamentar', 'Indicação feita por deputados e senadores de onde aplicar uma parte do Orçamento federal, como obras e serviços nos estados e municípios.'],
-    ['Cota parlamentar', 'Verba para despesas do mandato, como passagens, combustível e divulgação. Os gastos de cada deputado são públicos.'],
-    ['Federação partidária', 'União de partidos que atuam juntos, como se fossem um só, por pelo menos quatro anos.'],
-  ];
+  protected readonly glossario = GLOSSARIO;
+  protected readonly categorias = ['Todos', 'Leis', 'Congresso', 'Executivo', 'Orçamento', 'Partidos'];
 }

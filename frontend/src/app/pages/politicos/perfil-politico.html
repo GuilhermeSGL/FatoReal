@@ -1,4 +1,4 @@
-<a routerLink="/politicos" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para a busca</a>
+<a routerLink="/politicos" [queryParams]="casa() === 'senado' ? { cargo: 'Senador(a)' } : {}" class="link-voltar"><app-icone nome="arrow_back" /> Voltar para a busca</a>
 
 @if (carregando()) {
   <div class="card perfil-cabecalho" aria-busy="true">
@@ -9,132 +9,756 @@
   <div class="card alerta-erro" role="alert"><app-icone nome="error" /> {{ erro() }}</div>
 } @else if (politico(); as p) {
   <article class="perfil">
-    <header class="card perfil-cabecalho">
-      <app-avatar class="avatar-oficial" [nome]="p.nome" [url]="p.foto_url" [tamanho]="128" />
-      <div class="perfil-identidade">
-        <p class="sobretitulo">{{ p.cargo || 'Deputado(a) Federal' }}</p>
-        <h1>{{ p.nome }}</h1>
-        <p class="perfil-partido">{{ p.partido || 'Partido não informado' }} · {{ p.uf || 'UF não informada' }}</p>
-        <div class="etiquetas">
-          @if (p.situacao) { <span class="etiqueta etiqueta-verde"><span class="ponto"></span>{{ p.situacao === 'Exercício' ? 'Em exercício' : p.situacao }}</span> }
-          @if (detalhes()?.condicaoEleitoral; as c) { <span class="etiqueta">{{ c }}</span> }
+    <header class="card perfil-slide">
+      <div class="ps-topo">
+        <app-avatar class="avatar-oficial ps-foto" [nome]="p.nome" [url]="p.foto_url" [tamanho]="148" />
+        <div class="ps-id">
+          <h1>{{ p.nome }} <app-icone nome="verified" class="ps-selo" [attr.title]="'Dados oficiais ' + (casa() === 'senado' ? 'do Senado' : 'da Câmara')" /></h1>
+          <p class="ps-cargo">{{ p.cargo || 'Deputado(a) Federal' }}@if (p.uf) { • {{ nomeEstado(p.uf) }}/{{ p.uf }} }</p>
+          <div class="ps-chips">
+            @if (p.partido) { <span class="ps-partido"><span class="ps-sigla">{{ p.partido.slice(0, 2) }}</span> {{ p.partido }}</span> }
+            @if (p.situacao) { <span class="etiqueta etiqueta-verde"><span class="ponto"></span>{{ p.situacao === 'Exercício' ? 'Em exercício' : p.situacao }}</span> }
+            @if (detalhes()?.condicaoEleitoral; as c) { <span class="etiqueta">{{ c }}</span> }
+          </div>
+          <dl class="ps-info">
+            <div><dt>Mandato</dt><dd>{{ casa() === 'senado' ? (senador()?.mandatos?.[0]?.periodo || '—') : legislatura().periodo }}</dd></div>
+            <div><dt>Início do mandato</dt><dd>@if (casa() === 'senado') { {{ inicioMandato() || '—' }} } @else { {{ legislatura().inicio + 'T12:00:00' | date: 'dd/MM/yyyy' }} }</dd></div>
+            <div><dt>Área de atuação</dt><dd>{{ area() || '—' }}</dd></div>
+            <div><dt>Gênero</dt><dd>{{ genero() || '—' }}</dd></div>
+          </dl>
         </div>
-        @if (fonte(); as f) { <app-fonte [fonte]="f" /> }
       </div>
-      <div class="perfil-acoes">
-        <a class="botao botao-verde" [routerLink]="['/fatobot']" [queryParams]="{ p: perguntaIa() }"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</a>
-        <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Página na Câmara</a>
+      <div class="perfil-acoes ps-acoes">
+        <button type="button" class="botao botao-verde" [perguntarFatobot]="perguntaIa()"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</button>
+        <button type="button" class="botao botao-fantasma" [class.botao-seguindo-politico]="seguidos.sigo(p)" (click)="alternarSeguir(p)">
+          <app-icone [nome]="seguidos.sigo(p) ? 'notifications_active' : 'person_add'" /> {{ seguidos.sigo(p) ? 'Seguindo' : 'Seguir' }}
+        </button>
+        @if (casa() !== 'senado') {
+          <a class="botao botao-fantasma" routerLink="/eleicoes/comparar" [queryParams]="{ a: p.id }"><app-icone nome="compare_arrows" /> Comparar</a>
+        }
+        <button type="button" class="botao botao-fantasma" (click)="compartilhar(p)" [disabled]="gerandoCartao()"><app-icone nome="ios_share" /> {{ gerandoCartao() ? 'Gerando...' : 'Compartilhar card' }}</button>
+        <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ casa() === 'senado' ? 'Página no Senado' : 'Página na Câmara' }}</a>
       </div>
     </header>
 
-    <!-- Números principais -->
-    <ul class="indicadores" aria-label="Resumo da atuação">
-      <li class="card">
-        <span class="indicador-rotulo"><app-icone nome="description" /> Proposições apresentadas</span>
-        @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
-        @else { <strong>{{ detalhes()?.totalProposicoes ?? '—' }}</strong> }
-        <small>desde {{ detalhes()?.desdeLegislatura | date: 'MM/yyyy' }} (legislatura atual)</small>
-      </li>
-      <li class="card">
-        <span class="indicador-rotulo"><app-icone nome="account_balance" /> Comissões atuais</span>
-        @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
-        @else { <strong>{{ detalhes() ? detalhes()!.comissoes.length : '—' }}</strong> }
-        <small>como titular ou suplente</small>
-      </li>
-      <li class="card">
-        <span class="indicador-rotulo"><app-icone nome="payments" /> Cota parlamentar</span>
-        @if (carregandoDetalhes()) { <span class="esqueleto esqueleto-numero"></span> }
-        @else if (detalhes()?.despesas; as g) {
-          <strong>{{ g.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong>
-          <small>gastos em {{ g.ano }}{{ g.parcial ? ' (parcial)' : '' }}</small>
-        } @else { <strong>—</strong><small>sem dados no momento</small> }
-      </li>
-    </ul>
-
-    <div class="grade-perfil">
-      <div class="coluna">
-        <section class="card">
-          <h2 class="titulo-secao">Proposições recentes</h2>
-          @if (carregandoDetalhes()) {
-            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto" style="width: 70%"></span></div>
-          } @else if (detalhes()?.proposicoes?.length) {
-            <ul class="lista-proposicoes">
-              @for (pr of detalhes()!.proposicoes; track pr.id) {
-                <li>
-                  <a [href]="pr.url" target="_blank" rel="noopener noreferrer">{{ pr.titulo }} <app-icone nome="open_in_new" /></a>
-                  <p>{{ pr.ementa }}</p>
-                </li>
+    <!-- Painel do mandato (estilo do slide 10): números grandes e gráficos, só com dados oficiais -->
+    <section class="pf-painel" aria-label="Resumo do mandato">
+      <h2 class="sr-only">Resumo do mandato</h2>
+      <div class="pf-stats">
+        @for (st of estatisticas(); track st.rotulo) {
+          <div class="pf-stat" [style.--cor]="st.cor">
+            <span class="pf-stat-icone"><app-icone [nome]="st.icone" /></span>
+            @if (st.carregando) { <span class="esqueleto esqueleto-numero"></span> } @else { <strong>{{ st.valor }}</strong> }
+            <small>{{ st.rotulo }}</small>
+          </div>
+        }
+      </div>
+      <div class="pf-graficos">
+        @if (gastosMes(); as g) {
+          <figure class="card pf-grafico pf-meses">
+            <figcaption><strong>Gastos da cota mês a mês</strong><small>{{ g.ano }}{{ g.parcial ? ' (parcial)' : '' }} · total {{ g.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</small></figcaption>
+            <div class="pf-barras" role="img" [attr.aria-label]="'Gastos por mês em ' + g.ano">
+              @for (v of g.meses; track $index; let i = $index) {
+                <span class="pf-col" tabindex="0" [attr.data-dica]="mesesNomes[i] + ': ' + (v | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR')">
+                  <span class="pf-barra" [style.height.%]="g.max ? (v / g.max) * 100 : 0" [class.zero]="!v"></span>
+                  <small>{{ mesesNomes[i].slice(0, 1) }}</small>
+                </span>
+              }
+            </div>
+            <a class="pf-fonte" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="verified" /> Fonte: Câmara dos Deputados</a>
+          </figure>
+        }
+        <figure class="card pf-grafico pf-anel-card">
+          <figcaption><strong>Presença nas votações</strong><small>últimas votações nominais do plenário</small></figcaption>
+          @if (presenca() !== null) {
+            <div class="pf-anel" [style.--p]="presenca()" role="img" [attr.aria-label]="'Presença de ' + presenca() + '%'"><strong>{{ presenca() }}%</strong></div>
+            <small class="texto-suave">Faltar pode ter motivo justo (licença, missão oficial).</small>
+          } @else {
+            <div class="pf-anel pf-anel-vazio"><strong>{{ (casa() === 'senado' ? carregandoFicha() : carregandoVotacoes()) ? '...' : 'sem dados' }}</strong></div>
+          }
+        </figure>
+        @if (detalhes()?.despesas?.porTipo?.length) {
+          <figure class="card pf-grafico">
+            <figcaption><strong>Para onde foi a cota</strong><small>maiores tipos de gasto</small></figcaption>
+            <ul class="pf-tipos">
+              @for (t of detalhes()!.despesas!.porTipo.slice(0, 4); track t.tipo) {
+                <li><span>{{ t.tipo }}</span><span class="pf-tipo-trilha"><span [style.width.%]="(t.valor / maiorGasto()) * 100"></span></span><strong>{{ t.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></li>
               }
             </ul>
-          } @else {
-            <p class="texto-suave">Nenhuma proposição de autoria encontrada nesta legislatura.</p>
+          </figure>
+        }
+      </div>
+    </section>
+
+    <!-- Polêmicas e problemas na Justiça -->
+    @if (!carregandoAlertas()) {
+      <section class="card polemicas" [class.com-registros]="alertas().length" aria-labelledby="titulo-polemicas">
+        <header class="polemicas-topo">
+          <span class="polemicas-icone"><app-icone [nome]="alertas().length ? 'report' : 'gpp_maybe'" /></span>
+          <div>
+            <h2 id="titulo-polemicas">Polêmicas e problemas na Justiça</h2>
+            @if (alertas().length) {
+              <p>{{ alertas().length }} {{ alertas().length === 1 ? 'registro' : 'registros' }} com fonte. Leia cada um e abra a fonte antes de tirar conclusões.</p>
+            } @else {
+              <p>Nenhum registro cadastrado pela moderação para {{ p.nome }}. Isso não garante que não existam: confira nas fontes oficiais abaixo.</p>
+            }
+          </div>
+          @if (auth.moderador() && !adicionando()) {
+            <button type="button" class="botao botao-fantasma polemicas-add" (click)="adicionando.set(true)"><app-icone nome="add" /> Adicionar registro</button>
           }
+        </header>
+
+        @if (alertas().length) {
+          <ol class="polemicas-lista">
+            @for (a of alertas(); track a.id) {
+              <li [attr.data-gravidade]="gravidade[a.tipo]">
+                <div class="polemica-linha">
+                  <span class="alerta-tipo">{{ a.tipo }}</span>
+                  @if (a.data) { <time>{{ a.data | date: 'MM/yyyy' }}</time> }
+                  @if (a.verificado) { <span class="selo-verificado-equipe" title="Levantado pela equipe em fonte oficial"><app-icone nome="verified" /> Verificado pela equipe</span> }
+                  @if (auth.moderador() && !a.verificado) {
+                    <button type="button" class="polemica-remover" (click)="remover(a)" [attr.aria-label]="'Remover ' + a.titulo" title="Remover"><app-icone nome="delete" /></button>
+                  }
+                </div>
+                <strong>{{ a.titulo }}</strong>
+                <p>{{ a.descricao }}</p>
+                <a class="polemica-fonte" [href]="a.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Fonte: {{ a.orgao }}</a>
+              </li>
+            }
+          </ol>
+          <p class="polemicas-nota"><app-icone nome="balance" /> <span>Processo ou investigação em andamento não é condenação: todos têm direito à presunção de inocência até decisão final. Viu um registro errado? Avise pelo <a routerLink="/contato">contato</a>.</span></p>
+        }
+
+        @if (adicionando()) {
+          <form class="polemicas-form" #f="ngForm" (ngSubmit)="f.valid && fonteValida() && salvarRegistro()">
+            <h3>Novo registro (moderação)</h3>
+            <div class="linha-campos">
+              <div class="campo-form">
+                <label for="pa-tipo">Tipo</label>
+                <select id="pa-tipo" name="tipo" [(ngModel)]="novo.tipo">
+                  @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+                </select>
+              </div>
+              <div class="campo-form">
+                <label for="pa-data">Data do fato</label>
+                <input id="pa-data" name="data" type="date" [(ngModel)]="novo.data" />
+              </div>
+            </div>
+            <div class="campo-form">
+              <label for="pa-titulo">Título</label>
+              <input id="pa-titulo" name="titulo" [(ngModel)]="novo.titulo" required minlength="5" maxlength="140" placeholder="Resumo em uma linha, sem adjetivos" />
+            </div>
+            <div class="campo-form">
+              <label for="pa-desc">O que aconteceu</label>
+              <textarea id="pa-desc" name="descricao" rows="3" [(ngModel)]="novo.descricao" required minlength="20" maxlength="600" placeholder="Descreva só o que a fonte diz, com fatos e datas."></textarea>
+            </div>
+            <div class="linha-campos">
+              <div class="campo-form">
+                <label for="pa-orgao">Quem publicou</label>
+                <input id="pa-orgao" name="orgao" [(ngModel)]="novo.orgao" required maxlength="80" placeholder="Ex.: STF, TSE, Agência Brasil" />
+              </div>
+              <div class="campo-form campo-largo">
+                <label for="pa-fonte">Link da fonte (obrigatório)</label>
+                <input id="pa-fonte" name="fonte" type="url" [(ngModel)]="novo.fonte_url" required placeholder="https://..." />
+                @if (novo.fonte_url && !fonteValida()) { <small class="erro-campo">Use o endereço completo, começando com https://</small> }
+              </div>
+            </div>
+            <p class="texto-p"><app-icone nome="info" /> Só registre o que estiver publicado em fonte confiável (decisão judicial, órgão oficial ou veículo de imprensa). Sem fonte, não publique.</p>
+            <div class="modal-acoes">
+              <button type="button" class="botao botao-fantasma" (click)="adicionando.set(false)">Cancelar</button>
+              <button type="submit" class="botao botao-perigo" [disabled]="f.invalid || !fonteValida() || salvando()">{{ salvando() ? 'Salvando...' : 'Publicar registro' }}</button>
+            </div>
+          </form>
+        }
+
+        <ul class="consultas-oficiais">
+          @for (c of consultas; track c.url) { <li><a [href]="c.url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ c.nome }}</a></li> }
+        </ul>
+      </section>
+    }
+
+    <!-- Resumo em uma frase -->
+    <section class="card ficha-resumo">
+      <app-icone nome="summarize" />
+      <p>{{ resumo() }}</p>
+    </section>
+
+    <nav class="ficha-abas" role="tablist" aria-label="Seções do perfil">
+      @for (a of abas(); track a.id) {
+        <button type="button" role="tab" [attr.aria-selected]="aba() === a.id" (click)="abrirAba(a.id)"><app-icone [nome]="a.icone" /> {{ a.nome }}</button>
+      }
+    </nav>
+
+    @let sen = casa() === 'senado';
+    @let s = senador();
+    @let car = carreira();
+
+    @switch (aba()) {
+      <!-- ================= VISÃO GERAL ================= -->
+      @case ('geral') {
+        <div class="ps-grade3">
+          <!-- Projetos apresentados -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="description" /></span> Projetos apresentados</h2>
+            @let lista = sen ? (s?.autorias ?? []).slice(0, 3) : [];
+            @if (sen ? carregandoFicha() : carregandoProjetos()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (!sen && projetos().length) {
+              <ul class="ps-projetos">
+                @for (pr of projetos().slice(0, 3); track pr.id) {
+                  <li><a [href]="pr.url" target="_blank" rel="noopener noreferrer"><strong>{{ pr.titulo }}</strong></a>
+                    <span class="ps-ementa">{{ pr.ementa }}</span>
+                    <small>{{ pr.apresentacao ? (pr.apresentacao | date: 'yyyy') + ' · ' : '' }}{{ pr.situacao || 'Situação não informada' }}</small></li>
+                }
+              </ul>
+            } @else if (sen && lista.length) {
+              <ul class="ps-projetos">
+                @for (a of lista; track $index) {
+                  <li><a [href]="a.url" target="_blank" rel="noopener noreferrer"><strong>{{ a.titulo }}</strong></a><span class="ps-ementa">{{ a.ementa }}</span><small>{{ a.data | date: 'yyyy' }}</small></li>
+                }
+              </ul>
+            } @else { <p class="texto-suave">Nenhum projeto encontrado nesta legislatura.</p> }
+            <button type="button" class="ps-ver" (click)="abrirAba('projetos')">Ver todos os projetos <app-icone nome="arrow_forward" /></button>
+          </section>
+
+          <!-- Votações -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="how_to_vote" /></span> Votações</h2>
+            @if (sen ? carregandoFicha() : carregandoVotacoes()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (rosca(); as r) {
+              <div class="ps-rosca">
+                <svg viewBox="0 0 100 100" role="img" [attr.aria-label]="'Votos em ' + r.total + ' votações recentes'">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="var(--superficie-2)" stroke-width="14" />
+                  @for (a of r.arcos; track a.nome) {
+                    <circle cx="50" cy="50" r="40" fill="none" [attr.stroke]="a.cor" stroke-width="14" [attr.stroke-dasharray]="a.dash" [attr.stroke-dashoffset]="a.offset" transform="rotate(-90 50 50)" />
+                  }
+                  <text x="50" y="48" text-anchor="middle" class="ps-rosca-num">{{ r.total }}</text>
+                  <text x="50" y="60" text-anchor="middle" class="ps-rosca-txt">votações</text>
+                </svg>
+                <ul>
+                  @for (a of r.arcos; track a.nome) {
+                    <li><i [style.background]="a.cor"></i><span>{{ a.nome }}<strong>{{ a.valor }} ({{ a.pct }}%)</strong></span></li>
+                  }
+                </ul>
+              </div>
+              <small class="texto-suave">{{ sen ? 'Votações mais recentes no plenário do Senado.' : 'Últimas votações nominais do plenário (90 dias).' }}</small>
+            } @else { <p class="texto-suave">Sem votações nominais recentes.</p> }
+            <button type="button" class="ps-ver" (click)="abrirAba('votacoes')">Ver todas as votações <app-icone nome="arrow_forward" /></button>
+          </section>
+
+          <!-- Trajetória -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="timeline" /></span> Trajetória</h2>
+            @if (carregandoFicha()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (trajetoria().length) {
+              <ol class="ps-trajetoria">
+                @for (t of trajetoria().slice(0, 3); track $index) {
+                  <li><span class="ps-periodo">{{ t.periodo }}</span><span><strong>{{ t.titulo }}</strong><small>{{ t.local }}</small></span></li>
+                }
+              </ol>
+            } @else { <p class="texto-suave">Sem dados de trajetória.</p> }
+            <button type="button" class="ps-ver" (click)="abrirAba('carreira')">Ver mais sobre a trajetória <app-icone nome="arrow_forward" /></button>
+          </section>
+        </div>
+
+        <div class="ps-grade2">
+          <!-- Pontos de atenção -->
+          <section class="card ps-cartao ps-atencao">
+            <h2 class="ps-titulo"><span class="ps-icone ps-icone-alerta"><app-icone nome="warning" /></span> Pontos de atenção</h2>
+            @if (pontos().length) {
+              <ul class="ps-pontos">
+                @for (pt of pontos(); track pt.texto) {
+                  <li [attr.data-tipo]="pt.tipo"><app-icone [nome]="pt.icone" /><span><strong>{{ pt.texto }}</strong><small>{{ pt.detalhe }}</small></span></li>
+                }
+              </ul>
+            } @else {
+              <p class="texto-suave">Calculando com os dados oficiais...</p>
+            }
+            @if (!sen && !comparacaoGastos()) {
+              <a class="ps-dica" routerLink="/politicos/gastos" [queryParams]="{ uf: p.uf }"><app-icone nome="leaderboard" /> Calcule o ranking de gastos de {{ p.uf }} para ver se gastou acima da média</a>
+            }
+            <h3 class="sub-secao">Dívidas, sanções e contas de campanha</h3>
+            <p class="texto-p">Esses dados não têm API aberta, por isso o site não confere sozinho. Pesquise o nome nos sites oficiais:</p>
+            <ul class="ps-consultas">
+              @for (c of consultasNegativas; track c.url) {
+                <li><a [href]="c.url" target="_blank" rel="noopener noreferrer"><app-icone [nome]="c.icone" /><span><strong>{{ c.titulo }}</strong><small>{{ c.texto }}</small></span><app-icone nome="open_in_new" class="ps-ext" /></a></li>
+              }
+            </ul>
+          </section>
+
+          <!-- Tempo na vida pública -->
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="hourglass_top" /></span> Tempo na vida pública</h2>
+            @if (carregandoFicha()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (vidaPublica(); as v) {
+              <p class="ps-total"><strong>{{ v.politica }} anos</strong> em cargos públicos @if (v.inicio < anoAtual) { <span class="texto-suave">· desde {{ v.inicio }}</span> }</p>
+              <div class="ps-barra-total" role="img" [attr.aria-label]="'Divisão do tempo: ' + v.politica + ' anos em cargos públicos'">
+                @for (c of v.porCategoria; track c.nome) { <span [style.flex-grow]="c.anos" [style.background]="c.cor" [title]="c.nome + ': ' + c.anos + ' anos'"></span> }
+              </div>
+              <ul class="ps-legenda">
+                @for (c of v.porCategoria; track c.nome) { <li><i [style.background]="c.cor"></i> {{ c.nome }} <strong>{{ c.anos }} {{ c.anos === 1 ? 'ano' : 'anos' }}</strong></li> }
+              </ul>
+              <div class="ps-gantt">
+                @for (l of v.linhas; track $index) {
+                  <div class="ps-gantt-linha">
+                    <span class="ps-gantt-rotulo" [title]="l.rotulo">{{ l.rotulo }}</span>
+                    <span class="ps-gantt-trilha"><span [style.left.%]="l.esq" [style.width.%]="l.larg" [style.background]="l.cor" [title]="l.ini + '–' + (l.fim | number: '1.0-0') + ' (' + l.anos + ' anos)'"></span></span>
+                  </div>
+                }
+                <div class="ps-gantt-linha ps-gantt-eixo"><span></span><span class="ps-gantt-trilha">@for (m of v.marcas; track m) { <small [style.left.%]="((m - v.inicio) / (v.fim - v.inicio)) * 100">{{ m }}</small> }</span></div>
+              </div>
+              <small class="texto-suave">{{ sen ? 'Mandatos registrados no Senado.' : 'Mandatos na Câmara, cargos anteriores e ocupações declaradas à Câmara.' }}</small>
+            } @else { <p class="texto-suave">Sem dados de trajetória.</p> }
+          </section>
+        </div>
+
+        <!-- Linha do tempo do mandato -->
+        @if (linhaDoTempo().length > 1) {
+          <section class="card ps-linha">
+            <h2 class="ps-titulo">Linha do tempo do mandato</h2>
+            <ol>
+              @for (e of linhaDoTempo(); track $index) {
+                <li><span class="ps-ponto"></span><time>{{ e.data | date: 'MMM yyyy' : '' : 'pt-BR' }}</time><span>{{ e.texto }}</span></li>
+              }
+            </ol>
+          </section>
+        }
+
+        <!-- Fontes e transparência -->
+        <section class="card ps-fontes">
+          <h2 class="ps-titulo">Fontes e transparência</h2>
+          <ul>
+            @for (f of fontes(); track f.url) {
+              <li><a [href]="f.url" target="_blank" rel="noopener noreferrer"><app-icone [nome]="f.icone" /><span><strong>{{ f.titulo }}</strong><small>{{ dominio(f.url) }}</small></span></a></li>
+            }
+          </ul>
+          <footer class="ps-rodape">
+            <span>Dados consultados em {{ agora | date: 'dd/MM/yyyy HH:mm' }}</span>
+            <span>Como coletamos e conferimos os dados: <a routerLink="/sobre">metodologia</a></span>
+          </footer>
         </section>
 
-        <section class="card">
-          <h2 class="titulo-secao">Gastos da cota parlamentar</h2>
-          @if (carregandoDetalhes()) {
-            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
-          } @else if (detalhes()?.despesas; as g) {
-            <p class="texto-p">Maiores categorias em {{ g.ano }} · {{ g.lancamentos | number: '1.0-0' : 'pt-BR' }} lançamentos{{ g.parcial ? ' (parcial: primeiros 500)' : '' }}</p>
-            <ul class="barras-gasto">
-              @for (t of g.porTipo; track t.tipo) {
-                <li>
-                  <span class="barras-gasto-texto"><span>{{ t.tipo }}</span><strong>{{ t.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></span>
-                  <span class="barras-gasto-trilha"><span [style.width.%]="(t.valor / maiorGasto()) * 100"></span></span>
-                </li>
+        <div class="grade-perfil">
+          <div class="coluna">
+            <section class="card">
+              <h2 class="titulo-secao">Quem é</h2>
+              <dl class="lista-campos">
+                <app-campo rotulo="Nome civil" [valor]="p.nome_civil" />
+                <app-campo rotulo="Idade" [valor]="idade(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) ? idade(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) + ' anos' : null" />
+                <app-campo rotulo="Nascimento" [valor]="(sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) ? ((sen ? s?.nascimento : car?.nascimento ?? p.data_nascimento) | date: 'dd/MM/yyyy') : null" />
+                <app-campo rotulo="Naturalidade" [valor]="sen ? s?.naturalidade : car?.naturalidade ?? p.municipio_nascimento" />
+                <app-campo rotulo="Escolaridade" [valor]="sen ? (s?.formacao?.[0]?.grau || null) : car?.escolaridade ?? p.escolaridade" />
+                <app-campo rotulo="Profissão" [valor]="(sen ? s?.profissoes : car?.profissoes)?.join(', ') || null" />
+                <app-campo rotulo="Partido" [valor]="p.partido" />
+                <app-campo rotulo="Estado" [valor]="p.uf" />
+              </dl>
+            </section>
+            @if (!sen) {
+              <section class="card">
+                <h2 class="titulo-secao">Gastos da cota parlamentar</h2>
+                @if (carregandoDetalhes()) {
+                  <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+                } @else if (detalhes()?.despesas; as g) {
+                  <p class="texto-p">Maiores categorias em {{ g.ano }}</p>
+                  <ul class="barras-gasto">
+                    @for (t of g.porTipo; track t.tipo) {
+                      <li>
+                        <span class="barras-gasto-texto"><span>{{ t.tipo }}</span><strong>{{ t.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></span>
+                        <span class="barras-gasto-trilha"><span [style.width.%]="(t.valor / maiorGasto()) * 100"></span></span>
+                      </li>
+                    }
+                  </ul>
+                  <button type="button" class="ver-todas link-discreto" (click)="abrirAba('gastos')">Ver todos os gastos, mês a mês <app-icone nome="arrow_forward" /></button>
+                } @else {
+                  <p class="texto-suave">Não foi possível carregar os gastos agora.</p>
+                }
+              </section>
+            }
+          </div>
+
+          <div class="coluna">
+            <section class="card">
+              <h2 class="titulo-secao">Contato e gabinete</h2>
+              <dl class="lista-campos">
+                <app-campo rotulo="E-mail" [valor]="detalhes()?.gabinete?.email || p.email" />
+                <app-campo rotulo="Telefone" [valor]="sen ? s?.telefone : (detalhes()?.gabinete?.telefone ? '(61) ' + detalhes()!.gabinete!.telefone : null)" />
+                <app-campo rotulo="Gabinete" [valor]="sen ? s?.endereco : local()" />
+              </dl>
+              @if (detalhes()?.redesSociais?.length || car?.site) {
+                <ul class="redes">
+                  @if (car?.site && link(car!.site!); as u) { <li><a [href]="u" target="_blank" rel="noopener noreferrer">Site</a></li> }
+                  @for (r of detalhes()?.redesSociais ?? []; track r.url) {
+                    @if (link(r.url); as u) { <li><a [href]="u" target="_blank" rel="noopener noreferrer">{{ r.rede }}</a></li> }
+                  }
+                </ul>
               }
+            </section>
+
+            <section class="card">
+              <h2 class="titulo-secao">Comissões atuais</h2>
+              @let coms = sen ? (s?.comissoes ?? []) : (detalhes()?.comissoes ?? []);
+              @if (sen ? carregandoFicha() : carregandoDetalhes()) {
+                <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+              } @else if (coms.length) {
+                <ul class="lista-comissoes">
+                  @for (c of coms; track c.sigla) {
+                    <li><span class="sigla">{{ c.sigla }}</span><span>{{ c.nome }}@if (c.papel) {<small>{{ c.papel }}</small>}</span></li>
+                  }
+                </ul>
+              } @else {
+                <p class="texto-suave">Nenhuma comissão atual encontrada.</p>
+              }
+            </section>
+
+            @if (!sen && car?.frentes?.length) {
+              <section class="card">
+                <h2 class="titulo-secao">Frentes parlamentares ({{ car!.frentes.length }})</h2>
+                <p class="texto-p">Grupos de parlamentares que defendem uma causa. Mostram os temas que {{ p.nome }} apoia.</p>
+                <ul class="frentes">
+                  @for (f of car!.frentes.slice(0, 12); track f.id) { <li>{{ f.titulo.replace('Frente Parlamentar ', '') }}</li> }
+                </ul>
+                @if (car!.frentes.length > 12) { <button type="button" class="link-discreto" (click)="abrirAba('carreira')">Ver todas as {{ car!.frentes.length }} frentes</button> }
+              </section>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- ================= PROJETOS ================= -->
+      @case ('projetos') {
+        @if (!sen) {
+          <section class="card">
+            <h2 class="titulo-secao">O que {{ p.nome }} propôs nesta legislatura</h2>
+            <p class="texto-p">Toque num tipo para filtrar. Projetos de lei e PECs são as propostas que podem virar lei; requerimentos e indicações são pedidos e sugestões.</p>
+            <div class="contagem-tipos">
+              @if (!contagem()) {
+                @for (t of tiposProposicao; track t.sigla) { <span class="esqueleto esqueleto-chip"></span> }
+              } @else {
+                @for (t of contagem(); track t.sigla) {
+                  <button type="button" class="chip-tipo" [attr.aria-pressed]="tipoProjeto() === t.sigla" (click)="filtrarProjetos(t.sigla)">
+                    <strong>{{ t.total }}</strong><span>{{ t.nome }}</span>
+                  </button>
+                }
+              }
+            </div>
+          </section>
+          <section class="card">
+            <h2 class="titulo-secao">{{ tipoProjeto() ? 'Proposições do tipo ' + tipoProjeto() : 'Proposições mais recentes' }}</h2>
+            @if (carregandoProjetos()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto" style="width: 70%"></span></div>
+            } @else if (erroProjetos()) {
+              <p class="texto-suave">Não foi possível carregar agora. <button type="button" class="link-discreto" (click)="carregarProjetos(paginaProjetos())">Tentar de novo</button></p>
+            } @else if (projetos().length) {
+              <ul class="lista-projetos">
+                @for (pr of projetos(); track pr.id) {
+                  <li>
+                    <div class="projeto-topo">
+                      <a [href]="pr.url" target="_blank" rel="noopener noreferrer"><strong>{{ pr.titulo }}</strong> <app-icone nome="open_in_new" /></a>
+                      @if (pr.apresentacao) { <time>{{ pr.apresentacao | date: 'dd/MM/yyyy' }}</time> }
+                    </div>
+                    <p>{{ pr.ementa }}</p>
+                    @if (pr.situacao) { <span class="situacao" [class.situacao-final]="/arquivad|transformad|retirad|prejudicad/i.test(pr.situacao)">{{ pr.situacao }}</span> }
+                    <app-projeto-acoes [ementa]="pr.ementa" [idProposicao]="pr.id" />
+                  </li>
+                }
+              </ul>
+              <div class="paginacao">
+                <button type="button" class="botao botao-fantasma botao-p" [disabled]="paginaProjetos() === 1" (click)="carregarProjetos(paginaProjetos() - 1)"><app-icone nome="chevron_left" /> Anteriores</button>
+                <span class="texto-suave">Página {{ paginaProjetos() }}</span>
+                <button type="button" class="botao botao-fantasma botao-p" [disabled]="paginaProjetos() * 10 >= totalProjetos()" (click)="carregarProjetos(paginaProjetos() + 1)">Próximas <app-icone nome="chevron_right" /></button>
+              </div>
+            } @else {
+              <p class="texto-suave">Nenhuma proposição encontrada.</p>
+            }
+            <app-fonte [fonte]="fonteCamara()" rotulo="consultado em" />
+          </section>
+        } @else {
+          <section class="card">
+            <h2 class="titulo-secao">Matérias de autoria de {{ p.nome }}</h2>
+            @if (carregandoFicha()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (s?.autorias?.length) {
+              <ul class="lista-projetos">
+                @for (a of s!.autorias; track $index) {
+                  <li>
+                    <div class="projeto-topo"><a [href]="a.url" target="_blank" rel="noopener noreferrer"><strong>{{ a.titulo }}</strong> <app-icone nome="open_in_new" /></a>@if (a.data) { <time>{{ a.data | date: 'dd/MM/yyyy' }}</time> }</div>
+                    <p>{{ a.ementa }}</p>
+                    <app-projeto-acoes [ementa]="a.ementa" />
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="texto-suave">A API do Senado não trouxe as matérias agora. Veja na <a [href]="p.fonte_url" target="_blank" rel="noopener noreferrer">página oficial</a>.</p>
+            }
+          </section>
+        }
+      }
+
+      <!-- ================= VOTAÇÕES ================= -->
+      @case ('votacoes') {
+        @if (!sen) {
+          @if (carregandoVotacoes()) {
+            <section class="card"><p class="texto-suave"><app-icone nome="hourglass_top" /> Conferindo as últimas votações do plenário, voto a voto. Pode levar alguns segundos...</p>
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div></section>
+          } @else if (erroVotacoes()) {
+            <section class="card"><p class="texto-suave">Não foi possível carregar as votações. <button type="button" class="link-discreto" (click)="carregarVotacoes()">Tentar de novo</button></p></section>
+          } @else if (votacoes(); as v) {
+            <ul class="indicadores indicadores-3">
+              <li class="card"><span class="indicador-rotulo"><app-icone nome="how_to_vote" /> Presença nas votações</span>
+                <strong>{{ v.presenca ?? '—' }}{{ v.presenca !== null ? '%' : '' }}</strong><small>das {{ v.analisadas }} últimas votações nominais</small></li>
+              <li class="card"><span class="indicador-rotulo"><app-icone nome="diversity_3" /> Vota com o partido</span>
+                <strong>{{ v.fidelidade ?? '—' }}{{ v.fidelidade !== null ? '%' : '' }}</strong><small>igual à maioria do {{ p.partido }}</small></li>
+              <li class="card"><span class="indicador-rotulo"><app-icone nome="calendar_month" /> Período</span>
+                <strong>90 dias</strong><small>votações no plenário da Câmara</small></li>
             </ul>
+            <section class="card">
+              <h2 class="titulo-secao">Como votou</h2>
+              @if (v.votos.length) {
+                <ul class="lista-votos">
+                  @for (vt of v.votos; track vt.id) {
+                    <li>
+                      <span class="voto" [class]="'voto ' + classeVoto(vt.voto)">{{ vt.voto }}</span>
+                      <div>
+                        <strong>{{ vt.proposicao || 'Votação em plenário' }}</strong>
+                        <p>{{ vt.descricao }}</p>
+                        <small class="texto-suave">
+                          {{ vt.data | date: 'dd/MM/yyyy' }} · Placar: {{ vt.placar.sim }} sim × {{ vt.placar.nao }} não
+                          @if (vt.maioriaPartido) { · {{ p.partido }} votou “{{ vt.maioriaPartido }}” }
+                          @if (vt.comPartido === false) { <span class="contra-partido">· contra o partido</span> }
+                        </small>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="texto-suave">Nenhuma votação nominal no plenário nos últimos 90 dias.</p>
+              }
+              <p class="texto-p"><app-icone nome="info" /> “Não votou” pode ser falta, licença ou missão oficial. Votações simbólicas (sem registro de voto individual) não aparecem.</p>
+              <app-fonte [fonte]="{ titulo: 'Votações da Câmara (dados abertos)', url: 'https://dadosabertos.camara.leg.br/swagger/api.html#/Votacoes', data: null }" />
+            </section>
+          }
+        } @else {
+          <section class="card">
+            <h2 class="titulo-secao">Como votou no plenário do Senado</h2>
+            @if (carregandoFicha()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (s?.votos?.length) {
+              <ul class="lista-votos">
+                @for (vt of s!.votos; track $index) {
+                  <li>
+                    <span [class]="'voto ' + classeVoto(vt.voto)">{{ vt.voto }}</span>
+                    <div><strong>{{ vt.materia || 'Votação' }}</strong><p>{{ vt.descricao }}</p><small class="texto-suave">{{ vt.data | date: 'dd/MM/yyyy' }}@if (vt.resultado) { · {{ vt.resultado }} }</small></div>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="texto-suave">A API do Senado não trouxe as votações agora. Veja na <a [href]="p.fonte_url" target="_blank" rel="noopener noreferrer">página oficial</a>.</p>
+            }
+          </section>
+        }
+      }
+
+      <!-- ================= GASTOS ================= -->
+      @case ('gastos') {
+        <section class="card">
+          <div class="gastos-topo">
+            <h2 class="titulo-secao">Cota parlamentar</h2>
+            <div class="seletor-ano" role="group" aria-label="Ano">
+              @for (a of anosGastos; track a) { <button type="button" [attr.aria-pressed]="anoGastos() === a" (click)="carregarGastos(a)">{{ a }}</button> }
+            </div>
+          </div>
+          <p class="texto-p">Dinheiro público que cada deputado recebe para passagens, escritório, divulgação, combustível etc. Todo gasto precisa de nota fiscal.</p>
+          @if (carregandoGastos()) {
+            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div>
+          } @else if (erroGastos()) {
+            <p class="texto-suave">Não foi possível carregar agora. <button type="button" class="link-discreto" (click)="carregarGastos()">Tentar de novo</button></p>
+          } @else if (gastos(); as g) {
+            <p class="gastos-total"><strong>{{ g.total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong> em {{ g.lancamentos | number: '1.0-0' : 'pt-BR' }} notas{{ g.parcial ? ' (primeiras 1.000)' : '' }}</p>
+            <h3 class="sub-secao">Mês a mês</h3>
+            <div class="grafico-meses" role="img" [attr.aria-label]="'Gastos por mês em ' + g.ano">
+              @for (v of g.porMes; track $index) {
+                <div class="mes" [title]="meses[$index] + ': ' + (v | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR')">
+                  <span class="mes-valor">{{ v ? (v / 1000 | number: '1.0-0' : 'pt-BR') + 'k' : '' }}</span>
+                  <span class="mes-barra" [style.height.%]="(v / maiorMes()) * 100"></span>
+                  <span class="mes-nome">{{ meses[$index] }}</span>
+                </div>
+              }
+            </div>
+            <div class="grade-2 gastos-grade">
+              <div>
+                <h3 class="sub-secao">Por categoria</h3>
+                <ul class="barras-gasto">
+                  @for (t of g.porTipo; track t.tipo) {
+                    <li>
+                      <span class="barras-gasto-texto"><span>{{ t.tipo }}</span><strong>{{ t.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></span>
+                      <span class="barras-gasto-trilha"><span [style.width.%]="(t.valor / maiorTipo()) * 100"></span></span>
+                    </li>
+                  }
+                </ul>
+              </div>
+              <div>
+                <h3 class="sub-secao">Quem mais recebeu</h3>
+                <ol class="lista-fornecedores">
+                  @for (f of g.fornecedores; track f.nome) {
+                    <li><span>{{ f.nome }}<small>{{ f.vezes }} nota(s)</small></span><strong>{{ f.valor | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></li>
+                  }
+                </ol>
+              </div>
+            </div>
+            <h3 class="sub-secao">Notas mais recentes</h3>
+            <div class="tabela-rolagem">
+              <table class="tabela-notas">
+                <thead><tr><th>Data</th><th>Categoria</th><th>Fornecedor</th><th class="num">Valor</th><th><span class="sr-only">Nota</span></th></tr></thead>
+                <tbody>
+                  @for (n of g.ultimas; track $index) {
+                    <tr>
+                      <td>{{ n.data | date: 'dd/MM/yy' }}</td><td>{{ n.tipo }}</td><td>{{ n.fornecedor }}</td>
+                      <td class="num">{{ n.valor | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
+                      <td>@if (n.url) { <a [href]="n.url" target="_blank" rel="noopener noreferrer" aria-label="Ver nota fiscal"><app-icone nome="receipt_long" /></a> }</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           } @else {
-            <p class="texto-suave">Não foi possível carregar os gastos agora.</p>
+            <p class="texto-suave">Nenhum gasto registrado em {{ anoGastos() }}.</p>
           }
           <app-fonte [fonte]="fonteCamara()" rotulo="consultado em" />
         </section>
-      </div>
+      }
 
-      <div class="coluna">
+      <!-- ================= DISCURSOS ================= -->
+      @case ('discursos') {
         <section class="card">
-          <h2 class="titulo-secao">Contato e gabinete</h2>
-          <dl class="lista-campos">
-            <app-campo rotulo="E-mail" [valor]="detalhes()?.gabinete?.email || p.email" />
-            <app-campo rotulo="Telefone" [valor]="detalhes()?.gabinete?.telefone ? '(61) ' + detalhes()!.gabinete!.telefone : null" />
-            <app-campo rotulo="Gabinete" [valor]="local()" />
-          </dl>
-          @if (detalhes()?.redesSociais?.length) {
-            <ul class="redes">
-              @for (r of detalhes()!.redesSociais; track r.url) {
-                @if (link(r.url); as u) { <li><a [href]="u" target="_blank" rel="noopener noreferrer">{{ r.rede }}</a></li> }
-              }
-            </ul>
-          }
-        </section>
-
-        <section class="card">
-          <h2 class="titulo-secao">Comissões</h2>
-          @if (carregandoDetalhes()) {
-            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
-          } @else if (detalhes()?.comissoes?.length) {
-            <ul class="lista-comissoes">
-              @for (c of detalhes()!.comissoes; track c.sigla) {
-                <li><span class="sigla">{{ c.sigla }}</span><span>{{ c.nome }}@if (c.papel) {<small>{{ c.papel }}</small>}</span></li>
-              }
-            </ul>
+          <h2 class="titulo-secao">Discursos {{ sen ? 'no último ano' : 'nesta legislatura' }}</h2>
+          @if (!sen) {
+            @if (carregandoDiscursos()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (erroDiscursos()) {
+              <p class="texto-suave">Não foi possível carregar agora. <button type="button" class="link-discreto" (click)="carregarDiscursos(paginaDiscursos())">Tentar de novo</button></p>
+            } @else if (discursos().length) {
+              <ul class="lista-discursos">
+                @for (d of discursos(); track $index; let i = $index) {
+                  <li>
+                    <small class="texto-suave">{{ d.data | date: 'dd/MM/yyyy HH:mm' }}@if (d.fase) { · {{ d.fase }} }</small>
+                    <p>{{ d.sumario || 'Discurso sem resumo oficial.' }}</p>
+                    @if (d.palavras.length) { <div class="palavras">@for (k of d.palavras; track k) { <span>{{ k }}</span> }</div> }
+                    <div class="discurso-acoes">
+                      @if (d.transcricao) { <button type="button" class="link-discreto" (click)="discursoAberto.set(discursoAberto() === i ? null : i)">{{ discursoAberto() === i ? 'Esconder' : 'Ler' }} o discurso completo</button> }
+                      @if (d.urlVideo) { <a [href]="d.urlVideo" target="_blank" rel="noopener noreferrer"><app-icone nome="play_circle" /> Vídeo</a> }
+                    </div>
+                    @if (discursoAberto() === i) { <blockquote class="transcricao">{{ d.transcricao }}</blockquote> }
+                  </li>
+                }
+              </ul>
+              <div class="paginacao">
+                <button type="button" class="botao botao-fantasma botao-p" [disabled]="paginaDiscursos() === 1" (click)="carregarDiscursos(paginaDiscursos() - 1)"><app-icone nome="chevron_left" /> Anteriores</button>
+                <span class="texto-suave">Página {{ paginaDiscursos() }}</span>
+                <button type="button" class="botao botao-fantasma botao-p" [disabled]="paginaDiscursos() * 8 >= totalDiscursos()" (click)="carregarDiscursos(paginaDiscursos() + 1)">Próximos <app-icone nome="chevron_right" /></button>
+              </div>
+            } @else {
+              <p class="texto-suave">Nenhum discurso registrado nesta legislatura.</p>
+            }
           } @else {
-            <p class="texto-suave">Nenhuma comissão atual encontrada.</p>
+            @if (carregandoFicha()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (s?.discursos?.length) {
+              <ul class="lista-discursos">
+                @for (d of s!.discursos; track $index) {
+                  <li>
+                    <small class="texto-suave">{{ d.data | date: 'dd/MM/yyyy' }}@if (d.tipo) { · {{ d.tipo }} }</small>
+                    <p>{{ d.resumo || 'Pronunciamento sem resumo oficial.' }}</p>
+                    @if (d.url && link(d.url); as u) { <a [href]="u" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Texto completo</a> }
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="texto-suave">Nenhum pronunciamento encontrado no último ano.</p>
+            }
           }
         </section>
+      }
 
-        <section class="card">
-          <h2 class="titulo-secao">Dados pessoais</h2>
-          <dl class="lista-campos">
-            <app-campo rotulo="Nome civil" [valor]="p.nome_civil" />
-            <app-campo rotulo="Nascimento" [valor]="p.data_nascimento ? (p.data_nascimento | date: 'dd/MM/yyyy') : null" />
-            <app-campo rotulo="Naturalidade" [valor]="p.municipio_nascimento" />
-            <app-campo rotulo="Escolaridade" [valor]="p.escolaridade" />
-          </dl>
-        </section>
-      </div>
-    </div>
+      <!-- ================= CARREIRA ================= -->
+      @case ('carreira') {
+        @if (carregandoFicha()) {
+          <section class="card"><div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div></section>
+        } @else {
+          <div class="grade-perfil">
+            <div class="coluna">
+              <section class="card">
+                <h2 class="titulo-secao">Trajetória política</h2>
+                <ol class="linha-carreira">
+                  @if (!sen) {
+                    @for (l of car?.legislaturas ?? []; track l) {
+                      <li><strong>Deputado(a) federal · {{ p.uf }}</strong><span>{{ anoLegislatura(l) }} a {{ anoLegislatura(l) + 4 }}</span></li>
+                    }
+                    @for (m of car?.mandatosExternos ?? []; track $index) {
+                      <li><strong>{{ m.cargo }}</strong><span>{{ m.local }}@if (m.periodo) { · {{ m.periodo }} }@if (m.partido) { · eleito(a) pelo {{ m.partido }} }</span></li>
+                    }
+                  } @else {
+                    @for (m of s?.mandatos ?? []; track $index) {
+                      <li><strong>Senador(a) · {{ m.uf }}</strong><span>{{ m.periodo }}@if (m.participacao && m.participacao !== 'Titular') { · {{ m.participacao }} }</span></li>
+                    }
+                  }
+                </ol>
+                @if (!sen && !car?.legislaturas?.length && !car?.mandatosExternos?.length) { <p class="texto-suave">Sem dados de trajetória agora.</p> }
+              </section>
+              <section class="card">
+                <h2 class="titulo-secao">Partidos</h2>
+                @let prts = sen ? (s?.partidos ?? []) : (car?.partidos ?? []);
+                @if (prts.length) {
+                  <ol class="linha-carreira linha-partidos">
+                    @for (pt of prts; track $index; let primeiro = $first) {
+                      <li [class.atual]="primeiro"><strong>{{ pt.sigla }}</strong><span>desde {{ pt.desde | date: 'MM/yyyy' }}</span></li>
+                    }
+                  </ol>
+                  @if (prts.length > 1) { <p class="texto-p"><app-icone nome="swap_horiz" /> Trocou de partido {{ prts.length - 1 }} {{ prts.length === 2 ? 'vez' : 'vezes' }}{{ sen ? '' : ' desde que chegou à Câmara' }}.</p> }
+                } @else { <p class="texto-suave">Sem histórico de partidos.</p> }
+              </section>
+            </div>
+            <div class="coluna">
+              <section class="card">
+                <h2 class="titulo-secao">Formação e profissão</h2>
+                <dl class="lista-campos">
+                  <app-campo rotulo="Escolaridade" [valor]="sen ? (s?.formacao?.[0]?.grau || null) : car?.escolaridade" />
+                  <app-campo rotulo="Profissões" [valor]="(sen ? s?.profissoes : car?.profissoes)?.join(', ') || null" />
+                </dl>
+                @if (sen && s?.formacao?.length) {
+                  <ul class="lista-simples">@for (f of s!.formacao; track $index) { <li><strong>{{ f.curso }}</strong> @if (f.local) { <small>{{ f.local }}</small> }</li> }</ul>
+                }
+              </section>
+              @if (!sen && car?.ocupacoes?.length) {
+                <section class="card">
+                  <h2 class="titulo-secao">Onde trabalhou</h2>
+                  <ul class="lista-simples">
+                    @for (o of car!.ocupacoes; track $index) { <li><strong>{{ o.titulo }}</strong><small>{{ o.entidade }}@if (o.periodo) { · {{ o.periodo }} }</small></li> }
+                  </ul>
+                </section>
+              }
+              @if (!sen && car?.frentes?.length) {
+                <section class="card">
+                  <h2 class="titulo-secao">Todas as frentes parlamentares ({{ car!.frentes.length }})</h2>
+                  <ul class="frentes">@for (f of car!.frentes; track f.id) { <li>{{ f.titulo.replace('Frente Parlamentar ', '') }}</li> }</ul>
+                </section>
+              }
+              <section class="card">
+                <h2 class="titulo-secao">Eleições, patrimônio e doações</h2>
+                <p class="texto-p">Bens declarados, votos recebidos e quem doou para a campanha ficam no TSE.</p>
+                <ul class="lista-links">
+                  <li><a href="https://divulgacandcontas.tse.jus.br/divulga/#/home" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> DivulgaCandContas (TSE): bens e doações</a></li>
+                  <li><a href="https://resultados.tse.jus.br/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Resultados das eleições (TSE)</a></li>
+                  @if (sen) { <li><a href="https://www6g.senado.leg.br/transparencia/sen/" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> Gastos do senador (Transparência do Senado)</a></li> }
+                </ul>
+              </section>
+            </div>
+          </div>
+        }
+      }
+    }
   </article>
 } @else {
   <div class="card vazio">

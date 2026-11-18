@@ -1,3 +1,4 @@
+import { ContaMoldura } from '../../shared/conta-moldura';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -7,8 +8,9 @@ import { AvisosService } from '../../core/avisos.service';
 /** LGPD: pedimos só nome, e-mail e senha. Nada sobre opinião ou preferência política. */
 @Component({
   selector: 'app-cadastrar',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ContaMoldura],
   template: `
+    <app-conta-moldura frase="Faça parte de uma rede onde toda informação tem fonte.">
     <section class="card formulario formulario-estreito">
       @if (confirmar()) {
         <h1>Confirme seu e-mail</h1>
@@ -40,6 +42,7 @@ import { AvisosService } from '../../core/avisos.service';
         <p class="links-formulario"><span>Já tem conta? <a routerLink="/entrar">Entrar</a></span></p>
       }
     </section>
+    </app-conta-moldura>
   `,
 })
 export class CadastrarPage {

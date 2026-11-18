@@ -35,6 +35,7 @@ export class PerfisService {
     return {
       id: data.id, nome: data.nome, foto_url: data.foto_url, moderador: !!data.is_moderador, criado_em: data.criado_em,
       bio: data.bio ?? null, cidade: data.cidade ?? null, uf: data.uf ?? null, capa: data.capa ?? null,
+      profissao: data.profissao ?? null, interesses: data.interesses ?? null, redes: data.redes ?? null, capa_url: data.capa_url ?? null,
     };
   }
 
@@ -120,7 +121,9 @@ export class PerfisService {
     return id;
   }
 
+  /** As pessoas de exemplo vêm sempre do código (assim novas entram para todos); só quem segue quem fica salvo. */
   private demo(): BancoPessoas {
-    return lerDemo<BancoPessoas>('pessoas-v1', { perfis: PESSOAS_EXEMPLO, seguir: SEGUIR_EXEMPLO });
+    const salvo = lerDemo<Partial<BancoPessoas>>('pessoas-v1', {});
+    return { perfis: PESSOAS_EXEMPLO, seguir: salvo.seguir ?? [...SEGUIR_EXEMPLO] };
   }
 }

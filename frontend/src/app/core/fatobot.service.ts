@@ -6,6 +6,7 @@ export type EstadoVerificacao =
   | 'Evidências contradizem'
   | 'Fora de contexto'
   | 'Evidência insuficiente'
+  | 'Fonte confiável'
   | 'Em análise';
 
 export interface ResultadoVerificacao {
@@ -13,9 +14,13 @@ export interface ResultadoVerificacao {
   explicacao: string;
   fontes: Fonte[];
   consultado_em: string;
+  /** Contexto do registro (slide 20): fonte primária, data e categoria, quando conhecidos. */
+  contexto?: { fonte?: string; data?: string; categoria?: string };
 }
 import { apiUrl, modoDemo } from './supabase';
 import { PoliticosService } from './politicos.service';
+import { AFIRMACOES } from './fato-ou-fake';
+import { EXEMPLOS } from './checagens.service';
 
 /**
  * FatoBot: o front só manda a pergunta para a API em Node.
@@ -47,30 +52,95 @@ export class FatoBotService {
   }
 
   /**
-   * Verificação assistida de uma afirmação.
-   * Contrato: POST {API_URL}/verificar  body { "afirmacao": "..." }
+   * Verificação assistida de uma afirmação, com link e anexos opcionais.
+   * Contrato: POST {API_URL}/verificar
+   *   - sem anexos: JSON { "afirmacao": "...", "link": "https://..." | null }
+   *   - com anexos: multipart/form-data com os campos afirmacao, link e anexos (um ou mais arquivos)
    *   200 → { estado, explicacao, fontes, consultado_em }
    */
-  async verificar(afirmacao: string): Promise<ResultadoVerificacao> {
+  async verificar(pedido: { afirmacao: string; link?: string | null; anexos?: File[] }): Promise<ResultadoVerificacao> {
+    const anexos = pedido.anexos ?? [];
     try {
-      const resp = await fetch(`${apiUrl}/verificar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ afirmacao }),
-      });
+      let corpo: BodyInit;
+      const headers: Record<string, string> = {};
+      if (anexos.length) {
+        const form = new FormData();
+        form.append('afirmacao', pedido.afirmacao);
+        if (pedido.link) form.append('link', pedido.link);
+        for (const a of anexos) form.append('anexos', a, a.name);
+        corpo = form; // o navegador define o Content-Type com o boundary
+      } else {
+        headers['Content-Type'] = 'application/json';
+        corpo = JSON.stringify({ afirmacao: pedido.afirmacao, link: pedido.link ?? null });
+      }
+      const resp = await fetch(`${apiUrl}/verificar`, { method: 'POST', headers, body: corpo });
       if (resp.ok && resp.headers.get('content-type')?.includes('json')) return (await resp.json()) as ResultadoVerificacao;
       if (!modoDemo) throw new Error();
     } catch {
       if (!modoDemo) throw new Error('A verificação não respondeu agora. Tente de novo em instantes.');
     }
+    const conhecido = this.checagemConhecida(pedido.afirmacao, pedido.link ?? null);
+    if (conhecido) return conhecido;
+    const extras = [pedido.link ? 'o link' : '', anexos.length ? `${anexos.length} anexo(s)` : ''].filter(Boolean).join(' e ');
     return {
       estado: 'Em análise',
       explicacao:
-        'Recebemos a afirmação. No modo demonstração ainda não há busca automática de fontes, então ela fica em análise. ' +
-        'Enquanto isso, confira nas agências de checagem e nas fontes oficiais listadas ao lado.',
+        `Recebemos ${extras ? 'o pedido com ' + extras : 'a afirmação'}. No modo demonstração ainda não há busca automática de fontes ` +
+        (anexos.length ? 'nem análise de fotos, vídeos e documentos (isso passa por revisão humana), ' : '') +
+        'então ele fica em análise. Enquanto isso, confira nas agências de checagem e nas fontes oficiais listadas ao lado.',
       fontes: [],
       consultado_em: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Modo demonstração: só responde o que já foi conferido pela equipe (jogo Fato ou Fake e exemplos)
+   * ou quando o link é de um órgão oficial. O resto fica "Em análise". Nada é inventado.
+   */
+  private checagemConhecida(afirmacao: string, link: string | null): ResultadoVerificacao | null {
+    const consultado_em = new Date().toISOString();
+    const norm = (t: string) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter((w) => w.length > 2);
+    const palavras = new Set(norm(afirmacao));
+    const parecida = (texto: string) => {
+      const alvo = norm(texto);
+      if (!alvo.length || palavras.size < 3) return 0;
+      return alvo.filter((w) => palavras.has(w)).length / alvo.length;
+    };
+    let melhor: ResultadoVerificacao | null = null;
+    let nota = 0.6;
+    for (const a of AFIRMACOES) {
+      const n = parecida(a.texto);
+      if (n >= nota) {
+        nota = n;
+        melhor = { estado: a.fato ? 'Evidências sustentam' : 'Evidências contradizem', explicacao: a.explicacao, fontes: [{ titulo: a.fonte.titulo, url: a.fonte.url, data: consultado_em }], consultado_em,
+          contexto: { fonte: a.fonte.titulo.replace(/ \(.*\)$/, ''), categoria: 'Política e eleições' } };
+      }
+    }
+    for (const e of EXEMPLOS) {
+      const n = parecida(e.afirmacao);
+      if (n >= nota) {
+        nota = n;
+        melhor = { estado: e.estado, explicacao: e.resumo, fontes: e.fonte ? [{ titulo: e.fonte.titulo, url: e.fonte.url, data: consultado_em }] : [], consultado_em,
+          contexto: { fonte: e.fonte?.titulo, categoria: 'Política e eleições' } };
+      }
+    }
+    if (melhor) return melhor;
+    if (link) {
+      try {
+        const host = new URL(link).hostname.replace(/^www\./, '');
+        const oficiais: [RegExp, string][] = [[/(^|\.)camara\.leg\.br$/, 'Câmara dos Deputados'], [/(^|\.)senado\.leg\.br$/, 'Senado Federal'], [/(^|\.)tse\.jus\.br$/, 'Tribunal Superior Eleitoral'],
+          [/(^|\.)stf\.jus\.br$/, 'Supremo Tribunal Federal'], [/(^|\.)ibge\.gov\.br$/, 'IBGE'], [/(^|\.)gov\.br$/, 'Governo federal (gov.br)'], [/\.leg\.br$/, 'Poder Legislativo'], [/\.jus\.br$/, 'Poder Judiciário'], [/\.mp\.br$/, 'Ministério Público']];
+        const achou = oficiais.find(([re]) => re.test(host));
+        if (achou) {
+          return { estado: 'Fonte confiável', consultado_em, fontes: [{ titulo: achou[1], url: link, data: consultado_em }],
+            explicacao: `O link é de um site oficial (${achou[1]}). O conteúdo vem direto da fonte primária. Mesmo assim, confira a data da publicação e se o texto compartilhado é o mesmo da página.`,
+            contexto: { fonte: achou[1] } };
+        }
+      } catch {
+        /* link inválido */
+      }
+    }
+    return null;
   }
 
   /**

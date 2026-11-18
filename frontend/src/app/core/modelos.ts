@@ -22,6 +22,43 @@ export interface Politico {
   municipio_nascimento?: string | null;
   fonte_url: string;
   data_coleta?: string | null;
+  /** De onde vem o dado: Câmara, Senado ou importação da equipe (TSE etc.). */
+  casa?: 'camara' | 'senado' | 'outro';
+}
+
+export type TipoAlerta =
+  | 'Condenação'
+  | 'Processo em andamento'
+  | 'Investigação'
+  | 'Inelegibilidade'
+  | 'Cassação'
+  | 'Sanção administrativa'
+  | 'Polêmica'
+  | 'Absolvição ou arquivamento';
+
+/** Polêmica ou registro jurídico/administrativo de um político. Sempre com link para a fonte. */
+export interface AlertaJuridico {
+  id: number;
+  tipo: TipoAlerta;
+  titulo: string;
+  descricao: string;
+  /** Tribunal, órgão ou veículo que publicou (STF, TSE, TCU, Agência Brasil etc.). */
+  orgao: string;
+  data?: string | null;
+  fonte_url: string;
+  /** true = levantado pela equipe e fixo no código (não pode ser apagado pelo site). */
+  verificado?: boolean;
+}
+
+/** Redes sociais do perfil (nome de usuário ou link; WhatsApp = número). */
+export interface Redes {
+  instagram?: string | null;
+  tiktok?: string | null;
+  facebook?: string | null;
+  whatsapp?: string | null;
+  x?: string | null;
+  linkedin?: string | null;
+  youtube?: string | null;
 }
 
 export interface Usuario {
@@ -37,6 +74,13 @@ export interface Usuario {
   uf?: string | null;
   /** Cor da capa do perfil (chave de CAPAS em perfis.service.ts). */
   capa?: string | null;
+  /** Profissão ou ocupação (estilo LinkedIn). */
+  profissao?: string | null;
+  /** Temas de interesse (Política, Educação...). */
+  interesses?: string[] | null;
+  redes?: Redes | null;
+  /** Imagem de capa enviada pela pessoa (link https ou imagem reduzida em data URL). */
+  capa_url?: string | null;
 }
 
 /** Dados de perfil que qualquer pessoa pode ver (sem e-mail). */
@@ -50,6 +94,13 @@ export interface PerfilPublico {
   capa?: string | null;
   moderador: boolean;
   criado_em?: string | null;
+  /** Profissão ou ocupação (estilo LinkedIn). */
+  profissao?: string | null;
+  /** Temas de interesse (Política, Educação...). */
+  interesses?: string[] | null;
+  redes?: Redes | null;
+  /** Imagem de capa enviada pela pessoa (link https ou imagem reduzida em data URL). */
+  capa_url?: string | null;
 }
 
 export interface Autor {
@@ -86,7 +137,16 @@ export interface Publicacao {
   comunidade_nome?: string;
   comunidade_slug?: string;
   comunidade_tema?: string;
+  /** Foto ou imagem do meme (no modo demonstração, imagem reduzida em data URL). */
+  imagem_url?: string | null;
+  /** Meme: textos por cima da imagem. Sempre marcado como "Meme" no card (piada não é informação). */
+  meme?: { topo: string; base: string } | null;
+  /** Checagem do Fato ou Fake compartilhada no feed. */
+  checagem?: { afirmacao: string; estado: string; resumo: string; fonte?: { titulo: string; url: string } | null } | null;
 }
+
+/** Extras opcionais ao publicar. */
+export type ExtrasPublicacao = Pick<Publicacao, 'imagem_url' | 'meme' | 'checagem'>;
 
 export interface Comentario {
   id: number;

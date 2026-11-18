@@ -1,3 +1,4 @@
+import { ContaMoldura } from '../../shared/conta-moldura';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,8 +8,9 @@ import { AvisosService } from '../../core/avisos.service';
 /** Página aberta pelo link do e-mail de recuperação (o Supabase já cria a sessão). */
 @Component({
   selector: 'app-nova-senha',
-  imports: [FormsModule],
+  imports: [FormsModule, ContaMoldura],
   template: `
+    <app-conta-moldura frase="Quase lá! Crie uma senha nova para entrar.">
     <section class="card formulario formulario-estreito">
       <h1>Criar nova senha</h1>
       <form #f="ngForm" (ngSubmit)="f.valid && salvar()">
@@ -24,6 +26,7 @@ import { AvisosService } from '../../core/avisos.service';
         <button class="botao botao-bloco" type="submit" [disabled]="f.invalid">Salvar nova senha</button>
       </form>
     </section>
+    </app-conta-moldura>
   `,
 })
 export class NovaSenhaPage {

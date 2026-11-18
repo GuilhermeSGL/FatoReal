@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
@@ -24,6 +24,10 @@ export class ComunidadesPage implements OnInit {
   protected readonly iconeTema = ICONE_TEMA;
   protected readonly lista = signal<Comunidade[]>([]);
   protected readonly erro = signal('');
+  /** Filtro por tema (botões acima da lista). */
+  protected readonly tema = signal('');
+  protected readonly temas = computed(() => [...new Set(this.lista().map((c) => c.tema))].sort());
+  protected readonly filtradas = computed(() => (this.tema() ? this.lista().filter((c) => c.tema === this.tema()) : this.lista()));
 
   private vistos = inject(VistosService);
   private notificacoes = inject(NotificacoesService);

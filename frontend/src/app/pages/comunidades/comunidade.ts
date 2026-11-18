@@ -1,3 +1,4 @@
+import { CaixaPublicar } from '../../shared/caixa-publicar';
 import { Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,7 +13,7 @@ import { PublicacaoCard } from '../../shared/publicacao-card';
 
 @Component({
   selector: 'app-comunidade',
-  imports: [FormsModule, RouterLink, Avatar, Icone, PublicacaoCard],
+  imports: [CaixaPublicar, FormsModule, RouterLink, Avatar, Icone, PublicacaoCard],
   templateUrl: './comunidade.html',
 })
 export class ComunidadePage implements OnInit {
@@ -35,9 +36,7 @@ export class ComunidadePage implements OnInit {
   protected readonly mural = signal<Publicacao[]>([]);
   protected readonly aba = signal<'mural' | 'regras' | 'membros'>('mural');
 
-  protected novoTexto = '';
-  protected novoLink = '';
-  protected mostrarLink = false;
+  protected trackIndice = (i: number) => i;
 
   async ngOnInit() {
     try {
@@ -87,23 +86,8 @@ export class ComunidadePage implements OnInit {
     }
   }
 
-  protected async publicar() {
+  protected async aoPublicar() {
     const c = this.comunidade();
-    const texto = this.novoTexto.trim();
-    if (!c || !texto) return;
-    const link = this.novoLink.trim() ? linkSeguro(this.novoLink) : null;
-    if (this.novoLink.trim() && !link) {
-      this.avisos.mostrar('O link precisa começar com http:// ou https://', 'erro');
-      return;
-    }
-    try {
-      await this.service.publicar(c.id, texto, link);
-      this.novoTexto = this.novoLink = '';
-      this.mostrarLink = false;
-      this.avisos.mostrar('Publicado no mural!');
-      this.mural.set(await this.service.publicacoes(c.id));
-    } catch (e) {
-      this.avisos.erro(e);
-    }
+    if (c) this.mural.set(await this.service.publicacoes(c.id));
   }
 }

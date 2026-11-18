@@ -1,51 +1,86 @@
-<header class="fatobot-topo">
-  <img src="img/fatobot-rosto.svg" alt="" />
-  <div>
-    <h1>FatoBot</h1>
-    <p>Pergunte sobre política, instituições e os políticos do nosso conjunto de dados. Respondo só com base em fontes e mostro as referências.</p>
+<!-- Faixa de boas-vindas com o FatoBot animado -->
+<header class="fb-hero">
+  <div class="fb-hero-texto">
+    <p class="fb-k"><span class="bolha-online"></span> Online · responde só com fontes oficiais</p>
+    <h1>Oi! Eu sou o FatoBot 👋</h1>
+    <p>Pergunte sobre política, leis, instituições e os políticos do Fato Real. Eu mostro de onde veio cada informação — e, quando não acho fonte, eu falo.</p>
+    <ul class="fb-faz">
+      <li><app-icone nome="gavel" /> Explico leis e termos</li>
+      <li><app-icone nome="account_balance" /> Conto como funciona o Congresso</li>
+      <li><app-icone nome="fact_check" /> Mostro a fonte de tudo</li>
+    </ul>
+  </div>
+  <div class="fb-hero-bot" aria-hidden="true">
+    <span class="fb-onda"></span><span class="fb-onda fb-onda-2"></span>
+    <img src="img/fatobot.svg" alt="" />
   </div>
 </header>
 
-<section class="card chat" aria-label="Conversa com o FatoBot">
-  <ol class="chat-mensagens" aria-live="polite">
-    @for (m of mensagens(); track $index) {
-      <li class="msg" [class.msg-voce]="m.autor === 'voce'">
-        <span class="msg-autor">{{ m.autor === 'voce' ? 'Você' : 'FatoBot' }}</span>
-        <p>{{ m.texto }}</p>
-        @if (m.resposta; as r) {
-          @if (r.sem_evidencia) {
-            <p class="sem-evidencia"><app-icone nome="help" /> Sem evidência suficiente nas fontes consultadas.</p>
-          }
-          @if (r.fontes.length) {
-            <div class="msg-fontes">
-              <strong>Fontes</strong>
-              @for (f of r.fontes; track f.url) {
-                <app-fonte [fonte]="f" rotulo="data" />
-              }
-            </div>
-          }
-          <small class="texto-suave">Consultado em {{ r.consultado_em | date: 'dd/MM/yyyy HH:mm' }}</small>
-          <app-aviso-ia />
-        }
-      </li>
-    } @empty {
-      <li class="chat-vazio">
-        <p>Experimente perguntar:</p>
-        <div class="sugestoes">
-          @for (s of sugestoes; track s) {
-            <button type="button" class="chip" (click)="enviar(s)">{{ s }}</button>
-          }
+<div class="fb-grade">
+  <section class="fb-chat" aria-label="Conversa com o FatoBot">
+    <div class="fb-mensagens" #lista aria-live="polite">
+      @if (!mensagens().length) {
+        <div class="fb-vazio">
+          <img src="img/fatobot-rosto.svg" alt="" width="64" height="64" />
+          <strong>Sobre o que vamos conversar hoje?</strong>
+          <span>Escolha uma pergunta ou escreva a sua aqui embaixo.</span>
+          <div class="fb-sugestoes">
+            @for (s of sugestoes; track s.texto) {
+              <button type="button" class="fb-sugestao" [style.--cor]="s.cor" (click)="enviar(s.texto)">
+                <span class="icone-tile"><app-icone [nome]="s.icone" /></span>{{ s.texto }}
+              </button>
+            }
+          </div>
         </div>
-      </li>
-    }
-    @if (pensando()) {
-      <li class="msg"><span class="msg-autor">FatoBot</span><p>Consultando as fontes...</p></li>
-    }
-  </ol>
+      }
+      @for (m of mensagens(); track $index) {
+        <div class="bolha-msg fb-msg" [class.bolha-voce]="m.autor === 'voce'">
+          @if (m.autor === 'bot') { <img src="img/fatobot-rosto.svg" alt="" width="36" height="36" /> }
+          <div class="bolha-balao">
+            <p>{{ m.texto }}</p>
+            @if (m.resposta; as r) {
+              @if (r.sem_evidencia) { <app-selo tipo="insuficiente" /> }
+              @else if (r.fontes.length) { <app-selo tipo="verificado" texto="Com fonte oficial" /> }
+              @for (f of r.fontes; track f.url) { <app-fonte [fonte]="f" rotulo="data" /> }
+              <small class="texto-suave">Consultado em {{ r.consultado_em | date: 'dd/MM/yyyy HH:mm' }}</small>
+            }
+          </div>
+        </div>
+      }
+      @if (pensando()) {
+        <div class="bolha-msg fb-msg">
+          <img src="img/fatobot-rosto.svg" alt="" width="36" height="36" class="fb-pensando" />
+          <div class="bolha-balao fb-procurando">
+            <span class="bolha-digitando"><span></span><span></span><span></span></span>
+            <small>Consultando as fontes oficiais...</small>
+          </div>
+        </div>
+      }
+    </div>
 
-  <form class="chat-form" (submit)="$event.preventDefault(); enviar()">
-    <label for="pergunta" class="sr-only">Sua pergunta</label>
-    <input id="pergunta" name="pergunta" [(ngModel)]="pergunta" placeholder="Digite sua pergunta" maxlength="500" autocomplete="off" />
-    <button class="botao" type="submit" [disabled]="pensando()">Enviar</button>
-  </form>
-</section>
+    <form class="bolha-form fb-form" (submit)="$event.preventDefault(); enviar()">
+      <label for="pergunta" class="sr-only">Sua pergunta</label>
+      <input id="pergunta" name="pergunta" [(ngModel)]="pergunta" placeholder="Escreva sua pergunta..." maxlength="500" autocomplete="off" />
+      @if (mensagens().length) {
+        <button type="button" class="botao-icone" (click)="limpar()" aria-label="Nova conversa" title="Nova conversa"><app-icone nome="refresh" /></button>
+      }
+      <button type="submit" class="bolha-enviar" [disabled]="!pergunta.trim() || pensando()" aria-label="Enviar"><app-icone nome="send" /></button>
+    </form>
+  </section>
+
+  <aside class="fb-lado">
+    <section class="card fb-como">
+      <h2><app-icone nome="psychology" /> Como eu respondo</h2>
+      <ol>
+        <li><span class="fb-passo" style="--cor:#0369a1"><app-icone nome="search" /></span><span><strong>Procuro</strong> nas fontes oficiais (Câmara, Senado, TSE...)</span></li>
+        <li><span class="fb-passo" style="--cor:#7c3aed"><app-icone nome="menu_book" /></span><span><strong>Explico</strong> em palavras simples</span></li>
+        <li><span class="fb-passo" style="--cor:#15803d"><app-icone nome="link" /></span><span><strong>Mostro o link</strong> para você conferir</span></li>
+      </ol>
+    </section>
+    <section class="card fb-regra">
+      <app-icone nome="balance" />
+      <p><strong>Eu não dou opinião.</strong> Não digo em quem votar nem quem está certo. Sem fonte, eu aviso: “sem evidência suficiente”.</p>
+    </section>
+    <app-aviso-ia />
+  </aside>
+</div>
