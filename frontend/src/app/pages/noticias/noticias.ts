@@ -1,3 +1,4 @@
+import { rolarSuave } from '../../shared/rolar-suave';
 import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
@@ -95,7 +96,7 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
   private decorrido = 0;
 
   ngAfterViewInit() {
-    // Passa sozinho a cada 9 s (pausa com o mouse em cima ou com o foco do teclado; desliga se a pessoa prefere menos movimento)
+    // Passa sozinho a cada 7 s (pausa com o mouse em cima ou com o foco do teclado; desliga se a pessoa prefere menos movimento)
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     this.timer = setInterval(() => {
       if (this.pausado() || document.hidden) {
@@ -103,7 +104,7 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
         return;
       }
       this.decorrido += 1;
-      if (this.decorrido >= 9) this.ir(this.atual() === this.noticias.length - 1 ? 0 : this.atual() + 1);
+      if (this.decorrido >= 7) this.ir(this.atual() === this.noticias.length - 1 ? 0 : this.atual() + 1);
     }, 1000);
   }
 
@@ -114,7 +115,7 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
   protected ir(i: number) {
     const lista = this.trilho().nativeElement;
     const destino = Math.max(0, Math.min(i, this.noticias.length - 1));
-    lista.scrollTo({ left: destino * lista.clientWidth, behavior: 'smooth' });
+    rolarSuave(lista, destino * lista.clientWidth);
     this.atual.set(destino);
     this.decorrido = 0;
   }

@@ -370,7 +370,7 @@ legend { font-weight: 700; padding: 0 6px; }
 
 .destaque { position: relative; height: 270px; border-radius: 20px; overflow: hidden; background: #09192b; box-shadow: var(--sombra); }
 .destaque-slide {
-  position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity 0.45s, visibility 0.45s;
+  position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity 0.35s ease, visibility 0.35s;
   &.ativo { opacity: 1; visibility: visible; }
   > img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 35%; }
   &::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 30, 80, 0) 30%, rgba(5, 30, 80, 0.88) 90%); }
@@ -937,7 +937,7 @@ legend { font-weight: 700; padding: 0 6px; }
   display: flex; justify-content: center; gap: 8px; margin-top: 14px;
   button { position: relative; width: 10px; height: 10px; padding: 0; border: 0; border-radius: 999px; background: var(--borda); cursor: pointer; overflow: hidden; transition: width 0.25s; }
   button[aria-selected='true'] { width: 44px; }
-  button[aria-selected='true'] span { position: absolute; inset: 0; background: var(--primaria); transform-origin: left; animation: progresso-noticia 9s linear; }
+  button[aria-selected='true'] span { position: absolute; inset: 0; background: var(--primaria); transform-origin: left; animation: progresso-noticia 7s linear; }
 }
 @keyframes progresso-noticia { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .fontes-oficiais {
@@ -1854,7 +1854,7 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 /* Espaço dinâmico (campanhas, comunicados, dicas) */
 .destaque-lateral { margin-top: auto; display: grid; gap: 8px; }
 .destaque-item { --cor: #ffc21a; display: grid; gap: 6px; padding: 14px; border-radius: 16px; text-decoration: none; color: var(--moldura-titulo); overflow: hidden; position: relative;
-  border: 1px solid color-mix(in srgb, var(--cor) 45%, var(--moldura-borda)); background: linear-gradient(160deg, color-mix(in srgb, var(--cor) 14%, var(--moldura-2)), var(--moldura-2)); animation: destaque-entra 0.5s ease;
+  border: 1px solid color-mix(in srgb, var(--cor) 45%, var(--moldura-borda)); background: linear-gradient(160deg, color-mix(in srgb, var(--cor) 14%, var(--moldura-2)), var(--moldura-2)); animation: destaque-entra 0.3s ease-out;
   strong { font-size: 0.92rem; line-height: 1.3; } small { color: var(--moldura-suave); font-size: 0.78rem; line-height: 1.35; }
   img { width: calc(100% + 28px); margin: 2px -14px -14px; height: 80px; object-fit: cover; }
   &:hover .destaque-acao { gap: 8px; } }

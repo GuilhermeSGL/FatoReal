@@ -1,3 +1,4 @@
+import { rolarSuave } from '../../shared/rolar-suave';
 import { PerguntarFatobot } from '../../shared/fatobot-bolha';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, computed, signal, viewChild } from '@angular/core';
 import { GLOSSARIO } from '../../core/glossario';
@@ -199,7 +200,7 @@ export class BasePoliticaPage implements AfterViewInit, OnDestroy {
   protected ir(i: number) {
     const lista = this.trilho().nativeElement;
     const destino = Math.max(0, Math.min(i, this.ultimaPosicao()));
-    lista.scrollTo({ left: destino * this.passo(lista), behavior: 'smooth' });
+    rolarSuave(lista, destino * this.passo(lista), 380);
     this.atual.set(destino);
     this.decorrido = 0;
   }
