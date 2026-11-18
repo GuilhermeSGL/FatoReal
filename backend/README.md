@@ -5,7 +5,8 @@ Responsáveis: João Vítor e Gustavo.
 API do FATO REAL e do FatoBot. É aqui que ficam as chaves secretas (Supabase `service_role`, IA),
 sempre em variáveis de ambiente — **nunca** no código nem no Angular.
 
-> **Divisão do backend entre João e Matheus** (quem mexe em qual arquivo, sem conflito): [`DIVISAO.md`](DIVISAO.md).
+> **Divisão do backend** (João: FatoBot e fontes · Gustavo: autenticação · Matheus e Kelly: revisão e testes),
+> com quem mexe em qual arquivo, sem conflito: [`DIVISAO.md`](DIVISAO.md).
 > Autenticação, conta e admin ficam em [`src/auth/`](src/auth/README.md).
 
 ## Como rodar
