@@ -3,6 +3,8 @@
 Rede social cívica do PI do Senac (turma DS 2025): informação política verificada, perfis de candidatos, comunidades e o assistente FatoBot.
 
 ## Como trabalhar aqui
+- **Repositório oficial:** `SenacDS2025-PI/FatoReal`. O antigo (`matheussss237/FatoReal`) não recebe mais trabalho. Resumo do que já foi feito e das pendências: `docs/contexto-claude.md`.
+- **Não fazer sem pedido do Luiz:** force-push, mexer na `main` ou nas branches dos outros (`joao/backend` etc.), abrir Pull Request.
 - **Idioma:** tudo em português do Brasil, simples e direto (o público vai de jovens a idosos). Código, comentários, commits e textos da interface.
 - **Branch do front-end:** `luiz/frontend`. Não fazer push em outras branches nem abrir PR sem pedido explícito.
 - **Commits:** mensagem em português, título curto + lista do que mudou.
