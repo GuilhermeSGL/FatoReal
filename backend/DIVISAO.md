@@ -43,7 +43,7 @@ arquivos diferentes e ninguém edita o arquivo do outro. Matheus e Kelly revisam
 |---|---|---|---|---|
 | J10 | **Limites de uso**: por IP contra abuso (60/min) e cota da IA para o servidor (14/min, 450/dia), sem bloquear uma turma no mesmo IP | `src/utils/limite.js`, `src/routes/fatobot.js`, `src/routes/verificar.js` | 20/11 | ✅ feito (PR #4) |
 | J11 | **Base de conhecimento da Constituição** no FatoBot ("o que são os Três Poderes?"), a partir do backup do Matheus, com crédito | `src/data/base-conhecimento.js`, `src/services/base.js`, `src/services/fatobot.js` | 20/11 | ✅ feito (PR #4) |
-| J12 | **`/api/health` com o status das fontes** (Câmara, cópia de reserva, Supabase, Gemini) para conferir tudo antes da apresentação | `src/routes/health.js` | 24/11 | |
+| J12 | **`/api/health` com o status das fontes** (Câmara, cópia de reserva, Supabase, Gemini) para conferir tudo antes da apresentação | `src/routes/health.js`, `src/services/saude.js` | 24/11 | ✅ feito (PR #4) |
 | J13 | **Anexos do Verificar**: aplicar a decisão do grupo (ajustar texto ou guardar para revisão humana) | `src/services/verificar.js`, `src/routes/verificar.js` | 24/11 | |
 | J14 | **Antes da apresentação**: `npm run atualizar-deputados`, importação no Supabase de produção | `src/data/deputados.json` | 27/11 | |
 

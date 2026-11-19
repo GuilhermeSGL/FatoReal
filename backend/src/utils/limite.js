@@ -27,6 +27,12 @@ export function criarContador({ janelaMs, max }) {
       item.total++;
       return { permitido: true, esperarMs: 0 };
     },
+    // Quanto já foi usado, sem registrar um uso novo (para o /api/health/fontes).
+    uso(chave = 'geral') {
+      const item = contagens.get(chave);
+      const vivo = item && item.fim > Date.now();
+      return { usados: vivo ? item.total : 0, max: this.max, renovaEmMs: vivo ? item.fim - Date.now() : 0 };
+    },
     zerar() {
       contagens.clear();
     },
@@ -76,6 +82,10 @@ export const cotaIaDia = criarContador({
 export function usarCotaIa() {
   if (!cotaIaMinuto.usar('servidor').permitido) return false;
   return cotaIaDia.usar('servidor').permitido;
+}
+
+export function usoCotaIa() {
+  return { porMinuto: cotaIaMinuto.uso('servidor'), porDia: cotaIaDia.uso('servidor') };
 }
 
 // Só para os testes.

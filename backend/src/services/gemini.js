@@ -339,3 +339,27 @@ export async function classificarComIA(afirmacao, evidencias, { prazo } = {}) {
   }
   return { estado: r.estado, explicacao };
 }
+
+// ---------------------------------------------------------------------------
+// J12 — para o /api/health/fontes. Nunca devolve a chave, só se ela existe.
+// ---------------------------------------------------------------------------
+
+export function infoIa() {
+  const [modelo, reserva = null] = modelos();
+  return { configurado: iaConfigurada(), modelo, reserva };
+}
+
+// Faz uma chamada mínima ao Gemini (gasta 1 da cota). Só roda quando pedido (?ia=1).
+export async function testarIa() {
+  if (!iaConfigurada()) return { ok: false, motivo: 'sem_chave' };
+  const inicio = Date.now();
+  try {
+    const { response, modelo } = await gerar(
+      { contents: 'Responda apenas com a palavra OK.', config: {} },
+      Date.now() + LIMITES_IA.porModeloMs
+    );
+    return { ok: Boolean(response.text), modelo, ms: Date.now() - inicio };
+  } catch (err) {
+    return { ok: false, motivo: motivoDoErro(err), ms: Date.now() - inicio };
+  }
+}
