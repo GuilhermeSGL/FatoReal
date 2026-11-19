@@ -1,0 +1,119 @@
+# Junta o front e o back na branch "dev" automaticamente.
+#
+# A "dev" é a branch de testes: tem sempre o front (luiz/frontend) e o back
+# (joao/backend) juntos, usa o banco fato-real-dev e é publicada pela Vercel em
+#   https://fato-real-git-dev-fato-real.vercel.app
+# Ela NUNCA vai sozinha para a main. Para levar algo à produção, abra um PR para a main.
+#
+# Quando roda:
+#   - a cada push em luiz/frontend ou joao/backend;
+#   - a cada 30 minutos (reserva, caso a branch ainda não tenha este arquivo);
+#   - pelo botão "Run workflow" na aba Actions (com a opção de recriar a dev do zero).
+#
+# Se der conflito, a dev NÃO é atualizada com aquela branch e uma issue é aberta
+# dizendo o que precisa ser resolvido à mão.
+name: Unificar na dev
+
+on:
+  push:
+    branches: [luiz/frontend, joao/backend]
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      recriar:
+        description: 'Recriar a dev do zero (main + front + back), apagando o que só existia nela'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: unificar-dev
+  cancel-in-progress: false
+
+env:
+  BRANCHES: 'main luiz/frontend joao/backend'
+
+jobs:
+  unificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar o git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Juntar as branches na dev
+        id: juntar
+        env:
+          RECRIAR: ${{ inputs.recriar }}
+        run: |
+          git fetch origin --prune
+          if [ "$RECRIAR" = "true" ] || ! git rev-parse -q --verify origin/dev >/dev/null; then
+            echo "Criando a dev a partir da main"
+            git checkout -B dev origin/main
+          else
+            git checkout -B dev origin/dev
+          fi
+
+          conflitos=""
+          for b in $BRANCHES; do
+            if ! git rev-parse -q --verify "origin/$b" >/dev/null; then
+              echo "Branch $b não existe, pulando"
+              continue
+            fi
+            if git merge --no-ff --no-edit -m "Junta $b na dev" "origin/$b"; then
+              echo "OK: $b"
+            else
+              echo "CONFLITO: $b"
+              git diff --name-only --diff-filter=U | sed "s|^|  $b: |" >> /tmp/conflitos.txt
+              git merge --abort
+              conflitos="$conflitos $b"
+            fi
+          done
+          echo "conflitos=$conflitos" >> "$GITHUB_OUTPUT"
+
+          if [ "$RECRIAR" = "true" ]; then
+            git push --force origin dev
+          else
+            git push origin dev
+          fi
+
+      - name: Avisar conflito (abre uma issue)
+        if: steps.juntar.outputs.conflitos != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CONFLITOS: ${{ steps.juntar.outputs.conflitos }}
+        run: |
+          titulo="Conflito ao juntar na dev:${CONFLITOS}"
+          if gh issue list --state open --search "in:title \"$titulo\"" --json number --jq '.[0].number' | grep -q .; then
+            echo "Já existe uma issue aberta para esse conflito."
+          else
+            {
+              echo "A automação não conseguiu juntar estas branches na **dev**:${CONFLITOS}"
+              echo
+              echo "Arquivos em conflito:"
+              echo '```'
+              cat /tmp/conflitos.txt
+              echo '```'
+              echo
+              echo "**Como resolver** (no seu computador):"
+              echo '```bash'
+              echo "git fetch origin"
+              echo "git checkout dev && git pull origin dev"
+              echo "git merge origin/NOME-DA-BRANCH   # resolva os arquivos, depois:"
+              echo "git add . && git commit && git push origin dev"
+              echo '```'
+              echo
+              echo "Execução: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            } > /tmp/corpo.md
+            gh issue create --title "$titulo" --body-file /tmp/corpo.md
+          fi
+          exit 1
