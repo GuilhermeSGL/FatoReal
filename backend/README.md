@@ -65,6 +65,26 @@ backend/
 
 Toda resposta com dados de político traz o bloco `fonte` (nome, URL oficial e data/hora da consulta).
 
+### `GET /api/health` e `GET /api/health/fontes`
+
+- `/api/health`: rápido, só diz que a API está no ar.
+- `/api/health/fontes` (J12): **check-up para abrir antes da apresentação**. Mostra se cada fonte
+  está funcionando, **sem nunca mostrar chaves**:
+
+| Campo | O que diz |
+|---|---|
+| `status` | `ok` (tudo certo), `parcial` (algo fora, mas o FatoBot ainda responde) ou `fora` (nenhuma fonte de deputados → HTTP `503`) |
+| `fontes.camara` | `ok` / `fora`, com o tempo de resposta |
+| `fontes.supabase` | `ok` / `vazio` / `fora` / `nao_configurado`, o total de deputados no banco e o **começo do endereço do projeto** (ex.: `mamsbc…`), para saber se é o banco de dev ou de produção |
+| `fontes.copiaReserva` | `ok` / `antiga` (mais de 7 dias) / `ausente`, com a data da coleta |
+| `fontes.gemini` | `configurado` / `sem_chave`, o modelo, o reserva e quanto da cota local já foi usado |
+
+Com `?ia=1`, também faz uma chamada mínima ao Gemini (gasta 1 da cota) e mostra `ok` ou o motivo da falha.
+O resultado fica em cache por 30s.
+
+**Checklist do dia:** abra `https://fato-real.vercel.app/api/health/fontes?ia=1` e confira se o
+`status` é `ok`, se o projeto do Supabase é o de **produção** e se a cópia de reserva não está `antiga`.
+
 ### `GET /api/deputados`
 
 Lista os deputados em exercício. Filtros opcionais (podem ser combinados):

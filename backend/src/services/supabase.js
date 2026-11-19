@@ -68,3 +68,16 @@ export async function obterDoSupabase(id) {
     fonte: fonteDaCopia(data.fonte_url, data.data_coleta),
   };
 }
+
+// J12 — para o /api/health/fontes. O início do endereço do projeto não é segredo
+// (vai no código do site) e ajuda a saber se é o banco de dev ou de produção.
+export function projetoSupabase() {
+  const host = String(process.env.SUPABASE_URL ?? '').replace(/^https?:\/\//, '').split('.')[0];
+  return host ? `${host.slice(0, 6)}…` : null;
+}
+
+export async function contarPoliticos() {
+  const { count, error } = await getClient().from('politicos').select('id', { count: 'exact', head: true });
+  if (error) throw new Error(`Supabase: ${error.message}`);
+  return count ?? 0;
+}
