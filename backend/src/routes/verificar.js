@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { verificar } from '../services/verificar.js';
+import { limitarPorIp } from '../utils/limite.js';
 
 const router = Router();
 
@@ -26,7 +27,7 @@ const MIN = 5;
 const MAX = 1000;
 
 // POST /api/verificar
-router.post('/', aceitarAnexos, async (req, res, next) => {
+router.post('/', limitarPorIp, aceitarAnexos, async (req, res, next) => {
   try {
     const afirmacao = typeof req.body?.afirmacao === 'string' ? req.body.afirmacao.trim() : '';
     if (afirmacao.length < MIN || afirmacao.length > MAX) {
