@@ -1,4 +1,3 @@
-import { MascoteService } from '../../core/mascote';
 import { DatePipe } from '@angular/common';
 import { Component, ElementRef, OnInit, effect, inject, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -14,7 +13,6 @@ import { SeloStatus } from '../../shared/selo-status';
   templateUrl: './fatobot.html',
 })
 export class FatoBotPage implements OnInit {
-  protected mascote = inject(MascoteService);
   private conversa = inject(FatoBotConversa);
   private rota = inject(ActivatedRoute);
   private lista = viewChild<ElementRef<HTMLElement>>('lista');

@@ -29,7 +29,7 @@
         </div>
       </div>
       <div class="perfil-acoes ps-acoes">
-        <button type="button" class="botao botao-verde" [perguntarFatobot]="perguntaIa()"><app-icone nome="smart_toy" /> Perguntar ao assistente</button>
+        <button type="button" class="botao botao-verde" [perguntarFatobot]="perguntaIa()"><app-icone nome="smart_toy" /> Perguntar ao FatoBot</button>
         <button type="button" class="botao botao-fantasma" [class.botao-seguindo-politico]="seguidos.sigo(p)" (click)="alternarSeguir(p)">
           <app-icone [nome]="seguidos.sigo(p) ? 'notifications_active' : 'person_add'" /> {{ seguidos.sigo(p) ? 'Seguindo' : 'Seguir' }}
         </button>

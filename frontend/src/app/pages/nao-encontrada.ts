@@ -1,5 +1,4 @@
-import { MascoteService } from '../core/mascote';
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Icone } from '../shared/componentes';
 
@@ -8,7 +7,7 @@ import { Icone } from '../shared/componentes';
   imports: [RouterLink, Icone],
   template: `
     <section class="card erro404">
-      <img [src]="mascote.img()" alt="" class="erro404-robo" />
+      <img src="img/fatobot.svg" alt="" class="erro404-robo" />
       <p class="erro404-num">404</p>
       <h1>Ops! Não achei essa página.</h1>
       <p class="texto-suave">O endereço pode estar errado ou a página foi removida. Que tal ir para um destes lugares?</p>
@@ -21,7 +20,6 @@ import { Icone } from '../shared/componentes';
   `,
 })
 export class NaoEncontradaPage {
-  protected mascote = inject(MascoteService);
   protected readonly atalhos = [
     { nome: 'Início', rota: '/', icone: 'home', cor: '#00c27a' },
     { nome: 'Notícias', rota: '/noticias', icone: 'newspaper', cor: '#1e6bff' },

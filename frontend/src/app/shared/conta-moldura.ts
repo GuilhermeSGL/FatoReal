@@ -1,5 +1,4 @@
-import { MascoteService } from '../core/mascote';
-import { Component, input, inject } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { Icone } from './componentes';
 
 /** Moldura das telas de conta (entrar, criar conta, senha): ilustração e frase do Fato Real ao lado do formulário. */
@@ -9,7 +8,7 @@ import { Icone } from './componentes';
   template: `
     <div class="conta-tela">
       <aside class="conta-arte" aria-hidden="true">
-        <img [src]="mascote.img()" alt="" class="conta-robo" />
+        <img src="img/fatobot.svg" alt="" class="conta-robo" />
         <p class="conta-k">Fato Real</p>
         <h2>{{ frase() }}</h2>
         <ul>
@@ -23,6 +22,5 @@ import { Icone } from './componentes';
   `,
 })
 export class ContaMoldura {
-  protected mascote = inject(MascoteService);
   readonly frase = input('Informação de verdade, conversa de verdade.');
 }

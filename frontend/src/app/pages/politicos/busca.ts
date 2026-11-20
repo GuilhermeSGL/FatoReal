@@ -1,4 +1,3 @@
-import { MascoteService } from '../../core/mascote';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -23,7 +22,6 @@ const POR_VEZ = 48;
   templateUrl: './busca.html',
 })
 export class BuscaPage implements OnInit {
-  protected mascote = inject(MascoteService);
   private rota = inject(ActivatedRoute);
   private router = inject(Router);
   private auth = inject(AuthService);

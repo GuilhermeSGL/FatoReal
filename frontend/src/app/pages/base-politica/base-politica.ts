@@ -55,7 +55,7 @@ interface Trilha {
             <p class="glossario-def">{{ g.definicao }}</p>
             <div class="glossario-pratica"><strong><app-icone nome="lightbulb" /> Na prática</strong><span>{{ g.exemplo }}</span></div>
             <button type="button" class="glossario-bot" [perguntarFatobot]="'O que é ' + g.termo + ' e como funciona no Brasil?'" [attr.tabindex]="i >= atual() && i < atual() + visiveis() ? 0 : -1">
-              <app-icone nome="smart_toy" /> Perguntar ao assistente
+              <app-icone nome="smart_toy" /> Perguntar ao FatoBot
             </button>
           </li>
         }
@@ -106,8 +106,8 @@ interface Trilha {
 
     <div class="card aviso-participar">
       <app-icone nome="smart_toy" />
-      <p>Ficou com dúvida? Pergunte ao assistente do Fato Real: ele explica em linguagem simples e mostra de onde veio a informação.</p>
-      <button type="button" class="botao botao-verde" perguntarFatobot>Perguntar ao assistente</button>
+      <p>Ficou com dúvida? Pergunte ao FatoBot: ele explica em linguagem simples e mostra de onde veio a informação.</p>
+      <button type="button" class="botao botao-verde" perguntarFatobot>Perguntar ao FatoBot</button>
     </div>
   `,
 })

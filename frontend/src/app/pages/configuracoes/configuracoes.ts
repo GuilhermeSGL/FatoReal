@@ -7,7 +7,6 @@ import { AcessibilidadeService } from '../../core/acessibilidade.service';
 import { Icone } from '../../shared/componentes';
 import { FatoBotConversa } from '../../core/fatobot-conversa.service';
 import { PreferenciaTema, TemaService } from '../../core/tema.service';
-import { MASCOTES, MascoteService } from '../../core/mascote';
 
 @Component({
   selector: 'app-configuracoes',
@@ -15,7 +14,7 @@ import { MASCOTES, MascoteService } from '../../core/mascote';
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="settings" /> Configurações</h1>
-      <p>Aparência, assistente, acessibilidade, conta e privacidade.</p>
+      <p>Aparência, acessibilidade, FatoBot, conta e privacidade.</p>
     </header>
 
     <section class="card cfg-aparencia">
@@ -27,21 +26,6 @@ import { MASCOTES, MascoteService } from '../../core/mascote';
             <span class="cfg-previa" aria-hidden="true"><i></i><b></b><b></b><em></em></span>
             <span class="cfg-tema-nome"><app-icone [nome]="o.icone" /> {{ o.nome }}</span>
             <small>{{ o.texto }}</small>
-          </button>
-        }
-      </div>
-    </section>
-
-    <section class="card cfg-aparencia cfg-mascote">
-      <h2><app-icone nome="pets" /> Seu assistente</h2>
-      <p class="texto-suave">O padrão é o FatoBot, mas você pode trocar por um bichinho brasileiro. Muda só o visual e o nome: o assistente responde do mesmo jeito, sempre com fonte.</p>
-      <div class="cfg-mascotes" role="radiogroup" aria-label="Mascote do assistente">
-        @for (m of mascotes; track m.id) {
-          <button type="button" role="radio" class="cfg-masc" [attr.aria-checked]="mascote.id() === m.id" (click)="mascote.escolher(m.id)">
-            <img [src]="m.img" alt="" />
-            <strong>{{ m.nome }}</strong>
-            <small class="cfg-bicho">{{ m.bicho }}</small>
-            <small>{{ m.jeito }}</small>
           </button>
         }
       </div>
@@ -64,11 +48,11 @@ import { MASCOTES, MascoteService } from '../../core/mascote';
       </section>
 
       <section class="card" id="fatobot">
-        <h2><app-icone nome="smart_toy" /> {{ mascote.nome() }}</h2>
+        <h2><app-icone nome="smart_toy" /> FatoBot</h2>
         <p class="texto-suave">O assistente que acompanha você em todas as páginas.</p>
         <label class="opcao-alternar">
           <input type="checkbox" [checked]="bot.dicasLigadas()" (change)="bot.definir('dicas', !bot.dicasLigadas())" />
-          <span><strong>Dicas do assistente</strong><small>De vez em quando ele mostra uma dica sobre a página em que você está.</small></span>
+          <span><strong>Dicas do FatoBot</strong><small>De vez em quando ele mostra uma dica sobre a página em que você está.</small></span>
         </label>
         <label class="opcao-alternar">
           <input type="checkbox" [checked]="bot.falarRespostas()" (change)="bot.definir('voz', !bot.falarRespostas())" />
@@ -118,8 +102,6 @@ export class ConfiguracoesPage {
   protected a11y = inject(AcessibilidadeService);
   protected bot = inject(FatoBotConversa);
   protected tema = inject(TemaService);
-  protected mascote = inject(MascoteService);
-  protected readonly mascotes = MASCOTES;
   protected readonly opcoesTema: { id: PreferenciaTema; nome: string; icone: string; texto: string }[] = [
     { id: 'claro', nome: 'Claro', icone: 'light_mode', texto: 'Fundo claro, com o verde do Fato Real.' },
     { id: 'escuro', nome: 'Escuro', icone: 'dark_mode', texto: 'Preto e grafite, descansa a vista à noite.' },
