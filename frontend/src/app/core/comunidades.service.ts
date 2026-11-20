@@ -344,7 +344,7 @@ export interface BancoDemo {
   sementes?: string[];
 }
 
-const EQUIPE: Autor = { id: 'equipe', nome: 'Fato Real', foto_url: 'logo.svg' };
+const EQUIPE: Autor = { id: 'equipe', nome: 'Fato Real', foto_url: 'img/logo-fr.png' };
 const EXEMPLO: Autor = { id: 'exemplo', nome: 'Participante (exemplo)', foto_url: null };
 const REGRAS_PADRAO =
   '1. Respeite as pessoas: critique ideias, não ataque quem pensa diferente.\n' +

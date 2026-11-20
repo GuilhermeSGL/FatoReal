@@ -2506,3 +2506,7 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 @media (max-width: 700px) { .cfg-temas { grid-template-columns: 1fr; } }
 /* No celular a lâmpada cobriria as abas: lá a troca fica em Configurações > Aparência */
 @media (max-width: 900px) { .lamp { display: none; } }
+
+/* Logo oficial (FR) na barra de cima */
+.marca img { border-radius: 11px; box-shadow: 0 3px 10px rgba(20, 90, 50, .25); transition: transform .2s; }
+.marca:hover img { transform: rotate(-4deg) scale(1.05); }
