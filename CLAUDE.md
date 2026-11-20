@@ -8,6 +8,7 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 - **Idioma:** tudo em português do Brasil, simples e direto (o público vai de jovens a idosos). Código, comentários, commits e textos da interface.
 - **Branch do front-end:** `luiz/frontend`. Não fazer push em outras branches nem abrir PR sem pedido explícito.
 - **Commits:** mensagem em português, título curto + lista do que mudou.
+- **Visual:** cores, fontes, componentes e regras de tela estão em `DESIGN.md` (raiz). Siga-o ao criar ou mudar telas.
 - **Antes de dizer que terminou:** `npx ng build` sem erros e capturas das telas mexidas (ver skills abaixo).
 
 ## Stack
