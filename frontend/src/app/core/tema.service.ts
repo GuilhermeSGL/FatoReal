@@ -1,28 +1,48 @@
 import { Injectable, signal } from '@angular/core';
 
-type Tema = 'claro' | 'escuro';
+export type Tema = 'claro' | 'escuro';
+export type PreferenciaTema = Tema | 'sistema';
 
-/** Modo claro/escuro. Começa pelo que o sistema da pessoa usa e lembra a escolha. */
+/**
+ * Modo claro/escuro. A pessoa escolhe em Configurações (Claro, Escuro ou Automático = segue o celular/computador)
+ * ou puxando a cordinha da lâmpada na barra de cima. A escolha fica salva neste navegador.
+ */
 @Injectable({ providedIn: 'root' })
 export class TemaService {
-  readonly tema = signal<Tema>(this.inicial());
+  readonly preferencia = signal<PreferenciaTema>(this.lerPreferencia());
+  readonly tema = signal<Tema>(this.resolver(this.preferencia()));
+  private readonly sistema = matchMedia('(prefers-color-scheme: dark)');
 
   constructor() {
     this.aplicar(this.tema());
+    // No modo Automático, acompanha a troca do sistema na hora
+    this.sistema.addEventListener?.('change', () => {
+      if (this.preferencia() === 'sistema') this.definirTema(this.resolver('sistema'));
+    });
   }
 
+  /** Cordinha da lâmpada: acende (claro) ou apaga (escuro). */
   alternar(): void {
-    const novo: Tema = this.tema() === 'claro' ? 'escuro' : 'claro';
-    this.tema.set(novo);
-    this.aplicar(novo);
+    this.definir(this.tema() === 'claro' ? 'escuro' : 'claro');
+  }
+
+  definir(p: PreferenciaTema): void {
+    this.preferencia.set(p);
+    this.definirTema(this.resolver(p));
     try {
-      localStorage.setItem('fatoreal-tema', novo);
+      if (p === 'sistema') localStorage.removeItem('fatoreal-tema');
+      else localStorage.setItem('fatoreal-tema', p);
     } catch {
       /* sem localStorage */
     }
   }
 
-  private inicial(): Tema {
+  private definirTema(t: Tema) {
+    this.tema.set(t);
+    this.aplicar(t);
+  }
+
+  private lerPreferencia(): PreferenciaTema {
     // Se a página estiver dentro de outro site que já escolheu o tema, segue ele
     const externo = document.documentElement.dataset['theme'];
     if (externo === 'dark') return 'escuro';
@@ -33,6 +53,11 @@ export class TemaService {
     } catch {
       /* sem localStorage */
     }
+    return 'sistema';
+  }
+
+  private resolver(p: PreferenciaTema): Tema {
+    if (p !== 'sistema') return p;
     return matchMedia('(prefers-color-scheme: dark)').matches ? 'escuro' : 'claro';
   }
 

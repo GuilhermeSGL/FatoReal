@@ -39,11 +39,7 @@
     <a routerLink="/fato-ou-fake" class="botao-verificar" routerLinkActive="ativo" title="Fato ou Fake: verifique uma informação antes de compartilhar">
       <app-icone nome="fact_check" /> <span>Verificar</span>
     </a>
-    <button type="button" class="sino" (click)="tema.alternar()"
-      [attr.aria-label]="tema.tema() === 'claro' ? 'Ativar modo escuro' : 'Ativar modo claro'"
-      [title]="tema.tema() === 'claro' ? 'Modo escuro' : 'Modo claro'">
-      <app-icone [nome]="tema.tema() === 'claro' ? 'dark_mode' : 'light_mode'" />
-    </button>
+    <app-cordinha-tema />
     <div class="menu-conta">
       <button type="button" class="sino" (click)="alternarNotificacoes()" [attr.aria-expanded]="notifAberto()" aria-haspopup="dialog"
         [attr.aria-label]="'Notificações' + (notificacoes.naoLidas() ? ', ' + notificacoes.naoLidas() + ' novas' : '')" title="Notificações">

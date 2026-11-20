@@ -6,6 +6,7 @@ import { AvisosService } from './core/avisos.service';
 import { MensagensService } from './core/mensagens.service';
 import { NotificacoesService } from './core/notificacoes.service';
 import { TemaService } from './core/tema.service';
+import { CordinhaTema } from './shared/cordinha-tema';
 import { BuscaGeralService, ResultadoBusca } from './core/busca-geral';
 import { AcessibilidadeService } from './core/acessibilidade.service';
 import { tempoAtras } from './core/util';
@@ -19,7 +20,7 @@ type Contador = 'comunidades' | 'mensagens';
 /** Casca do app, como na apresentação: barra superior escura, menu lateral, painel claro e navegação inferior no celular. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral],
+  imports: [CordinhaTema, RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral],
   templateUrl: './app.html',
 })
 export class App {

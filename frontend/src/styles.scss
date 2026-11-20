@@ -2449,3 +2449,37 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 .cmp-foto { border-radius: 18px; padding: 4px; line-height: 0; }
 .pf-graficos:not(:has(.pf-meses)) { grid-template-columns: repeat(2, minmax(0, 380px)); }
 .nt-post-img img { max-height: 220px; }
+
+/* ===== Lâmpada com cordinha (troca claro/escuro) ===== */
+.lamp { position: relative; width: 44px; height: 62px; align-self: flex-start; margin-top: -14px; flex: none; }
+.lamp-fio { position: absolute; left: 50%; top: 0; width: 2px; height: 14px; margin-left: -1px; background: var(--texto-suave); }
+.lamp-cupula { position: absolute; left: 50%; top: 13px; width: 30px; height: 15px; margin-left: -15px; border-radius: 16px 16px 4px 4px; background: linear-gradient(180deg, #1f7a52, #146c43); box-shadow: inset 0 -3px 0 rgba(0,0,0,.18); z-index: 2; }
+.lamp-bulbo { position: absolute; left: 50%; top: 25px; width: 14px; height: 12px; margin-left: -7px; border-radius: 0 0 8px 8px; background: #c9ced4; transition: background .3s, box-shadow .3s; z-index: 1; }
+.lamp-luz { position: absolute; left: 50%; top: 22px; width: 64px; height: 50px; margin-left: -32px; border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity .35s;
+  background: radial-gradient(ellipse at 50% 10%, rgba(253, 224, 71, .55), rgba(253, 224, 71, 0) 70%); }
+.lamp.acesa { .lamp-bulbo { background: #fde047; box-shadow: 0 0 10px 3px rgba(253, 224, 71, .8); } .lamp-luz { opacity: 1; } }
+.lamp-corda { --puxado: 0px; position: absolute; left: calc(50% + 9px); top: 25px; width: 22px; height: calc(34px + var(--puxado)); margin-left: -11px; padding: 0; border: 0; background: none; cursor: grab; touch-action: none; display: flex; flex-direction: column; align-items: center; z-index: 3;
+  &.solta { transition: height .45s cubic-bezier(.3, 1.8, .5, 1); }
+  &:active { cursor: grabbing; }
+  &:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 6px; } }
+.lamp-linha { flex: 1; width: 1.5px; background: var(--texto-suave); }
+.lamp-pingente { width: 9px; height: 13px; border-radius: 5px 5px 7px 7px; background: linear-gradient(180deg, #e8b04a, #b7791f); box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
+.lamp-corda:hover .lamp-pingente { transform: scale(1.12); }
+:root[data-tema='escuro'] { .lamp-cupula { background: linear-gradient(180deg, #2a2d32, #1a1c20); border: 1px solid #33363b; } .lamp-bulbo { background: #3a3d42; } .lamp-pingente { background: linear-gradient(180deg, #d9f99d, #c6f432); } }
+@media (prefers-reduced-motion: reduce) { .lamp-corda.solta { transition: none; } }
+
+/* ===== Configurações: aparência ===== */
+.cfg-aparencia { margin-bottom: 16px; h2 { display: flex; align-items: center; gap: 8px; } }
+.cfg-temas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.cfg-tema { display: grid; gap: 6px; text-align: left; padding: 10px 10px 12px; border-radius: 16px; border: 2px solid var(--borda); background: var(--superficie); color: var(--texto); font: inherit; cursor: pointer; transition: border-color .15s, transform .15s;
+  small { color: var(--texto-suave); font-size: .82rem; }
+  &:hover { transform: translateY(-2px); }
+  &[aria-checked='true'] { border-color: var(--link); box-shadow: 0 0 0 3px color-mix(in srgb, var(--link) 20%, transparent); .cfg-tema-nome::after { content: '✓'; margin-left: auto; color: var(--link); } } }
+.cfg-tema-nome { display: flex; align-items: center; gap: 6px; font-weight: 800; }
+.cfg-previa { position: relative; height: 70px; border-radius: 10px; overflow: hidden; display: block; background: #eef6f1; border: 1px solid #d6e4dc;
+  i { position: absolute; left: 0; top: 0; bottom: 0; width: 26%; background: #fff; border-right: 1px solid #d6e4dc; }
+  b { position: absolute; left: 32%; right: 8%; height: 14px; border-radius: 5px; background: #fff; border: 1px solid #d6e4dc; top: 12px; & + b { top: 32px; right: 30%; } }
+  em { position: absolute; left: 32%; bottom: 8px; width: 22%; height: 9px; border-radius: 5px; background: #15803d; } }
+.cfg-tema[data-opcao='escuro'] .cfg-previa { background: #09090b; border-color: #33363b; i, b { background: #121316; border-color: #33363b; } em { background: #c6f432; } }
+.cfg-tema[data-opcao='sistema'] .cfg-previa { background: linear-gradient(105deg, #eef6f1 50%, #09090b 50%); i { background: #fff; } b { background: linear-gradient(105deg, #fff 45%, #121316 45%); } em { background: linear-gradient(90deg, #15803d 50%, #c6f432 50%); } }
+@media (max-width: 700px) { .cfg-temas { grid-template-columns: 1fr; } }
