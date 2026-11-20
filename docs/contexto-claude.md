@@ -5,7 +5,7 @@
 > Atualizado em 20/11/2026.
 
 ## O projeto
-- **Fato Real**: rede social de informação cívica (PI do Senac, turma DS 2025): informação política verificada, perfis de políticos, comunidades e o assistente FatoBot. O que vale é o **Trello** "PI Senac - FATO REAL", que é o que o professor pediu.
+- **Fato Real**: rede social de informação cívica (PI do Senac, turma DS 2025): informação política verificada, perfis de políticos, comunidades e o assistente FatoBot. O que vale é o **Trello** "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi), que é o que o professor pediu. O quadro antigo "PI Senac - FATO REAL" não é mais editado.
 - **Tecnologias:** Angular 22 (pasta `frontend/`), Supabase (banco e login), API em Node/Express (pasta `backend/`, branch `joao/backend`), hospedagem na Vercel.
 - **Entrega final:** 1º/12/2026. Código congelado em 28/11.
 - **Equipe:** Luiz Gustavo (GitHub `Liipez`) cuida do **front-end**. João cuida do **back-end**. Coordenador: Guilherme. Vice: Pablo.
@@ -78,4 +78,4 @@ No Windows, o PowerShell pode precisar de `Set-ExecutionPolicy -Scope CurrentUse
 - Acabamento fino de Base da Política, Congresso e Configurações para ficarem idênticas ao protótipo.
 - Ideias propostas ao Luiz (aguardando resposta): carregamento/erro padronizados, lista do que o front espera do back, teste de acessibilidade, prévia ao compartilhar no WhatsApp.
 - Trocar o e-mail de contato provisório (`contato.fatoreal@exemplo.com`) em `frontend/src/app/pages/institucional/institucional.ts`.
-- Trello: ler o quadro "PI Senac - FATO REAL" quando o conector estiver ligado.
+- Trello: o quadro oficial agora é o "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi). Código congelado em 28/11 (alguns cartões ainda dizem 23/11 e precisam ser ajustados).
