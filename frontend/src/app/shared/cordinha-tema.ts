@@ -8,6 +8,7 @@ import { TemaService } from '../core/tema.service';
  */
 @Component({
   selector: 'app-cordinha-tema',
+  host: { style: 'display: contents' },
   template: `
     <div class="lamp" [class.acesa]="tema.tema() === 'claro'">
       <span class="lamp-fio"></span>
