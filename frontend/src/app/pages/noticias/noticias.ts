@@ -1,3 +1,4 @@
+import { MascoteService } from '../../core/mascote';
 import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CATEGORIAS, Categoria, InfoCategoria, LISTA_ATUALIZADA_EM, Noticia, NOTICIAS, infoCategoria } from '../../core/noticias';
@@ -70,7 +71,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
                   <span class="nt-fonte-oficial"><app-icone nome="verified" /> {{ n.fonte }}</span>
                   <time>{{ n.data }}</time>
                   @if (n.pergunta) {
-                    <button type="button" class="nt-botao-vidro" [perguntarFatobot]="n.pergunta" [attr.tabindex]="i === atual() ? 0 : -1"><app-icone nome="smart_toy" /> Entender com o FatoBot</button>
+                    <button type="button" class="nt-botao-vidro" [perguntarFatobot]="n.pergunta" [attr.tabindex]="i === atual() ? 0 : -1"><app-icone nome="smart_toy" /> Entender com o assistente</button>
                   }
                 </div>
               </div>
@@ -128,7 +129,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
           @if (item.tipo === 'checagem') {
             <article class="nt-post nt-post-checagem">
               <header class="nt-post-topo">
-                <img src="img/fatobot-rosto.svg" alt="" class="nt-post-av" />
+                <img [src]="mascote.rosto()" alt="" class="nt-post-av" />
                 <span><strong>Fato Real <app-icone nome="verified" class="nt-post-selo" /></strong><small>Checagem · fato ou fake?</small></span>
               </header>
               <p class="nt-checagem-frase">“{{ item.a.texto }}”</p>
@@ -199,6 +200,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
   `,
 })
 export class NoticiasPage implements AfterViewInit, OnDestroy {
+  protected mascote = inject(MascoteService);
   private readonly servico = inject(NoticiasService);
   protected readonly atualizadaEm = LISTA_ATUALIZADA_EM;
   protected readonly todas = signal<Noticia[]>(NOTICIAS);

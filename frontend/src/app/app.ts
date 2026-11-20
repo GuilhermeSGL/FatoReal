@@ -1,3 +1,4 @@
+import { MascoteService } from './core/mascote';
 import { Component, HostListener, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
@@ -24,6 +25,7 @@ type Contador = 'comunidades' | 'mensagens';
   templateUrl: './app.html',
 })
 export class App {
+  protected mascote = inject(MascoteService);
   protected auth = inject(AuthService);
   protected avisos = inject(AvisosService);
   protected tema = inject(TemaService);

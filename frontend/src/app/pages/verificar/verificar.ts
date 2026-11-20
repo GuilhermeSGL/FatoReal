@@ -1,3 +1,4 @@
+import { MascoteService } from '../../core/mascote';
 import { Conferindo } from '../../shared/conferindo';
 import { DatePipe } from '@angular/common';
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
@@ -66,7 +67,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
               (dragleave)="arrastando.set(false)" (drop)="$event.preventDefault(); arrastando.set(false); adicionar($event.dataTransfer?.files ?? null)">
               <input type="file" multiple [accept]="aceitos" (change)="adicionar(seletor.files); seletor.value = ''" #seletor />
               <app-icone nome="upload_file" />
-              <span class="zona-bot" aria-hidden="true"><img src="img/fatobot-rosto.svg" alt="" /> Pode soltar, eu confiro!</span>
+              <span class="zona-bot" aria-hidden="true"><img [src]="mascote.rosto()" alt="" /> Pode soltar, eu confiro!</span>
               <strong>Arraste aqui ou clique para escolher</strong>
               <span class="zona-anexo-tipos">
                 <span><app-icone nome="image" /> Fotos e prints</span>
@@ -221,6 +222,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
   `,
 })
 export class VerificarPage implements OnDestroy {
+  protected mascote = inject(MascoteService);
   private bot = inject(FatoBotService);
   private avisos = inject(AvisosService);
   private checagens = inject(ChecagensService);

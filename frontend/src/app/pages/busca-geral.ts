@@ -1,3 +1,4 @@
+import { MascoteService } from '../core/mascote';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { BuscaGeralService, ResultadoBusca, TipoResultado } from '../core/busca-geral';
@@ -31,7 +32,7 @@ const GRUPOS: { tipo: TipoResultado; titulo: string; icone: string; cor: string 
       </div>
     } @else if (!resultados().length) {
       <div class="card vazio bsc-vazio">
-        <img src="img/fatobot.svg" alt="" width="110" />
+        <img [src]="mascote.img()" alt="" width="110" />
         <strong>Não achei nada com “{{ q() }}”</strong>
         <span>Tente outro nome, a sigla de um partido (ex.: PT, PL) ou de um estado (ex.: SP).</span>
       </div>
@@ -89,6 +90,7 @@ const GRUPOS: { tipo: TipoResultado; titulo: string; icone: string; cor: string 
   `,
 })
 export class BuscaGeralPage {
+  protected mascote = inject(MascoteService);
   private busca = inject(BuscaGeralService);
   private bot = inject(FatoBotConversa);
   readonly q = input('');
