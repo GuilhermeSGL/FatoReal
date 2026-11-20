@@ -45,6 +45,10 @@ const TELAS = [
   { nome: 'comunidades', rota: '/comunidades' },
   { nome: 'meu-perfil', rota: '/perfil', logado: true },
   { nome: 'base-politica', rota: '/base-da-politica' },
+  { nome: 'noticias', rota: '/noticias', espera: 2500 },
+  { nome: 'mensagens', rota: '/mensagens', logado: true },
+  { nome: 'eleicoes', rota: '/eleicoes' },
+  { nome: 'configuracoes', rota: '/configuracoes' },
 ].filter((t) => !so || so.includes(t.nome));
 
 const MODOS = [

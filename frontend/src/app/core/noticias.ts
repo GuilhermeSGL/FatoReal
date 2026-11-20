@@ -205,5 +205,3 @@ export const NOTICIAS: Noticia[] = [
   },
 ];
 
-/** Mantido para quem ainda importa o nome antigo (ex.: página inicial). */
-export const NOTICIAS_DESTAQUE = NOTICIAS.filter((n) => n.destaque && n.resumo);
