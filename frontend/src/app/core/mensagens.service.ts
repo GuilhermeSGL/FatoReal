@@ -37,7 +37,7 @@ export interface ConversaGrupo {
   naoLidas: number;
 }
 
-const FATO_REAL: Autor = { id: 'equipe', nome: 'Fato Real', foto_url: 'img/logo-fr.png' };
+const FATO_REAL: Autor = { id: 'equipe', nome: 'Fato Real', foto_url: 'img/logo.svg' };
 
 /**
  * Mensagens privadas entre participantes (Supabase: tabela "mensagens") e
