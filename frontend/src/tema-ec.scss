@@ -303,3 +303,19 @@ main#conteudo > *:nth-child(3) { animation-delay: 80ms; }
   ::view-transition-old(conteudo), ::view-transition-new(conteudo), main#conteudo > * { animation: none !important; }
   .menu a:hover, .botao:hover, .card:hover, .nt-cartao:hover { transform: none !important; }
 }
+
+/* =========================================================
+   Leveza (23 nov. 2026): menos trabalho para o navegador
+   ========================================================= */
+/* Escuro: cartões e barra sólidos. O desfoque (blur) atrás de cada cartão e o fundo "fixo"
+   faziam o navegador redesenhar a tela inteira a cada rolada. */
+:root[data-tema='escuro'] {
+  body { background: var(--painel); background-attachment: scroll; }
+  .card { background: var(--superficie); backdrop-filter: none; box-shadow: none; }
+  .topo { background: var(--ec-topo); backdrop-filter: none; }
+  .botao:not(.botao-fantasma):not(.botao-perigo) { box-shadow: none; }
+}
+.nt-botao-vidro, .nt-setas button { backdrop-filter: none; }
+/* Listas longas: o navegador só desenha o que está perto da tela */
+app-publicacao { display: block; }
+app-publicacao, .nt-post { content-visibility: auto; contain-intrinsic-size: auto 420px; }

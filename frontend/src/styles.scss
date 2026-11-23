@@ -1530,7 +1530,7 @@ small.nt-k { display: block; color: color-mix(in srgb, var(--c) 80%, var(--texto
 /* ===== Selos de status (Verificado, Confiável, Em análise, Novo, Falso...) ===== */
 .selo-status { --c: #14a370; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 6px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; white-space: nowrap;
   color: color-mix(in srgb, var(--c) 82%, #000); background: color-mix(in srgb, var(--c) 13%, transparent); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent);
-  .icone { font-size: 1.05rem; color: #fff; background: var(--c); border-radius: 50%; width: 18px; height: 18px; display: inline-grid; place-items: center; font-size: 0.8rem; font-variation-settings: 'FILL' 1, 'wght' 600; }
+  .icone { font-size: 1.05rem; color: #fff; background: var(--c); border-radius: 50%; width: 18px; height: 18px; display: inline-grid; place-items: center; font-size: 0.8rem; font-variation-settings: 'FILL' 1, 'wght' 500; }
   &.selo-grande { font-size: 0.95rem; padding: 6px 14px 6px 8px; .icone { width: 24px; height: 24px; font-size: 1rem; } } }
 .selo-status[data-selo='verificado'] { --c: #16a34a; }
 .selo-status[data-selo='confiavel'] { --c: #2563eb; }
@@ -2257,5 +2257,4 @@ button.nav-robo { border: 0; background: none; padding: 0; cursor: pointer; }
 .marca img { border-radius: 11px; box-shadow: 0 3px 10px rgba(20, 90, 50, .25); transition: transform .2s; }
 .marca:hover img { transform: rotate(-4deg) scale(1.05); }
 
-/* Visual E + C (aprovado em 20 nov. 2026): fica por último para valer sobre o resto */
-@import "tema-ec";
+/* O visual E + C (src/tema-ec.scss) entra depois deste arquivo: veja "styles" no angular.json. */
