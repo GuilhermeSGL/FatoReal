@@ -227,8 +227,11 @@ Se a pergunta não cita nenhum deputado, o Gemini **nem é chamado**: a resposta
 Verifica uma afirmação e devolve um dos **5 estados** do Quadro 3 da documentação.
 É a rota usada pela tela **Verificar informação** do front.
 
-Aceita JSON `{ "afirmacao": "...", "link": "https://..." }` ou formulário (multipart)
-com `afirmacao`, `link` e até 5 `anexos` de no máximo 4 MB cada.
+Aceita JSON `{ "afirmacao": "...", "link": "https://...", "anexos": [{ "nome", "tipo", "tamanho" }] }`.
+**Recomendado (J13):** mandar só as *informações* dos anexos, e não os arquivos. Os anexos não são
+analisados nem guardados, e a Vercel recusa pedidos acima de ~4,5 MB (uma foto de celular ou um vídeo já passa disso).
+O formato antigo (formulário multipart com os arquivos) continua aceito; se os arquivos passarem
+do limite, o texto é verificado mesmo assim e a resposta avisa.
 
 ```json
 {
@@ -257,8 +260,23 @@ com `afirmacao`, `link` e até 5 `anexos` de no máximo 4 MB cada.
 Regras que **não dependem da IA**:
 - Sem citação válida, o sistema **nunca** confirma nem nega: vira "Evidência insuficiente".
 - O **link** enviado não é acessado nem usado como fonte.
-- Os **anexos** não são analisados nem guardados (mídia precisa de revisão humana). Na Vercel,
-  o pedido inteiro tem limite de ~4,5 MB.
+- Os **anexos** não são analisados nem guardados, e o aviso diz isso com clareza (sem prometer revisão
+  humana, que não existe no MVP). Anexo grande ou em excesso **nunca** impede a verificação do texto.
+
+### `POST /api/traduzir`
+
+"Tradutor de juridiquês": explica a ementa de um projeto de lei em linguagem simples. É chamado pelo
+botão **Explicar** dos projetos no front (`frontend/src/app/core/tradutor.ts`).
+
+Corpo: `{ "texto": "<ementa>" }` (10 a 2000 caracteres) → `{ "explicacao", "fonte", "aviso" }`.
+
+A única fonte é o próprio texto. Travas que **não dependem da IA** (se alguma falhar, responde `503`
+e o front usa as regras locais dele, que trocam palavras difíceis por simples):
+- todo número da explicação precisa existir no texto original (ex.: `8.069/1990` passa se a ementa
+  cita "Lei nº 8.069, de ... de 1990"; uma multa de "500 reais" que não está no texto, não);
+- nada de opinião ou recomendação que não esteja no texto ("deveria", "ótimo", "vote"...);
+- curta (até 600 caracteres) e nunca muito maior que o original;
+- `<` e `>` são tirados do texto, e a mesma ementa fica em cache por 24h (não gasta cota de novo).
 
 ### `GET /api/cep/:cep`
 
