@@ -6,6 +6,7 @@ import { AvisosService } from './core/avisos.service';
 import { MensagensService } from './core/mensagens.service';
 import { NotificacoesService } from './core/notificacoes.service';
 import { TemaService } from './core/tema.service';
+import { CordinhaTema } from './shared/cordinha-tema';
 import { BuscaGeralService, ResultadoBusca } from './core/busca-geral';
 import { AcessibilidadeService } from './core/acessibilidade.service';
 import { tempoAtras } from './core/util';
@@ -19,7 +20,7 @@ type Contador = 'comunidades' | 'mensagens';
 /** Casca do app, como na apresentação: barra superior escura, menu lateral, painel claro e navegação inferior no celular. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral],
+  imports: [CordinhaTema, RouterOutlet, RouterLink, RouterLinkActive, Icone, Avatar, AvisoDemo, BoasVindas, FatoBotBolha, PerguntarFatobot, DestaqueLateral],
   templateUrl: './app.html',
 })
 export class App {
@@ -150,6 +151,32 @@ export class App {
 
   protected fecharSugestoesDepois() {
     setTimeout(() => this.sugestoesAbertas.set(false), 150);
+  }
+
+  /** Dica do campo de busca: vai trocando para mostrar o que dá para pesquisar. */
+  private readonly dicas = [
+    'Pesquise um político, partido ou estado...',
+    'Ex.: deputados de Pernambuco',
+    'Ex.: PT, PL, MDB...',
+    'Ex.: saúde, educação, SUS',
+    'Ex.: comunidade Memes da Política',
+    'Ex.: o que é medida provisória?',
+  ];
+  protected readonly dicaBusca = signal(this.dicas[0]);
+  private indiceDica = 0;
+  private relogioDica = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : setInterval(() => {
+    if (document.activeElement?.id === 'busca-topo') return;
+    this.indiceDica = (this.indiceDica + 1) % this.dicas.length;
+    this.dicaBusca.set(this.dicas[this.indiceDica]);
+  }, 4000);
+
+  /** Atalho: apertar "/" em qualquer lugar leva para a busca. */
+  @HostListener('document:keydown', ['$event'])
+  protected atalhoBusca(e: KeyboardEvent) {
+    const alvo = e.target as HTMLElement;
+    if (e.key !== '/' || /^(INPUT|TEXTAREA|SELECT)$/.test(alvo.tagName) || alvo.isContentEditable) return;
+    const campo = document.getElementById('busca-topo') as HTMLInputElement | null;
+    if (campo && campo.offsetParent) { e.preventDefault(); campo.focus(); }
   }
 
   protected buscar(termo: string): void {

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Logo do Fato Real (redesenho em vetor da logo oficial: chip com o globo do Brasil) -->
+  <defs>
+    <linearGradient id="ouro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f1cf6b"/><stop offset=".55" stop-color="#d9a93f"/><stop offset="1" stop-color="#b8862a"/></linearGradient>
+    <radialGradient id="globo" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#4f86d9"/><stop offset=".55" stop-color="#2346a0"/><stop offset="1" stop-color="#16246b"/></radialGradient>
+    <linearGradient id="fundo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c5e3e"/><stop offset="1" stop-color="#173f2d"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="496" height="496" rx="120" fill="#1f6b45"/>
+  <rect x="22" y="22" width="468" height="468" rx="108" fill="#16232a"/>
+  <rect x="44" y="44" width="424" height="424" rx="92" fill="url(#fundo)" stroke="#d9a93f" stroke-width="7"/>
+  <!-- trilhas do circuito -->
+  <g fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M70 150 H118 L150 182 H196" stroke="#3ccf6e"/><path d="M70 168 H112 L146 202 H200" stroke="#d9a93f"/><path d="M70 186 H106 L140 220 H196" stroke="#3ccf6e"/>
+    <path d="M70 340 H118 L150 308 H196" stroke="#d9a93f"/><path d="M70 322 H112 L146 288 H200" stroke="#3ccf6e"/>
+    <path d="M442 150 H394 L362 182 H316" stroke="#3ccf6e"/><path d="M442 168 H400 L366 202 H312" stroke="#d9a93f"/>
+    <path d="M442 340 H394 L362 308 H316" stroke="#3ccf6e"/><path d="M442 322 H400 L366 288 H312" stroke="#d9a93f"/><path d="M442 304 H406 L372 270 H316" stroke="#3ccf6e"/>
+    <path d="M256 70 V120 Q256 132 244 140 L232 150" stroke="#3ccf6e"/><path d="M290 70 V112 Q290 128 274 138" stroke="#d9a93f"/>
+    <path d="M330 70 V104 L300 140" stroke="#2fd3c4"/>
+    <path d="M222 442 V396 L250 368" stroke="#d9a93f"/><path d="M198 442 V390 L232 356" stroke="#3ccf6e"/>
+    <path d="M100 100 L170 170" stroke="#3ccf6e"/><path d="M412 412 Q380 380 350 350" stroke="#2fd3c4"/>
+    <path d="M330 442 Q330 400 312 360" stroke="#3ccf6e"/><path d="M372 432 Q362 396 330 352" stroke="#2fd3c4"/>
+  </g>
+  <g fill="#16232a" stroke-width="4">
+    <circle cx="394" cy="108" r="8" stroke="#d9a93f"/><circle cx="414" cy="132" r="7" stroke="#d9a93f"/><circle cx="96" cy="370" r="8" stroke="#3ccf6e"/><circle cx="150" cy="420" r="7" stroke="#d9a93f"/>
+  </g>
+  <circle cx="330" cy="442" r="7" fill="#7cf29a"/><circle cx="372" cy="432" r="7" fill="#2fd3c4"/><circle cx="412" cy="412" r="7" fill="#b7f26b"/>
+  <!-- losango dourado -->
+  <rect x="128" y="128" width="256" height="256" rx="24" transform="rotate(45 256 256)" fill="url(#ouro)"/>
+  <!-- pinos do chip -->
+  <g fill="#1f8a52" transform="translate(256 256) scale(1.16) translate(-256 -256)"><rect x="148" y="232" width="22" height="9" rx="2"/><rect x="148" y="252" width="22" height="9" rx="2"/><rect x="148" y="272" width="22" height="9" rx="2"/>
+    <rect x="342" y="232" width="22" height="9" rx="2"/><rect x="342" y="252" width="22" height="9" rx="2"/><rect x="342" y="272" width="22" height="9" rx="2"/>
+    <rect x="236" y="148" width="9" height="22" rx="2"/><rect x="267" y="148" width="9" height="22" rx="2"/><rect x="236" y="342" width="9" height="22" rx="2"/><rect x="267" y="342" width="9" height="22" rx="2"/></g>
+  <!-- globo azul com faixa e estrelas -->
+  <g transform="translate(256 256) scale(1.14) translate(-256 -256)">
+  <circle cx="256" cy="256" r="88" fill="#d9a93f"/>
+  <circle cx="256" cy="256" r="82" fill="url(#globo)"/>
+  <path d="M176 238 Q260 214 336 266 L332 286 Q258 236 178 258 Z" fill="url(#ouro)"/>
+  <g fill="#fff"><circle cx="210" cy="272" r="3.5"/><circle cx="240" cy="294" r="4"/><circle cx="262" cy="282" r="3"/><circle cx="270" cy="306" r="4.5"/><circle cx="292" cy="296" r="3"/>
+    <circle cx="226" cy="312" r="3"/><circle cx="300" cy="318" r="3.5"/><circle cx="252" cy="322" r="2.5"/><circle cx="318" cy="300" r="2.5"/><circle cx="290" cy="232" r="4"/><circle cx="200" cy="250" r="3"/></g>
+  <ellipse cx="232" cy="210" rx="38" ry="20" fill="#fff" opacity=".16"/>
+  </g>
+</svg>

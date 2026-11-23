@@ -21,7 +21,7 @@ export const ELEICAO_2028 = new Date(2028, 9, 1);
       @if (dias() > 0) {
         <a class="lat-cartao lat-eleicao" routerLink="/eleicoes">
           <small><app-icone nome="event" /> Você sabia?</small>
-          <strong>Faltam {{ dias() }} dias para a eleição municipal de 2028</strong>
+          <strong><b class="lat-num">{{ dias() }}</b> dias para a eleição municipal de 2028</strong>
           <span>Prazos, como votar e comparar <app-icone nome="arrow_forward" /></span>
         </a>
       }
