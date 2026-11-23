@@ -37,9 +37,12 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
   selector: 'app-verificar',
   imports: [Conferindo, FormsModule, DatePipe, Icone, FonteDado, AvisoIa, SeloStatus],
   template: `
-    <header class="cabecalho-pagina">
-      <h1><app-icone nome="fact_check" /> Fato ou Fake?</h1>
-      <p>Recebeu uma mensagem, um link, um print ou um vídeo sobre política? Cole aqui antes de compartilhar e veja se é fato ou fake. A resposta é uma avaliação preliminar, baseada só nas fontes consultadas.</p>
+    <header class="cabecalho-pagina ff-hero">
+      <div>
+        <h1>Fato <span>ou</span> fake?</h1>
+        <p>Recebeu uma mensagem, um link, um print ou um vídeo sobre política? Cole aqui antes de compartilhar e veja se é fato ou fake. A resposta é uma avaliação preliminar, baseada só nas fontes consultadas.</p>
+      </div>
+      <img src="img/fatobot.svg" alt="" width="150" height="170" />
     </header>
 
     <div class="layout-comunidade">

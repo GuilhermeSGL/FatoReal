@@ -188,12 +188,6 @@ export async function despesasDoAno(id: number): Promise<DetalhesPolitico['despe
   return null;
 }
 
-/** Siglas dos partidos com deputados, para sugerir no filtro. */
-export async function partidosCamara(): Promise<string[]> {
-  const r = await jsonCamara<{ dados: { sigla: string }[] }>('/partidos?itens=100&ordem=ASC&ordenarPor=sigla');
-  return r.dados.map((p) => p.sigla);
-}
-
 /** Legislaturas começam em 1º de fevereiro de 2023, 2027, 2031... */
 export function inicioLegislatura(): string {
   const hoje = new Date();

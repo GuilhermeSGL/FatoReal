@@ -3,7 +3,7 @@
 <!-- ===== Barra superior ===== -->
 <header class="topo">
   <a routerLink="/" class="marca" aria-label="Fato Real, página inicial">
-    <img src="logo.svg" alt="" width="40" height="40" />
+    <img src="img/logo.svg" alt="" width="40" height="40" />
     <span>
       <strong>Fato Real</strong>
       <small>Informação • Comunidade • Cidadania</small>
@@ -12,12 +12,14 @@
 
   <form class="busca-topo" role="search" (submit)="$event.preventDefault(); buscar(campoBusca.value)">
     <label for="busca-topo" class="sr-only">Pesquisar</label>
-    <app-icone nome="search" />
-    <input id="busca-topo" #campoBusca type="search" placeholder="Pesquisar políticos, partidos, estados, comunidades..." autocomplete="off"
+    <span class="busca-lupa" aria-hidden="true"><app-icone nome="search" /></span>
+    <input id="busca-topo" #campoBusca type="search" [placeholder]="dicaBusca()" autocomplete="off"
       role="combobox" aria-autocomplete="list" aria-controls="sugestoes-busca" [attr.aria-expanded]="sugestoesAbertas()"
       (input)="digitarBusca(campoBusca.value)" (focus)="sugestoesAbertas.set(sugestoes().length > 0)"
       (keydown.arrowDown)="$event.preventDefault(); moverSugestao(1)" (keydown.arrowUp)="$event.preventDefault(); moverSugestao(-1)"
       (keydown.escape)="sugestoesAbertas.set(false)" (keydown.enter)="enterBusca($event, campoBusca)" (blur)="fecharSugestoesDepois()" />
+    <kbd class="busca-atalho" title="Atalho: aperte / para pesquisar" aria-hidden="true">/</kbd>
+    <button type="submit" class="busca-ir" aria-label="Pesquisar"><app-icone nome="arrow_forward" /></button>
     @if (sugestoesAbertas() && sugestoes().length) {
       <ul id="sugestoes-busca" class="sugestoes-busca" role="listbox">
         @for (r of sugestoes(); track r.tipo + r.titulo; let i = $index) {
@@ -39,11 +41,6 @@
     <a routerLink="/fato-ou-fake" class="botao-verificar" routerLinkActive="ativo" title="Fato ou Fake: verifique uma informação antes de compartilhar">
       <app-icone nome="fact_check" /> <span>Verificar</span>
     </a>
-    <button type="button" class="sino" (click)="tema.alternar()"
-      [attr.aria-label]="tema.tema() === 'claro' ? 'Ativar modo escuro' : 'Ativar modo claro'"
-      [title]="tema.tema() === 'claro' ? 'Modo escuro' : 'Modo claro'">
-      <app-icone [nome]="tema.tema() === 'claro' ? 'dark_mode' : 'light_mode'" />
-    </button>
     <div class="menu-conta">
       <button type="button" class="sino" (click)="alternarNotificacoes()" [attr.aria-expanded]="notifAberto()" aria-haspopup="dialog"
         [attr.aria-label]="'Notificações' + (notificacoes.naoLidas() ? ', ' + notificacoes.naoLidas() + ' novas' : '')" title="Notificações">
@@ -90,6 +87,8 @@
       <a routerLink="/entrar" class="botao botao-verde">Entrar</a>
     }
   </div>
+  <!-- Lâmpada pendurada no fio azul, embaixo da conta -->
+  <app-cordinha-tema />
 </header>
 
 <!-- Abas do topo (celular) -->

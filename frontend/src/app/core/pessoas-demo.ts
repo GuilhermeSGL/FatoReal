@@ -4,7 +4,7 @@ import { PerfilPublico } from './modelos';
 
 export const PESSOAS_EXEMPLO: PerfilPublico[] = [
   {
-    id: 'equipe', nome: 'Fato Real', foto_url: 'logo.svg', moderador: true, capa: 'verde',
+    id: 'equipe', nome: 'Fato Real', foto_url: 'img/logo.svg', moderador: true, capa: 'verde',
     bio: 'Perfil oficial do Fato Real. Publicamos informação com fonte oficial e data.', cidade: null, uf: null,
     profissao: 'Equipe de checagem', interesses: ['Política', 'Cidadania', 'Tecnologia'],
     criado_em: '2026-08-01T12:00:00Z',
