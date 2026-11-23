@@ -263,6 +263,21 @@ Regras que **não dependem da IA**:
 - Os **anexos** não são analisados nem guardados, e o aviso diz isso com clareza (sem prometer revisão
   humana, que não existe no MVP). Anexo grande ou em excesso **nunca** impede a verificação do texto.
 
+### `POST /api/traduzir`
+
+"Tradutor de juridiquês": explica a ementa de um projeto de lei em linguagem simples. É chamado pelo
+botão **Explicar** dos projetos no front (`frontend/src/app/core/tradutor.ts`).
+
+Corpo: `{ "texto": "<ementa>" }` (10 a 2000 caracteres) → `{ "explicacao", "fonte", "aviso" }`.
+
+A única fonte é o próprio texto. Travas que **não dependem da IA** (se alguma falhar, responde `503`
+e o front usa as regras locais dele, que trocam palavras difíceis por simples):
+- todo número da explicação precisa existir no texto original (ex.: `8.069/1990` passa se a ementa
+  cita "Lei nº 8.069, de ... de 1990"; uma multa de "500 reais" que não está no texto, não);
+- nada de opinião ou recomendação que não esteja no texto ("deveria", "ótimo", "vote"...);
+- curta (até 600 caracteres) e nunca muito maior que o original;
+- `<` e `>` são tirados do texto, e a mesma ementa fica em cache por 24h (não gasta cota de novo).
+
 ### `GET /api/cep/:cep`
 
 Endereço automático pelo CEP (RF07), usando o **ViaCEP** (gratuito, sem chave), e os
