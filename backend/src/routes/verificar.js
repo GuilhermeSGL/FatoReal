@@ -16,11 +16,24 @@ const upload = multer({
 function aceitarAnexos(req, res, next) {
   if (!req.is('multipart/form-data')) return next();
   upload.array('anexos', 5)(req, res, (err) => {
+    // J13: anexo grande demais ou em excesso NÃO impede a verificação do texto.
+    // Os arquivos não são analisados de qualquer jeito; só avisamos na resposta.
     if (err instanceof multer.MulterError) {
-      return res.status(400).json({ erro: 'Anexos inválidos: até 5 arquivos de no máximo 4 MB cada.' });
+      req.anexosAcimaDoLimite = true;
+      return next();
     }
     next(err);
   });
+}
+
+// J13: quantos anexos vieram. Aceita os arquivos (multipart, formato antigo) ou só
+// as informações deles em JSON, que é o recomendado: { "anexos": [{ "nome", "tipo", "tamanho" }] }.
+// Mandar só as informações evita o limite de ~4,5 MB por pedido da Vercel.
+function contarAnexos(req) {
+  if (Array.isArray(req.files) && req.files.length) return req.files.length;
+  const info = req.body?.anexos;
+  if (Array.isArray(info)) return Math.min(info.length, 20);
+  return 0;
 }
 
 const MIN = 5;
@@ -39,8 +52,8 @@ router.post('/', limitarPorIp, aceitarAnexos, async (req, res, next) => {
       return res.status(400).json({ erro: 'O link precisa começar com https://' });
     }
 
-    const anexos = Array.isArray(req.files) ? req.files.length : 0;
-    res.json(await verificar({ afirmacao, link, anexos }));
+    const anexos = contarAnexos(req);
+    res.json(await verificar({ afirmacao, link, anexos, anexosAcimaDoLimite: Boolean(req.anexosAcimaDoLimite) }));
   } catch (err) {
     next(err);
   }

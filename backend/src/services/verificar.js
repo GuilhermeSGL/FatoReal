@@ -22,22 +22,29 @@ const TEXTO_INSUFICIENTE =
   'Por enquanto, a verificação automática cobre dados dos deputados federais em exercício e regras básicas da Constituição. ' +
   'Ausência de evidência não é prova de falsidade.';
 
-function observacoes({ link, anexos }) {
+// J13: texto honesto sobre anexos. Eles NÃO são analisados nem guardados, então não
+// prometemos revisão humana (não existe fila de revisão de anexos no MVP).
+const DICA_ANEXOS =
+  'Para checar fotos, vídeos e documentos, procure a publicação original ou uma agência de checagem.';
+
+function observacoes({ link, anexos, anexosAcimaDoLimite }) {
   const obs = [];
   if (link) obs.push('O link enviado não é usado como fonte: a verificação considera só fontes oficiais.');
-  if (anexos > 0) {
+  if (anexosAcimaDoLimite) {
+    obs.push(`Os anexos passaram do tamanho permitido e não foram recebidos. ${DICA_ANEXOS}`);
+  } else if (anexos > 0) {
     obs.push(
-      `${anexos === 1 ? 'O anexo enviado não foi analisado' : `Os ${anexos} anexos enviados não foram analisados`} ` +
-        'nem guardado(s): fotos, vídeos e documentos precisam de revisão humana.'
+      `${anexos === 1 ? 'O anexo não foi analisado nem guardado' : `Os ${anexos} anexos não foram analisados nem guardados`}: ` +
+        `a verificação automática usa só o texto da afirmação. ${DICA_ANEXOS}`
     );
   }
   return obs;
 }
 
-export async function verificar({ afirmacao, link = null, anexos = 0 }) {
+export async function verificar({ afirmacao, link = null, anexos = 0, anexosAcimaDoLimite = false }) {
   const prazo = Date.now() + LIMITES_FATOBOT.totalMs; // J2: mesmo prazo total do FatoBot
   const consultado_em = new Date().toISOString();
-  const extra = observacoes({ link, anexos });
+  const extra = observacoes({ link, anexos, anexosAcimaDoLimite });
   const montar = (estado, explicacao, fontes = []) => ({
     estado: ESTADOS[estado],
     explicacao: [explicacao, ...extra].join(' '),
