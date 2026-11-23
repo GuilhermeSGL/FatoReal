@@ -5,9 +5,11 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 ## Como trabalhar aqui
 - **Repositório oficial:** `SenacDS2025-PI/FatoReal`. O antigo (`matheussss237/FatoReal`) não recebe mais trabalho. Resumo do que já foi feito e das pendências: `docs/contexto-claude.md`.
 - **Não fazer sem pedido do Luiz:** force-push, mexer na `main` ou nas branches dos outros (`joao/backend` etc.), abrir Pull Request.
+- **Prazos e Trello:** o quadro oficial é o "FATO - PI" (https://trello.com/b/PrP5J55T/fato-pi). Código congelado em **28/11/2026**; entrega final em 1º/12/2026.
 - **Idioma:** tudo em português do Brasil, simples e direto (o público vai de jovens a idosos). Código, comentários, commits e textos da interface.
 - **Branch do front-end:** `luiz/frontend`. Não fazer push em outras branches nem abrir PR sem pedido explícito.
 - **Commits:** mensagem em português, título curto + lista do que mudou.
+- **Visual:** cores, fontes, componentes e regras de tela estão em `DESIGN.md` (raiz). Siga-o ao criar ou mudar telas.
 - **Antes de dizer que terminou:** `npx ng build` sem erros e capturas das telas mexidas (ver skills abaixo).
 
 ## Stack
@@ -20,9 +22,10 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 - **Nunca inventar dados** sobre políticos, notícias, números ou checagens. Só fonte oficial ou registro verificado com link. Sem fonte, mostrar "sem dados" / "Em análise".
 - Polêmicas e processos de políticos: só com fonte oficial (STF, TSE, CNJ, Agência Brasil...). Processo não é condenação.
 - Pessoas e mensagens de exemplo do modo demonstração levam "(exemplo)" no nome.
-- O FatoBot nunca opina: responde com fonte ou diz que não há evidência.
+- O FatoBot **pode dar opinião e ajudar a pessoa** em qualquer tela (decisão do Luiz, 20 nov. 2026). Quando opinar, deixa claro que é opinião dele; fato e dado continuam só com fonte (sem fonte, diz que não há evidência).
 
 ## Visual (decisões do Luiz)
+- **Mudança de visual = só aparência:** manter todo o conteúdo e todas as funções que já existem (perfil, stories, publicar, feed, memes, enquetes, lateral etc.). Nada some sem o Luiz pedir. O Fato Real é uma **rede social**: o visual tem que lembrar isso.
 - **Foco atual: computador.** Protótipo de celular não é prioridade agora (o layout só não pode quebrar).
 - **Modo claro:** verde do Fato Real. **Modo escuro:** preto e grafite (`#09090b`, `#121316`, bordas `#33363b`, texto suave `#a3a8ae`; nada de preto puro `#000`), contraste definido e destaques discretos em **verde-limão** (`--lima: #c6f432`). Aprovado pelo Luiz em 18 nov. 2026 (antes era azul-marinho).
 - **Página Políticos:** segue o tema (claro no modo claro, preto/grafite no escuro). **Nada de bloco escuro dentro do modo claro** (pedido do Luiz). Cargos em cartões grandes coloridos, cartões "Explore" com imagem, cartões de políticos com foto oficial (Câmara/Senado). Sem índice A–Z.

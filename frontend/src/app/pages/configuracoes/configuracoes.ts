@@ -6,6 +6,7 @@ import { modoDemo } from '../../core/supabase';
 import { AcessibilidadeService } from '../../core/acessibilidade.service';
 import { Icone } from '../../shared/componentes';
 import { FatoBotConversa } from '../../core/fatobot-conversa.service';
+import { PreferenciaTema, TemaService } from '../../core/tema.service';
 
 @Component({
   selector: 'app-configuracoes',
@@ -13,8 +14,22 @@ import { FatoBotConversa } from '../../core/fatobot-conversa.service';
   template: `
     <header class="cabecalho-pagina">
       <h1><app-icone nome="settings" /> Configurações</h1>
-      <p>Conta e privacidade.</p>
+      <p>Aparência, acessibilidade, FatoBot, conta e privacidade.</p>
     </header>
+
+    <section class="card cfg-aparencia">
+      <h2><app-icone nome="palette" /> Aparência</h2>
+      <p class="texto-suave">Escolha como o Fato Real aparece para você. Também dá para trocar puxando a cordinha da lâmpada, no canto de cima.</p>
+      <div class="cfg-temas" role="radiogroup" aria-label="Tema do site">
+        @for (o of opcoesTema; track o.id) {
+          <button type="button" role="radio" class="cfg-tema" [attr.data-opcao]="o.id" [attr.aria-checked]="tema.preferencia() === o.id" (click)="tema.definir(o.id)">
+            <span class="cfg-previa" aria-hidden="true"><i></i><b></b><b></b><em></em></span>
+            <span class="cfg-tema-nome"><app-icone [nome]="o.icone" /> {{ o.nome }}</span>
+            <small>{{ o.texto }}</small>
+          </button>
+        }
+      </div>
+    </section>
 
     <div class="grade-2">
       <section class="card">
@@ -86,6 +101,12 @@ export class ConfiguracoesPage {
   protected auth = inject(AuthService);
   protected a11y = inject(AcessibilidadeService);
   protected bot = inject(FatoBotConversa);
+  protected tema = inject(TemaService);
+  protected readonly opcoesTema: { id: PreferenciaTema; nome: string; icone: string; texto: string }[] = [
+    { id: 'claro', nome: 'Claro', icone: 'light_mode', texto: 'Fundo claro, com o verde do Fato Real.' },
+    { id: 'escuro', nome: 'Escuro', icone: 'dark_mode', texto: 'Preto e grafite, descansa a vista à noite.' },
+    { id: 'sistema', nome: 'Automático', icone: 'brightness_auto', texto: 'Segue o modo do seu celular ou computador.' },
+  ];
   private avisos = inject(AvisosService);
   private router = inject(Router);
   protected readonly demo = modoDemo;

@@ -1,4 +1,4 @@
-// ÁREA DO MATHEUS — autenticação, conta do usuário e painel do administrador.
+// ÁREA DO GUSTAVO — autenticação, conta do usuário e painel do administrador.
 //
 // Este arquivo já está registrado no src/app.js (em /api). Para criar rotas novas,
 // importe e registre aqui, sem mexer no app.js:

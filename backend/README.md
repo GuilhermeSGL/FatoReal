@@ -5,7 +5,8 @@ Responsáveis: João Vítor e Gustavo.
 API do FATO REAL e do FatoBot. É aqui que ficam as chaves secretas (Supabase `service_role`, IA),
 sempre em variáveis de ambiente — **nunca** no código nem no Angular.
 
-> **Divisão do backend entre João e Matheus** (quem mexe em qual arquivo, sem conflito): [`DIVISAO.md`](DIVISAO.md).
+> **Divisão do backend** (João: FatoBot e fontes · Gustavo: autenticação · Matheus e Kelly: revisão e testes),
+> com quem mexe em qual arquivo, sem conflito: [`DIVISAO.md`](DIVISAO.md).
 > Autenticação, conta e admin ficam em [`src/auth/`](src/auth/README.md).
 
 ## Como rodar
@@ -63,6 +64,26 @@ backend/
 ## Rotas
 
 Toda resposta com dados de político traz o bloco `fonte` (nome, URL oficial e data/hora da consulta).
+
+### `GET /api/health` e `GET /api/health/fontes`
+
+- `/api/health`: rápido, só diz que a API está no ar.
+- `/api/health/fontes` (J12): **check-up para abrir antes da apresentação**. Mostra se cada fonte
+  está funcionando, **sem nunca mostrar chaves**:
+
+| Campo | O que diz |
+|---|---|
+| `status` | `ok` (tudo certo), `parcial` (algo fora, mas o FatoBot ainda responde) ou `fora` (nenhuma fonte de deputados → HTTP `503`) |
+| `fontes.camara` | `ok` / `fora`, com o tempo de resposta |
+| `fontes.supabase` | `ok` / `vazio` / `fora` / `nao_configurado`, o total de deputados no banco e o **começo do endereço do projeto** (ex.: `mamsbc…`), para saber se é o banco de dev ou de produção |
+| `fontes.copiaReserva` | `ok` / `antiga` (mais de 7 dias) / `ausente`, com a data da coleta |
+| `fontes.gemini` | `configurado` / `sem_chave`, o modelo, o reserva e quanto da cota local já foi usado |
+
+Com `?ia=1`, também faz uma chamada mínima ao Gemini (gasta 1 da cota) e mostra `ok` ou o motivo da falha.
+O resultado fica em cache por 30s.
+
+**Checklist do dia:** abra `https://fato-real.vercel.app/api/health/fontes?ia=1` e confira se o
+`status` é `ok`, se o projeto do Supabase é o de **produção** e se a cópia de reserva não está `antiga`.
 
 ### `GET /api/deputados`
 
@@ -150,8 +171,18 @@ Corpo: `{ "pergunta": "Quem é Tabata Amaral?" }` (3 a 500 caracteres).
 
 Responde **somente com base em fontes oficiais** (RN02 e RN04), em duas etapas:
 
-1. **Busca de evidências:** identifica deputados citados pelo nome parlamentar completo e
-   transforma o perfil em fatos numerados, cada um com fonte e data.
+1. **Busca de evidências** (a mesma do `/api/verificar`), em três fontes:
+   - **deputados** citados pelo nome parlamentar completo → fatos do perfil, com fonte e data;
+   - **total de deputados** em exercício, quando a pergunta é "quantos deputados...";
+   - **Constituição Federal de 1988** (`src/data/base-conhecimento.js`, 24 fatos com o artigo):
+     busca por palavras-chave, até 3 fatos por pergunta. Ex.: "O que são os Três Poderes?",
+     "Como funciona uma PEC?", "Qual a idade mínima para ser senador?".
+
+   Se a Câmara estiver fora e sem cópia, uma pergunta sobre a Constituição ainda é respondida;
+   o `503` só acontece quando não há nenhuma evidência.
+
+   **Para ensinar algo novo ao FatoBot**, acrescente um item em `src/data/base-conhecimento.js`
+   (id, título, artigo, texto fiel à fonte e palavras-chave) e confira o texto no site do Planalto.
 2. **Síntese com o Gemini (IA):** o Gemini recebe **só** essas evidências e escreve uma resposta
    curta e neutra, citando cada fato como `[1]`, `[2]`... O número aponta para `evidencias[n-1]`.
 
@@ -256,6 +287,19 @@ Devolve `{ "url": "https://wa.me/55...?text=..." }`: o front só abre essa URL (
 - O número fica em `WHATSAPP_NUMERO` (no `.env` e na Vercel), com código do país e DDD.
   Sem ele, a rota responde `503`.
 - **Nada é guardado** (LGPD): os dados só vão na mensagem que a própria pessoa envia.
+
+### Limites de uso (J10)
+
+Duas camadas, para proteger a cota grátis do Gemini **sem bloquear uma sala de aula**
+(numa rede como a do Senac, todos os alunos saem pelo mesmo IP):
+
+| Camada | Padrão | Ao passar do limite | Variável |
+|---|---|---|---|
+| Por IP, contra abuso (`/api/fatobot` e `/api/verificar`) | 60 pedidos/min | `429` *"Muitas perguntas em pouco tempo..."* com `Retry-After` | `LIMITE_POR_IP_MIN` |
+| Cota da IA, para o servidor todo | 14 chamadas/min e 450/dia (abaixo dos 15/min e 500/dia do plano grátis) | **Não recusa**: responde só com as fontes, `motivo_sem_ia: "limite_local"` | `LIMITE_IA_POR_MIN`, `LIMITE_IA_POR_DIA` |
+
+Os contadores ficam em memória (na Vercel, cada instância conta separado). Baseado no limitador por IP
+do Matheus (`backup/matheus-2026-11-17`).
 
 ### Para outras rotas usarem o Gemini: `gerarJson`
 

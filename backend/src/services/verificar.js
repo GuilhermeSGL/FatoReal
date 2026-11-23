@@ -6,7 +6,7 @@
 // - Sem IA disponível → "Em análise" (não confirma nem nega sozinho).
 // - O link enviado NÃO é acessado nem usado como fonte (só fontes oficiais contam).
 // - Anexos NÃO são analisados nem guardados (análise de mídia precisa de revisão humana).
-import { identificarDeputados, evidenciasDosDeputados, AVISO, LIMITES_FATOBOT } from './fatobot.js';
+import { buscarEvidencias, AVISO, LIMITES_FATOBOT } from './fatobot.js';
 import { classificarComIA } from './gemini.js';
 
 export const ESTADOS = {
@@ -19,7 +19,7 @@ export const ESTADOS = {
 
 const TEXTO_INSUFICIENTE =
   'Não encontrei nas fontes oficiais que consulto informação suficiente para confirmar ou negar essa afirmação. ' +
-  'Por enquanto, a verificação automática cobre dados dos deputados federais em exercício. ' +
+  'Por enquanto, a verificação automática cobre dados dos deputados federais em exercício e regras básicas da Constituição. ' +
   'Ausência de evidência não é prova de falsidade.';
 
 function observacoes({ link, anexos }) {
@@ -46,10 +46,10 @@ export async function verificar({ afirmacao, link = null, anexos = 0 }) {
     aviso: AVISO,
   });
 
-  const deputados = await identificarDeputados(afirmacao);
-  if (deputados.length === 0) return montar('insuficiente', TEXTO_INSUFICIENTE);
+  // Deputados citados + Constituição (J11), as mesmas fontes do FatoBot.
+  const { evidencias, fontes } = await buscarEvidencias(afirmacao);
+  if (evidencias.length === 0) return montar('insuficiente', TEXTO_INSUFICIENTE);
 
-  const { evidencias, fontes } = await evidenciasDosDeputados(deputados);
   const resultado = await classificarComIA(afirmacao, evidencias, { prazo });
   if (!resultado && !process.env.GEMINI_API_KEY) {
     console.warn('Verificar: GEMINI_API_KEY não configurada (confira o arquivo .env)');

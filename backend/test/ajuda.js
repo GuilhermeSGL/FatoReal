@@ -4,6 +4,7 @@ import app from '../src/app.js';
 import { clearCache } from '../src/utils/cache.js';
 import { _setClient } from '../src/services/gemini.js';
 import { _setCopia, _resetPausa } from '../src/services/camara.js';
+import { _zerarLimites } from '../src/utils/limite.js';
 
 export const PERFIL_TABATA = {
   dados: {
@@ -58,6 +59,7 @@ export function mockGemini(responder) {
 export async function iniciar() {
   clearCache();
   _resetPausa();
+  _zerarLimites();
   const server = app.listen(0);
   await new Promise((r) => server.once('listening', r));
   const base = `http://localhost:${server.address().port}`;

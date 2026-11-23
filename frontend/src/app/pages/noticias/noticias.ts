@@ -93,8 +93,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
         <h3><app-icone nome="trending_up" /> Em destaque agora</h3>
         @for (n of destaques(); track n.url; let i = $index) {
           <button type="button" class="nt-mini" [class.ativa]="i === atual()" [style.--c]="cat(n).cor" (click)="ir(i)">
-            @if (imagem(n); as img) { <img [src]="img" alt="" loading="lazy" /> }
-            @else { <span class="nt-mini-icone"><app-icone [nome]="cat(n).icone" /></span> }
+            <span class="nt-num" aria-hidden="true">{{ (i + 1).toString().padStart(2, '0') }}</span>
             <span><small class="nt-k">{{ n.categoria }}</small><strong>{{ n.titulo }}</strong><small>{{ n.fonte }} · {{ n.data }}</small></span>
           </button>
         }
