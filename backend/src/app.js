@@ -6,6 +6,7 @@ import fatobotRouter from './routes/fatobot.js';
 import verificarRouter from './routes/verificar.js';
 import cepRouter from './routes/cep.js';
 import whatsappRouter from './routes/whatsapp.js';
+import traduzirRouter from './routes/traduzir.js';
 import authRouter from './auth/index.js'; // autenticação, área do Gustavo (ver DIVISAO.md)
 import { CamaraError, MSG_CAMARA_FORA } from './services/camara.js';
 
@@ -25,6 +26,7 @@ app.use('/api/fatobot', fatobotRouter);
 app.use('/api/verificar', verificarRouter);
 app.use('/api/cep', cepRouter);
 app.use('/api/whatsapp', whatsappRouter);
+app.use('/api/traduzir', traduzirRouter);
 
 // Autenticação (área do Gustavo): /api/auth, /api/conta e /api/admin. As rotas são registradas em src/auth/index.js.
 app.use('/api', authRouter);
