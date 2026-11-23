@@ -9,6 +9,8 @@ sempre em variáveis de ambiente — **nunca** no código nem no Angular.
 > com quem mexe em qual arquivo, sem conflito: [`DIVISAO.md`](DIVISAO.md).
 > Autenticação, conta e admin ficam em [`src/auth/`](src/auth/README.md).
 
+> **Roteiro da apresentação** (véspera, teste com a turma e entrega) e o comando `npm run conferir`: [`APRESENTACAO.md`](APRESENTACAO.md).
+
 ## Como rodar
 
 Precisa do Node 20 ou mais novo.
