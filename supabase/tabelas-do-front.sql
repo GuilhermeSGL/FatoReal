@@ -101,3 +101,23 @@ create policy "checagens: moderação publica" on public.checagens
 drop policy if exists "checagens: moderação apaga" on public.checagens;
 create policy "checagens: moderação apaga" on public.checagens
   for delete using (public.eh_moderador());
+
+-- ---------- 5. Favoritos ("Salvos" no Meu Perfil) ----------
+-- Cada pessoa vê, salva e apaga só os próprios favoritos.
+create table if not exists public.favoritos (
+  id         bigint generated always as identity primary key,
+  usuario_id uuid   not null default auth.uid() references public.perfis(id) on delete cascade,
+  tipo       text   not null check (tipo in ('politico', 'projeto', 'noticia', 'publicacao', 'comunidade')),
+  ref_id     text   not null,
+  titulo     text   not null default '' check (char_length(titulo) <= 200),
+  url        text   check (url is null or url ~ '^https?://'),
+  criado_em  timestamptz not null default now(),
+  unique (usuario_id, tipo, ref_id)
+);
+alter table public.favoritos enable row level security;
+drop policy if exists "favoritos: a própria pessoa lê" on public.favoritos;
+create policy "favoritos: a própria pessoa lê" on public.favoritos for select using (usuario_id = auth.uid());
+drop policy if exists "favoritos: a própria pessoa salva" on public.favoritos;
+create policy "favoritos: a própria pessoa salva" on public.favoritos for insert with check (usuario_id = auth.uid());
+drop policy if exists "favoritos: a própria pessoa apaga" on public.favoritos;
+create policy "favoritos: a própria pessoa apaga" on public.favoritos for delete using (usuario_id = auth.uid());

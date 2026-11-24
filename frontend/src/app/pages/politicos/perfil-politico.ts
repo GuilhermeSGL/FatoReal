@@ -19,12 +19,13 @@ import { compartilharCartao } from '../../shared/cartao-compartilhar';
 import { nomeEstado } from '../../shared/mapa-brasil';
 import { Avatar, Campo, FonteDado, Icone } from '../../shared/componentes';
 import { ProjetoAcoes } from '../../shared/projeto-acoes';
+import { Favoritar } from '../../shared/favoritar';
 
 type Aba = 'geral' | 'projetos' | 'votacoes' | 'gastos' | 'agenda' | 'patrimonio' | 'discursos' | 'carreira';
 
 @Component({
   selector: 'app-perfil-politico',
-  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone, ProjetoAcoes, PerguntarFatobot],
+  imports: [RouterLink, FormsModule, DatePipe, CurrencyPipe, DecimalPipe, Avatar, Campo, FonteDado, Icone, ProjetoAcoes, PerguntarFatobot, Favoritar],
   templateUrl: './perfil-politico.html',
 })
 export class PerfilPoliticoPage implements OnInit {

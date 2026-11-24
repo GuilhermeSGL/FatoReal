@@ -2,11 +2,12 @@ import { Component, inject, input, signal } from '@angular/core';
 import { OpinioesService, Opiniao, Placar } from '../core/opinioes.service';
 import { Traducao, traduzirEmenta } from '../core/tradutor';
 import { Icone } from './componentes';
+import { Favoritar } from './favoritar';
 
 /** Embaixo de cada projeto: "Explicar em linguagem simples" e "Você é a favor ou contra?". */
 @Component({
   selector: 'app-projeto-acoes',
-  imports: [Icone],
+  imports: [Icone, Favoritar],
   template: `
     <div class="projeto-acoes">
       @if (ementa()) {
@@ -15,6 +16,7 @@ import { Icone } from './componentes';
         </button>
       }
       @if (idProposicao(); as id) {
+        <app-favoritar tipo="projeto" [refId]="id" [titulo]="titulo() || 'Proposição ' + id" [url]="'https://www.camara.leg.br/propostas-legislativas/' + id" [compacto]="true" />
         <div class="opinar" role="group" aria-label="Sua opinião sobre o projeto">
           <span class="texto-suave">Você é:</span>
           <button type="button" class="opinar-favor" [attr.aria-pressed]="placar()?.minha === 'favor'" (click)="opinar(id, 'favor')">
@@ -40,6 +42,8 @@ export class ProjetoAcoes {
   private opinioes = inject(OpinioesService);
   readonly ementa = input('');
   readonly idProposicao = input<number | null>(null);
+  /** Título curto do projeto (ex.: "PL 10/2026"), usado nos Salvos. */
+  readonly titulo = input('');
   protected readonly traducao = signal<Traducao | null>(null);
   protected readonly placar = signal<Placar | null>(null);
   private carregouPlacar = false;

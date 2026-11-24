@@ -36,6 +36,7 @@
         @if (casa() !== 'senado') {
           <a class="botao botao-fantasma" routerLink="/eleicoes/comparar" [queryParams]="{ a: p.id }"><app-icone nome="compare_arrows" /> Comparar</a>
         }
+        <app-favoritar tipo="politico" [refId]="(casa() === 'senado' ? 'senado-' : '') + p.id" [titulo]="p.nome + (p.partido ? ' (' + p.partido + '-' + p.uf + ')' : '')" [url]="p.fonte_url || null" />
         <button type="button" class="botao botao-fantasma" (click)="compartilhar(p)" [disabled]="gerandoCartao()"><app-icone nome="ios_share" /> {{ gerandoCartao() ? 'Gerando...' : 'Compartilhar card' }}</button>
         <a class="botao botao-fantasma" [href]="p.fonte_url" target="_blank" rel="noopener noreferrer"><app-icone nome="open_in_new" /> {{ casa() === 'senado' ? 'Página no Senado' : 'Página na Câmara' }}</a>
       </div>
@@ -503,7 +504,7 @@
                     </div>
                     <p>{{ pr.ementa }}</p>
                     @if (pr.situacao) { <span class="situacao" [class.situacao-final]="/arquivad|transformad|retirad|prejudicad/i.test(pr.situacao)">{{ pr.situacao }}</span> }
-                    <app-projeto-acoes [ementa]="pr.ementa" [idProposicao]="pr.id" />
+                    <app-projeto-acoes [ementa]="pr.ementa" [idProposicao]="pr.id" [titulo]="pr.titulo" />
                   </li>
                 }
               </ul>
