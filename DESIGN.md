@@ -160,7 +160,7 @@ Os principais (classes globais em `styles.scss`):
 1. **Nunca invente dados** sobre políticos, notícias, números ou checagens. Use só fonte oficial ou registro verificado com link. Sem fonte, mostre "sem dados" ou "Em análise".
 2. Polêmicas e processos de políticos só com fonte oficial (STF, TSE, CNJ, Agência Brasil...). **Processo não é condenação.**
 3. Pessoas e mensagens de exemplo do modo demonstração levam "(exemplo)" no nome.
-4. O FatoBot **pode dar opinião e ajudar** a pessoa em qualquer tela. Quando opinar, deixa claro que é opinião; fato e dado só com fonte (sem fonte, diz que não há evidência).
+4. O FatoBot é neutro: não opina, não elogia nem critica políticos e não recomenda voto. Fato e dado só com fonte; sem fonte, diz que não encontrou evidência (decisão do grupo, 23 nov. 2026).
 
 **Visual**
 

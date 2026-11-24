@@ -33,7 +33,7 @@ Em 20/11 a `luiz/frontend` tem 11 commits que a `main` ainda não tem (toda a pa
 - **Foco: computador.** Celular não é prioridade (só não pode quebrar).
 - **Nunca inventar dados** sobre políticos, notícias, números ou checagens. Sem fonte: "sem dados" / "Em análise". Processo não é condenação.
 - Pessoas e mensagens do modo demonstração levam **"(exemplo)"** no nome.
-- **FatoBot pode dar opinião e ajudar a pessoa** em qualquer tela (decisão de 20/11). Quando opinar, avisa que é opinião; fato e dado só com fonte.
+- **FatoBot neutro** (decisão do grupo, 23/11, substitui a de 20/11): não opina, não elogia nem critica políticos e não recomenda voto. Fato e dado só com fonte; sem fonte, diz que não encontrou evidência.
 - **Logo oficial:** a do chip com o globo (`frontend/public/img/logo.svg`, redesenhada em vetor). O robô FatoBot é o padrão (textura melhorada em `img/fatobot.svg` e `img/fatobot-rosto.svg`).
 - **Rejeitado pelo Luiz (não voltar com isso):** mascotes de animais (onça, tucano etc.), logo de cervo, vozes do ElevenLabs (no máximo a primeira voz da apresentação), troca do nome "FatoBot".
 
@@ -73,7 +73,6 @@ No Windows, o PowerShell pode precisar de `Set-ExecutionPolicy -Scope CurrentUse
 ## Pendências
 - Ligar o Supabase de verdade (URL e chave `anon` em `frontend/.env` e na Vercel; modelo em `frontend/.env.exemplo`).
 - Juntar o front com a API do João (`POST /api/fatobot`, `POST /api/verificar`; contratos em `frontend/README.md`).
-- Pedir ao João: o prompt do FatoBot no back (`backend/src/services/gemini.js`) ainda manda a IA ser neutra e não opinar; precisa seguir a decisão de 20/11 (pode opinar, avisando). Há teste ligado a isso: `backend/test/j5-citacao-por-frase.test.js`.
 - Levar a `luiz/frontend` para a `main`/`dev` (só quando o Luiz pedir; não abrir PR sem pedido).
 - Acabamento fino de Base da Política, Congresso e Configurações para ficarem idênticas ao protótipo.
 - Ideias propostas ao Luiz (aguardando resposta): carregamento/erro padronizados, lista do que o front espera do back, teste de acessibilidade, prévia ao compartilhar no WhatsApp.
