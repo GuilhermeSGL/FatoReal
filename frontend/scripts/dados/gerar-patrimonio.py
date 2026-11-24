@@ -25,7 +25,8 @@ CAMARA = 'https://dadosabertos.camara.leg.br/api/v2'
 SENADO = 'https://legis.senado.leg.br/dadosabertos/senador/lista/atual.json'
 ANOS = ('2022', '2018')  # mais recente primeiro
 # LGPD: o candidato às vezes escreve na descrição o nome e o CPF de terceiros (quem vendeu, herdeiros).
-CPF = re.compile(r'\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b')
+# Sem \b: o CPF às vezes vem grudado em letra ("CPF281.941..." ou "...-49CONFORME").
+CPF = re.compile(r'(?<!\d)\d{3}\.?\d{3}\.?\d{3}-?\d{2}(?!\d)')
 
 
 def limpar_descricao(texto):
