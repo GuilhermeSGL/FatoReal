@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { AvisosService } from '../../core/avisos.service';
 import { ComunidadesService } from '../../core/comunidades.service';
 import { Denuncia } from '../../core/modelos';
+import { Metricas, metricasAdmin } from '../../core/admin.service';
 import { Icone } from '../../shared/componentes';
 
 /** Painel mínimo de moderação: a decisão final é sempre de uma pessoa, com motivo registrado. */
@@ -16,6 +17,30 @@ import { Icone } from '../../shared/componentes';
       <h1><app-icone nome="shield" /> Moderação</h1>
       <p>Denúncias de publicações e comentários. Leia o conteúdo, consulte as fontes e registre o motivo da decisão.</p>
     </header>
+
+    <!-- Painel com os totais do site (API: GET /api/admin/metricas, só moderador) -->
+    <section class="card mod-painel" aria-label="Painel do site">
+      <div class="mod-painel-topo">
+        <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="leaderboard" /></span> Painel do site</h2>
+        @if (geradoEm(); as g) { <small class="texto-suave">Atualizado em {{ g | date: "dd/MM/yyyy 'às' HH:mm" }}</small> }
+        <button type="button" class="botao botao-fantasma botao-p" (click)="carregarMetricas()" [disabled]="carregandoMetricas()"><app-icone nome="refresh" /> Atualizar</button>
+      </div>
+      @if (carregandoMetricas()) {
+        <div class="esqueleto-linhas"><span class="esqueleto"></span></div>
+      } @else if (erroMetricas()) {
+        <p class="alerta-erro"><app-icone nome="error" /> {{ erroMetricas() }}</p>
+      } @else if (metricas(); as m) {
+        <ul class="mod-numeros">
+          <li><strong>{{ m.usuarios }}</strong><span>pessoas cadastradas</span></li>
+          <li><strong>{{ m.comunidades }}</strong><span>comunidades</span></li>
+          <li><strong>{{ m.publicacoes }}</strong><span>publicações</span></li>
+          <li><strong>{{ m.publicacoesRemovidas }}</strong><span>publicações removidas</span></li>
+          <li [class.mod-alerta]="m.denunciasAbertas > 0"><strong>{{ m.denunciasAbertas }}</strong><span>denúncias abertas</span></li>
+        </ul>
+      } @else {
+        <p class="texto-suave">Sem dados: o painel funciona quando o site está ligado ao banco (fora do modo demonstração).</p>
+      }
+    </section>
 
     <div class="abas" role="tablist">
       <button role="tab" type="button" [attr.aria-selected]="filtro() === 'aberta'" (click)="filtro.set('aberta')">Abertas ({{ abertas() }})</button>
@@ -75,8 +100,28 @@ export class ModeracaoPage implements OnInit {
   );
   protected motivo: Record<number, string> = {};
 
+  protected readonly metricas = signal<Metricas | null>(null);
+  protected readonly geradoEm = signal<string | null>(null);
+  protected readonly carregandoMetricas = signal(true);
+  protected readonly erroMetricas = signal<string | null>(null);
+
   async ngOnInit() {
+    this.carregarMetricas();
     await this.carregar();
+  }
+
+  protected async carregarMetricas() {
+    this.carregandoMetricas.set(true);
+    this.erroMetricas.set(null);
+    try {
+      const r = await metricasAdmin();
+      this.metricas.set(r?.metricas ?? null);
+      this.geradoEm.set(r?.geradoEm ?? null);
+    } catch (e) {
+      this.erroMetricas.set(e instanceof Error ? e.message : 'O painel não respondeu agora.');
+    } finally {
+      this.carregandoMetricas.set(false);
+    }
   }
 
   private async carregar() {

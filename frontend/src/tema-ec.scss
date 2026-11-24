@@ -348,3 +348,10 @@ app-publicacao, .nt-post { content-visibility: auto; contain-intrinsic-size: aut
   li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--borda); }
   span { display: grid; gap: 2px; min-width: 0; } small { overflow-wrap: anywhere; } b { flex: none; font-family: var(--titulo); } }
 @media (max-width: 760px) { .ag-lista li { grid-template-columns: 64px 1fr; > a { grid-column: 2; justify-self: start; } } .pt-cabeca { grid-template-columns: 1fr 1fr; } }
+
+/* Moderação: painel com os totais do site */
+.mod-painel-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; .ps-titulo { margin: 0; margin-right: auto; } }
+.mod-numeros { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
+  li { display: grid; gap: 2px; padding: 14px; border-radius: 8px; background: var(--superficie-2); border-left: 5px solid var(--ec-verde); }
+  li.mod-alerta { border-left-color: var(--ec-vermelho); strong { color: var(--ec-vermelho); } }
+  strong { font-family: var(--titulo); font-size: 2rem; font-weight: 900; line-height: 1; } span { font-size: 0.85rem; color: var(--texto-suave); } }

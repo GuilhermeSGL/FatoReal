@@ -40,8 +40,23 @@ create table if not exists public.opinioes_projetos (
   primary key (proposicao_id, usuario_id)
 );
 alter table public.opinioes_projetos enable row level security;
+-- LGPD: opinião política é dado sensível (RN06). Ninguém lê a opinião dos outros:
+-- cada pessoa lê só a própria linha, e os totais saem pela função contagem_opinioes (só números).
 drop policy if exists "opinioes: todos leem" on public.opinioes_projetos;
-create policy "opinioes: todos leem" on public.opinioes_projetos for select using (true);
+drop policy if exists "opinioes: a própria pessoa lê" on public.opinioes_projetos;
+create policy "opinioes: a própria pessoa lê" on public.opinioes_projetos
+  for select using (usuario_id = auth.uid());
+
+-- Totais de um projeto, sem dizer quem votou (LGPD: opinião política é dado sensível)
+create or replace function public.contagem_opinioes(p_proposicao bigint)
+returns table (favor bigint, contra bigint)
+language sql stable security definer set search_path = public as $$
+  select count(*) filter (where opiniao = 'favor'),
+         count(*) filter (where opiniao = 'contra')
+  from public.opinioes_projetos
+  where proposicao_id = p_proposicao;
+$$;
+grant execute on function public.contagem_opinioes(bigint) to anon, authenticated;
 drop policy if exists "opinioes: a própria pessoa grava" on public.opinioes_projetos;
 create policy "opinioes: a própria pessoa grava" on public.opinioes_projetos for insert with check (usuario_id = auth.uid());
 drop policy if exists "opinioes: a própria pessoa muda" on public.opinioes_projetos;
@@ -67,7 +82,8 @@ drop policy if exists "grupo: autor ou moderação apaga" on public.mensagens_co
 create policy "grupo: autor ou moderação apaga" on public.mensagens_comunidade for delete using (autor_id = auth.uid() or public.eh_moderador());
 
 -- ---------- 4. Checagens recentes (lista "últimas checagens" do Fato ou Fake) ----------
--- Quem grava é a API (backend, com a chave de serviço). O site só lê.
+-- Quem publica checagem é a moderação (pelo site, logada como moderadora). Todos leem.
+-- A API não usa a chave de serviço (combinado de segurança) e não grava nesta tabela.
 create table if not exists public.checagens (
   id         bigint generated always as identity primary key,
   afirmacao  text not null check (char_length(afirmacao) between 3 and 1000),
@@ -79,3 +95,9 @@ create table if not exists public.checagens (
 alter table public.checagens enable row level security;
 drop policy if exists "checagens: todos leem" on public.checagens;
 create policy "checagens: todos leem" on public.checagens for select using (true);
+drop policy if exists "checagens: moderação publica" on public.checagens;
+create policy "checagens: moderação publica" on public.checagens
+  for insert with check (public.eh_moderador());
+drop policy if exists "checagens: moderação apaga" on public.checagens;
+create policy "checagens: moderação apaga" on public.checagens
+  for delete using (public.eh_moderador());

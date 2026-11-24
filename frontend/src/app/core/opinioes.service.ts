@@ -9,7 +9,8 @@ const CHAVE = 'fatoreal-opinioes-v1';
 
 /**
  * Opinião das pessoas sobre projetos reais (a favor / contra).
- * Supabase: tabela "opinioes_projetos" (proposicao_id, usuario_id, opiniao). Sem ela, fica salvo neste navegador.
+ * Supabase: tabela "opinioes_projetos" (proposicao_id, usuario_id, opiniao) + função "contagem_opinioes".
+ * Sem elas, fica salvo neste navegador.
  */
 @Injectable({ providedIn: 'root' })
 export class OpinioesService {
@@ -39,20 +40,27 @@ export class OpinioesService {
     return { favor: minha === 'favor' ? 1 : 0, contra: minha === 'contra' ? 1 : 0, minha };
   }
 
+  /**
+   * Totais de um projeto + a opinião da própria pessoa.
+   * LGPD: opinião política é dado sensível (RN06). O site nunca lê as opiniões dos outros:
+   * os totais vêm da função "contagem_opinioes" (só números) e a regra do banco
+   * só deixa cada pessoa ler a própria linha.
+   */
   async placar(id: number): Promise<Placar> {
     if (!supabase || this.semTabela) return this.placarLocal(id);
-    const { data, error } = await supabase.from('opinioes_projetos').select('opiniao, usuario_id').eq('proposicao_id', id);
+    const { data: totais, error } = await supabase.rpc('contagem_opinioes', { p_proposicao: id });
     if (error) {
       this.semTabela = true;
       return this.placarLocal(id);
     }
+    const t = (Array.isArray(totais) ? totais[0] : totais) as { favor: number | string; contra: number | string } | null;
+    let minha: Opiniao | null = null;
     const eu = this.auth.usuario()?.id;
-    const linhas = (data ?? []) as { opiniao: Opiniao; usuario_id: string }[];
-    return {
-      favor: linhas.filter((l) => l.opiniao === 'favor').length,
-      contra: linhas.filter((l) => l.opiniao === 'contra').length,
-      minha: linhas.find((l) => l.usuario_id === eu)?.opiniao ?? null,
-    };
+    if (eu) {
+      const { data } = await supabase.from('opinioes_projetos').select('opiniao').eq('proposicao_id', id).eq('usuario_id', eu).maybeSingle();
+      minha = (data as { opiniao: Opiniao } | null)?.opiniao ?? null;
+    }
+    return { favor: Number(t?.favor ?? 0), contra: Number(t?.contra ?? 0), minha };
   }
 
   /** Marca (ou desmarca, se repetir) a opinião. Devolve o placar atualizado. */
