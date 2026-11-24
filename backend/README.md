@@ -265,6 +265,21 @@ Regras que **não dependem da IA**:
 - Os **anexos** não são analisados nem guardados, e o aviso diz isso com clareza (sem prometer revisão
   humana, que não existe no MVP). Anexo grande ou em excesso **nunca** impede a verificação do texto.
 
+### `GET /api/camara/<caminho>` (repasse para a Câmara)
+
+Às vezes a API da Câmara responde **sem o cabeçalho de CORS** em `/deputados/{id}` e
+`/deputados/{id}/historico`, e o navegador bloqueia a resposta. Quando o acesso direto falha,
+o front busca pela nossa API, que repassa o pedido:
+
+`GET /api/camara/deputados/221328?itens=5` → `https://dadosabertos.camara.leg.br/api/v2/deputados/221328?itens=5`,
+devolvendo **o mesmo corpo JSON e o mesmo status** da Câmara.
+
+- Só `GET`, só caminhos que começam com `deputados`, `proposicoes`, `votacoes` ou `eventos`, com
+  pedaços de letras, números e hífen (os ids de votação têm hífen). Outro caminho → `400`.
+- A query string vai como veio. Respostas 200 ficam 10 min no cache (`Cache-Control: public, max-age=600`).
+- Câmara fora do ar, lenta (mais de 8 s) ou respondendo HTML → `502`.
+- Limite por IP **próprio** (120/min, `LIMITE_CAMARA_POR_IP_MIN`), separado do FatoBot.
+
 ### `POST /api/traduzir`
 
 "Tradutor de juridiquês": explica a ementa de um projeto de lei em linguagem simples. É chamado pelo
