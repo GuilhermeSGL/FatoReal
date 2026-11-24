@@ -5,6 +5,7 @@
 // A chave service_role é usada SÓ no script de importação (scripts/importar-deputados.js).
 import { createClient } from '@supabase/supabase-js';
 import { FONTE_NOME } from './camara-fonte.js';
+import { CARGO_DEPUTADO } from './senado.js';
 
 let client;
 
@@ -34,6 +35,7 @@ export async function listarDoSupabase() {
   const { data, error } = await getClient()
     .from('politicos')
     .select('id, nome, partido, uf, foto_url, data_coleta')
+    .eq('cargo', CARGO_DEPUTADO) // a tabela também tem senadores: aqui só deputados
     .order('nome');
   if (error) throw new Error(`Supabase: ${error.message}`);
   if (!data?.length) return null;
@@ -47,7 +49,7 @@ export async function listarDoSupabase() {
 
 // Mesmo formato de obterDeputado() da Câmara (com menos campos). Retorna null se não achar.
 export async function obterDoSupabase(id) {
-  const { data, error } = await getClient().from('politicos').select('*').eq('id', id).maybeSingle();
+  const { data, error } = await getClient().from('politicos').select('*').eq('id', id).eq('cargo', CARGO_DEPUTADO).maybeSingle();
   if (error) throw new Error(`Supabase: ${error.message}`);
   if (!data) return null;
 
@@ -76,8 +78,8 @@ export function projetoSupabase() {
   return host ? `${host.slice(0, 6)}…` : null;
 }
 
-export async function contarPoliticos() {
-  const { count, error } = await getClient().from('politicos').select('id', { count: 'exact', head: true });
+export async function contarPoliticos(cargo = CARGO_DEPUTADO) {
+  const { count, error } = await getClient().from('politicos').select('id', { count: 'exact', head: true }).eq('cargo', cargo);
   if (error) throw new Error(`Supabase: ${error.message}`);
   return count ?? 0;
 }

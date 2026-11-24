@@ -58,7 +58,8 @@ await etapa('2. Fontes (/api/health/fontes?ia=1)', async () => {
 
   const s = f.supabase;
   if (s.status === 'ok') {
-    ok(`Supabase com ${s.deputados} deputados (projeto ${s.projeto})`);
+    ok(`Supabase com ${s.deputados} deputados e ${s.senadores ?? 0} senadores (projeto ${s.projeto})`);
+    if (!s.senadores) aviso('sem senadores no banco: a aba Senadores fica vazia no site. Rode npm run importar.');
     if (!String(s.projeto).startsWith(PROJETO_PRODUCAO)) {
       aviso(`o projeto não é o de produção (${PROJETO_PRODUCAO}…). Confira as variáveis da Vercel.`);
     }

@@ -46,6 +46,7 @@ arquivos diferentes e ninguém edita o arquivo do outro. Matheus e Kelly revisam
 | J12 | **`/api/health` com o status das fontes** (Câmara, cópia de reserva, Supabase, Gemini) para conferir tudo antes da apresentação | `src/routes/health.js`, `src/services/saude.js` | 24/11 | ✅ feito (PR #4) |
 | J13 | **Anexos do Verificar**: aplicar a decisão do grupo (ajustar texto ou guardar para revisão humana) | `src/services/verificar.js`, `src/routes/verificar.js` | 24/11 | ✅ backend feito (PR #5); falta o front mandar só as informações dos anexos (Luiz) |
 | J15 | **`POST /api/traduzir`**: explica a ementa dos projetos em linguagem simples (o front já chamava e recebia 404) | `src/services/traduzir.js`, `src/routes/traduzir.js` | 25/11 | ✅ feito (PR #5) |
+| J16 | **Senadores no Supabase** (relatório da Kelly: aba Senadores vazia). `npm run importar` grava deputados e senadores; a busca de deputados e o FatoBot filtram por cargo; `/api/health/fontes` e `npm run conferir` mostram quantos senadores há | `src/services/senado.js`, `scripts/importar-deputados.js`, `src/services/supabase.js`, `src/services/saude.js` | 25/11 | ✅ código pronto; falta rodar `npm run importar` no Brasil (dev e prod) |
 | J14 | **Antes da apresentação**: `npm run atualizar-deputados`, importação no Supabase de produção | `src/data/deputados.json`, `scripts/conferir.js`, `APRESENTACAO.md` | 26/11 | ⏳ roteiro e `npm run conferir` prontos; executar na véspera |
 
 ### Gustavo

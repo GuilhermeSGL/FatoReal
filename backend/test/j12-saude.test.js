@@ -4,14 +4,20 @@ import assert from 'node:assert/strict';
 import { _setClient as setSupabase } from '../src/services/supabase.js';
 import { _setCopia } from '../src/services/camara.js';
 import { iniciar, mockCamara, mockGemini } from './ajuda.js';
+import { clienteFalso } from './supabase-falso.js';
+import { CARGO_DEPUTADO, CARGO_SENADOR } from '../src/services/senado.js';
 
 const SEGREDO = 'chave-secreta-de-teste-123';
 let srv;
 let camara;
 
-// Supabase falso: só a contagem da tabela politicos.
-function supabaseComTotal(total, erro = null) {
-  setSupabase({ from: () => ({ select: async () => ({ count: total, error: erro }) }) });
+// Supabase falso: `total` deputados e `senadores` senadores na tabela politicos.
+function supabaseComTotal(total, erro = null, senadores = 0) {
+  const linhas = [
+    ...Array.from({ length: total ?? 0 }, (_, i) => ({ id: i + 1, cargo: CARGO_DEPUTADO })),
+    ...Array.from({ length: senadores }, (_, i) => ({ id: 90000 + i, cargo: CARGO_SENADOR })),
+  ];
+  setSupabase(clienteFalso(linhas, erro));
 }
 
 beforeEach(async () => {
@@ -34,10 +40,12 @@ const checkup = async (q = '') => {
 
 test('J12: tudo no ar → status ok, com detalhes de cada fonte', async () => {
   camara = mockCamara('ok');
-  supabaseComTotal(513);
+  supabaseComTotal(513, null, 81);
   const { status, body } = await checkup();
   assert.equal(status, 200);
   assert.equal(body.status, 'ok');
+  assert.equal(body.fontes.supabase.senadores, 81);
+  assert.equal(body.fontes.supabase.detalhe, undefined);
   assert.equal(body.fontes.camara.status, 'ok');
   assert.equal(body.fontes.supabase.status, 'ok');
   assert.equal(body.fontes.supabase.deputados, 513);
@@ -110,4 +118,13 @@ test('J12: resultado fica em cache por 30s (não sobrecarrega a Câmara)', async
   const antes = camara.chamadas.length;
   await checkup();
   assert.equal(camara.chamadas.length, antes);
+});
+
+test('Kelly: banco sem senadores → aviso para rodar a importação', async () => {
+  camara = mockCamara('ok');
+  supabaseComTotal(513);
+  const { body } = await checkup();
+  assert.equal(body.fontes.supabase.status, 'ok');
+  assert.equal(body.fontes.supabase.senadores, 0);
+  assert.match(body.fontes.supabase.detalhe, /senadores/i);
 });
