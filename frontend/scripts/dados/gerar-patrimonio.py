@@ -24,6 +24,14 @@ TSE = 'https://cdn.tse.jus.br/estatistica/sead/odsele'
 CAMARA = 'https://dadosabertos.camara.leg.br/api/v2'
 SENADO = 'https://legis.senado.leg.br/dadosabertos/senador/lista/atual.json'
 ANOS = ('2022', '2018')  # mais recente primeiro
+# LGPD: o candidato às vezes escreve na descrição o nome e o CPF de terceiros (quem vendeu, herdeiros).
+CPF = re.compile(r'\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b')
+
+
+def limpar_descricao(texto):
+    return CPF.sub('[CPF oculto]', texto)
+
+
 SAIDA = os.path.join(os.path.dirname(__file__), '..', '..', 'public', 'dados', 'patrimonio')
 
 
@@ -79,7 +87,7 @@ def main():
         for r in linhas(f'{pasta}/bem_candidato_{ano}/*.csv'):
             valor = float(r['VR_BEM_CANDIDATO'].replace('.', '').replace(',', '.') or 0)
             bens.setdefault((ano, r['SQ_CANDIDATO']), {})[r['NR_ORDEM_BEM_CANDIDATO']] = {
-                'tipo': r['DS_TIPO_BEM_CANDIDATO'].strip(), 'descricao': r['DS_BEM_CANDIDATO'].strip()[:140], 'valor': round(valor, 2)}
+                'tipo': r['DS_TIPO_BEM_CANDIDATO'].strip(), 'descricao': limpar_descricao(r['DS_BEM_CANDIDATO'].strip())[:140], 'valor': round(valor, 2)}
 
     def gravar(casa, pid, nome, ano, c):
         itens = sorted(bens.get((ano, c['sq']), {}).values(), key=lambda x: -x['valor'])
