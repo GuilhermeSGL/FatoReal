@@ -27,7 +27,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
       </div>
       <p class="nt-status" [class.ao-vivo]="aoVivo()">
         @if (aoVivo()) { <b>AO VIVO</b> Feed das fontes oficiais · }
-        @else { <app-icone nome="verified" /> Seleção da equipe · revisada em {{ atualizadaEm }} · }
+        @else { <app-icone nome="verified" /> Fontes oficiais · atualizada em {{ atualizadaEm() }} · }
         {{ todas().length }} notícias
       </p>
     </header>
@@ -199,7 +199,7 @@ type ItemFeed = { tipo: 'grande' | 'compacta'; n: Noticia } | { tipo: 'checagem'
 })
 export class NoticiasPage implements AfterViewInit, OnDestroy {
   private readonly servico = inject(NoticiasService);
-  protected readonly atualizadaEm = LISTA_ATUALIZADA_EM;
+  protected readonly atualizadaEm = signal(LISTA_ATUALIZADA_EM);
   protected readonly todas = signal<Noticia[]>(NOTICIAS);
   protected readonly aoVivo = signal(false);
   protected readonly filtro = signal<Categoria | null>(null);
@@ -210,11 +210,11 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
   private readonly filtradas = computed(() => (this.filtro() ? this.todas().filter((n) => n.categoria === this.filtro()) : this.todas()));
   protected readonly ultimas = computed(() => this.todas().slice(0, 8));
 
-  /** Carrossel: as marcadas como destaque (ou, num assunto, as primeiras dele). Até 6. */
+  /** Carrossel: as marcadas como destaque (até 6) ou, num assunto, as 4 mais novas dele. */
   protected readonly destaques = computed(() => {
     const l = this.filtradas();
     const marcadas = this.filtro() ? l : l.filter((n) => n.destaque);
-    return (marcadas.length ? marcadas : l).slice(0, 6);
+    return (marcadas.length ? marcadas : l).slice(0, this.filtro() ? 4 : 6);
   });
   private readonly restantes = computed(() => this.filtradas().filter((n) => !this.destaques().includes(n)));
   protected readonly secundarias = computed(() => this.restantes().slice(0, 5));
@@ -240,9 +240,10 @@ export class NoticiasPage implements AfterViewInit, OnDestroy {
   private decorrido = 0;
 
   constructor() {
-    this.servico.carregar().then(({ lista, aoVivo }) => {
+    this.servico.carregar().then(({ lista, aoVivo, atualizadaEm }) => {
       this.todas.set(lista);
       this.aoVivo.set(aoVivo);
+      this.atualizadaEm.set(atualizadaEm);
     });
     // Ao trocar de assunto, o carrossel volta para o começo
     effect(() => {
