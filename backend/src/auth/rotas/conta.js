@@ -22,7 +22,8 @@ export async function verMinhaConta(req, res) {
 
     const { is_moderador: moderador, ...perfil } = data;
     return res.json({ conta: { ...perfil, email: req.usuario.email, moderador: Boolean(moderador) } });
-  } catch {
+  } catch (err) {
+    console.error(`Auth (verMinhaConta): ${err?.message ?? err}`);
     return res.status(502).json({ erro: 'Não foi possível carregar sua conta agora. Tente de novo em instantes.' });
   }
 }
@@ -32,7 +33,8 @@ export async function excluirMinhaConta(req, res) {
     const { error } = await comPrazo(req.supabase.rpc('excluir_minha_conta'), PRAZO_SUPABASE_MS, 'Supabase demorou');
     if (error) throw error;
     return res.json({ ok: true, mensagem: 'Sua conta e seus dados foram excluídos.' });
-  } catch {
+  } catch (err) {
+    console.error(`Auth (excluirMinhaConta): ${err?.message ?? err}`);
     return res.status(502).json({ erro: 'Não foi possível excluir a conta agora. Nada foi apagado. Tente de novo.' });
   }
 }
