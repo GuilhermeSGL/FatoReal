@@ -65,6 +65,22 @@ export function limitarPorIp(req, res, next) {
   return res.status(429).json({ erro: 'Muitas perguntas em pouco tempo. Espere um minuto e tente de novo.' });
 }
 
+// Proxy da Câmara (/api/camara): mesma regra por IP, mas com um contador SEPARADO.
+// O perfil de político pode fazer vários pedidos por página e, numa sala de aula, todos
+// saem pelo mesmo IP: com o contador do FatoBot, a turma gastaria o limite dele.
+// Padrão: 120 pedidos por minuto por IP. Ajuste com LIMITE_CAMARA_POR_IP_MIN.
+export const limiteCamaraPorIp = criarContador({
+  janelaMs: 60_000,
+  max: () => numeroDoAmbiente('LIMITE_CAMARA_POR_IP_MIN', 120),
+});
+
+export function limitarPorIpCamara(req, res, next) {
+  const { permitido, esperarMs } = limiteCamaraPorIp.usar(ipDe(req));
+  if (permitido) return next();
+  res.set('Retry-After', String(Math.ceil(esperarMs / 1000)));
+  return res.status(429).json({ erro: 'Muitos pedidos em pouco tempo. Espere um minuto e tente de novo.' });
+}
+
 // Camada 2 — cota da IA para o servidor inteiro, um pouco abaixo do plano grátis do
 // gemini-3.5-flash-lite (15/min e 500/dia, segundo a tabela usada pelo grupo).
 // Quando acaba, o FatoBot NÃO recusa a pergunta: responde só com as fontes.
@@ -91,6 +107,7 @@ export function usoCotaIa() {
 // Só para os testes.
 export function _zerarLimites() {
   limitePorIp.zerar();
+  limiteCamaraPorIp.zerar();
   cotaIaMinuto.zerar();
   cotaIaDia.zerar();
 }
