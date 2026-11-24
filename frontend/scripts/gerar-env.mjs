@@ -17,6 +17,9 @@ const env = {
   apiUrl: vars.API_URL ?? '/api',
   // true = rotas com # (para hospedagem sem servidor, como o link de teste do claude.ai)
   roteamentoHash: vars.HASH_ROUTING === 'true',
+  // Chat do Tawk.to (painel do tawk.to → Administration → Chat Widget). Não são segredo. Vazio = não carrega.
+  tawkPropertyId: vars.TAWK_PROPERTY_ID ?? '',
+  tawkWidgetId: vars.TAWK_WIDGET_ID ?? '',
 };
 
 mkdirSync('src/environments', { recursive: true });

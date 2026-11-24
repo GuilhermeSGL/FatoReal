@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { AlertaJuridico, Politico } from './modelos';
 import { lerDemo, proximoId, salvarDemo } from './demo-store';
 import { verificadosDe } from './registros-verificados';
-import { supabase } from './supabase';
+import { apiUrl, supabase } from './supabase';
 
 const CAMARA_API = 'https://dadosabertos.camara.leg.br/api/v2';
 const SENADO_API = 'https://legis.senado.leg.br/dadosabertos';
@@ -170,12 +170,12 @@ export async function despesasDoAno(id: number): Promise<DetalhesPolitico['despe
     const porTipo = new Map<string, number>();
     const porMes = Array<number>(12).fill(0);
     for (const i of itens) {
-      porTipo.set(i.tipoDespesa, (porTipo.get(i.tipoDespesa) ?? 0) + (i.valorLiquido ?? 0));
-      if (i.mes && i.mes >= 1 && i.mes <= 12) porMes[i.mes - 1] += i.valorLiquido ?? 0;
+      porTipo.set(i.tipoDespesa, (porTipo.get(i.tipoDespesa) ?? 0) + valorDespesa(i));
+      if (i.mes && i.mes >= 1 && i.mes <= 12) porMes[i.mes - 1] += valorDespesa(i);
     }
     return {
       ano,
-      total: itens.reduce((t, i) => t + (i.valorLiquido ?? 0), 0),
+      total: itens.reduce((t, i) => t + valorDespesa(i), 0),
       lancamentos: itens.length,
       parcial: !!url,
       porMes,
@@ -194,6 +194,16 @@ export function inicioLegislatura(): string {
   let ano = hoje.getFullYear() - ((((hoje.getFullYear() - 2023) % 4) + 4) % 4);
   if (ano === hoje.getFullYear() && hoje.getMonth() < 1) ano -= 4;
   return `${ano}-02-01`;
+}
+
+/**
+ * Valor de uma despesa da cota. Pela Câmara, valor líquido = valor do documento − glosa.
+ * Desde 2026 a API manda "valorLiquido" com o sinal trocado (-249 numa nota de R$ 249),
+ * então calculamos a partir do documento e da glosa; sem eles, usamos o líquido sem sinal.
+ */
+export function valorDespesa(i: { valorLiquido?: number | null; valorDocumento?: number | null; valorGlosa?: number | null }): number {
+  if (i.valorDocumento != null) return i.valorDocumento - (i.valorGlosa ?? 0);
+  return Math.abs(i.valorLiquido ?? 0);
 }
 
 export async function jsonCamara<T>(caminho: string): Promise<T> {
@@ -419,11 +429,40 @@ interface SenadorIdentificacao {
   EmailParlamentar?: string;
 }
 
-/** fetch com mensagem amigável quando não há internet ou a API está fora do ar. */
-async function buscarCamara(url: string): Promise<Response> {
+/** Caminhos que o repasse do back-end aceita (GET {API_URL}/camara/<caminho>). */
+const REPASSE_CAMARA = /^\/?(deputados|proposicoes|votacoes|eventos)(\/|\?|$)/;
+
+/**
+ * Acesso único à API da Câmara. Recebe o caminho ("/deputados/123") ou o endereço completo.
+ * 1º tenta direto na Câmara; se o navegador barrar (a Câmara às vezes responde sem o cabeçalho
+ * de CORS, e o fetch dá TypeError) ou se der erro 5xx, tenta o repasse do nosso back-end:
+ * GET {API_URL}/camara/<caminho>?<query> → mesmo JSON e mesmo status da Câmara.
+ * O repasse só aceita deputados, proposições, votações e eventos.
+ */
+export async function buscarCamara(caminhoOuUrl: string): Promise<Response> {
+  const url = (caminhoOuUrl.startsWith('http') ? caminhoOuUrl : CAMARA_API + caminhoOuUrl).replace(/^http:\/\//, 'https://');
+  const caminho = url.startsWith(CAMARA_API) ? url.slice(CAMARA_API.length).replace(/^\//, '') : null;
+  const podeRepassar = !!caminho && REPASSE_CAMARA.test(caminho);
+  const repassar = () => fetch(`${apiUrl}/camara/${caminho}`, { headers: { Accept: 'application/json' } });
   try {
-    return await fetch(url, { headers: { Accept: 'application/json' } });
+    const resp = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (resp.status >= 500 && podeRepassar) {
+      try {
+        const viaBack = await repassar();
+        if (viaBack.ok) return viaBack;
+      } catch {
+        /* repasse também fora: fica a resposta da Câmara */
+      }
+    }
+    return resp;
   } catch {
+    if (podeRepassar) {
+      try {
+        return await repassar();
+      } catch {
+        /* sem repasse: cai na mensagem abaixo */
+      }
+    }
     throw new Error('Não foi possível acessar a API da Câmara. Verifique sua conexão e tente de novo.');
   }
 }
@@ -463,5 +502,5 @@ interface DeputadoDetalhe {
 
 interface OrgaoCamara { siglaOrgao: string; nomeOrgao?: string; nomePublicacao?: string; titulo?: string; dataFim?: string | null }
 interface ProposicaoCamara { id: number; siglaTipo: string; numero: number; ano: number; ementa: string }
-interface DespesaCamara { tipoDespesa: string; valorLiquido: number; mes?: number }
+interface DespesaCamara { tipoDespesa: string; valorLiquido: number; valorDocumento?: number; valorGlosa?: number; mes?: number }
 interface LinkCamara { rel: string; href: string }

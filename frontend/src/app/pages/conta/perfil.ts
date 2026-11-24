@@ -12,8 +12,10 @@ import { RedesSociais, REDES, linkDaRede } from '../../shared/redes-sociais';
 import { FormsModule } from '@angular/forms';
 import { imagemSegura, linkSeguro } from '../../core/util';
 import { PublicacaoCard } from '../../shared/publicacao-card';
+import { Favoritar } from '../../shared/favoritar';
+import { Favorito, FavoritosService, TipoFavorito } from '../../core/favoritos.service';
 
-type Aba = 'publicacoes' | 'curtidas';
+type Aba = 'publicacoes' | 'curtidas' | 'salvos';
 type Filtro = 'todas' | 'verificadas' | 'usuario';
 
 interface Conquista {
@@ -26,7 +28,7 @@ interface Conquista {
 /** Perfil no estilo Orkut + LinkedIn (mesma estrutura do perfil dos políticos). Serve para "/perfil" (o meu) e "/pessoas/:id" (de outra pessoa). */
 @Component({
   selector: 'app-perfil',
-  imports: [RouterLink, DatePipe, FormsModule, Avatar, Icone, PublicacaoCard, RedesSociais],
+  imports: [RouterLink, DatePipe, FormsModule, Avatar, Icone, PublicacaoCard, RedesSociais, Favoritar],
   templateUrl: './perfil.html',
 })
 export class PerfilPage {
@@ -42,6 +44,15 @@ export class PerfilPage {
   protected readonly perfil = signal<PerfilPublico | null>(null);
   protected readonly carregando = signal(true);
   protected readonly aba = signal<Aba>('publicacoes');
+  protected readonly favoritos = inject(FavoritosService);
+  protected readonly iconeSalvo: Record<TipoFavorito, string> = { politico: 'account_balance', projeto: 'description', noticia: 'newspaper', publicacao: 'dynamic_feed', comunidade: 'groups' };
+  protected readonly nomeSalvo: Record<TipoFavorito, string> = { politico: 'Político', projeto: 'Projeto', noticia: 'Notícia', publicacao: 'Publicação', comunidade: 'Comunidade' };
+  /** Rota interna do item salvo (político e comunidade abrem dentro do site). */
+  protected rotaSalvo(f: Favorito): string[] | null {
+    if (f.tipo === 'politico') return f.ref_id.startsWith('senado-') ? ['/politicos/senado', f.ref_id.slice(7)] : ['/politicos', f.ref_id];
+    if (f.tipo === 'comunidade') return ['/comunidades', f.ref_id];
+    return null;
+  }
   protected readonly publicacoes = signal<Publicacao[]>([]);
   protected readonly curtidas = signal<Publicacao[]>([]);
   protected readonly comunidades = signal<Comunidade[]>([]);
@@ -165,7 +176,7 @@ export class PerfilPage {
       return;
     }
     this.carregando.set(true);
-    if (!this.ehMeu() && this.aba() === 'curtidas') this.aba.set('publicacoes');
+    if (!this.ehMeu() && this.aba() !== 'publicacoes') this.aba.set('publicacoes');
     try {
       this.perfil.set(await this.perfis.obter(id));
     } catch (e) {

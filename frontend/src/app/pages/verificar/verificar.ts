@@ -78,6 +78,7 @@ const DOCUMENTOS = ['application/pdf', 'application/msword', 'application/vnd.op
               </span>
               <small>JPG, PNG, WEBP ou GIF até 10 MB · MP4, WEBM ou MOV até 50 MB · PDF, DOC, DOCX ou TXT até 10 MB</small>
             </label>
+            <p class="texto-p"><app-icone nome="info" /> Os anexos não são enviados nem guardados: a verificação automática usa só o texto da afirmação. Para checar fotos, vídeos e documentos, procure a publicação original ou uma agência de checagem.</p>
             @if (recebendo(); as r) {
               <app-conferindo modo="arquivo" [arquivos]="r.nomes" (fim)="aoCarregar(r.id)" />
             }

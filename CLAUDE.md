@@ -22,7 +22,7 @@ Rede social cívica do PI do Senac (turma DS 2025): informação política verif
 - **Nunca inventar dados** sobre políticos, notícias, números ou checagens. Só fonte oficial ou registro verificado com link. Sem fonte, mostrar "sem dados" / "Em análise".
 - Polêmicas e processos de políticos: só com fonte oficial (STF, TSE, CNJ, Agência Brasil...). Processo não é condenação.
 - Pessoas e mensagens de exemplo do modo demonstração levam "(exemplo)" no nome.
-- O FatoBot **pode dar opinião e ajudar a pessoa** em qualquer tela (decisão do Luiz, 20 nov. 2026). Quando opinar, deixa claro que é opinião dele; fato e dado continuam só com fonte (sem fonte, diz que não há evidência).
+- O FatoBot é neutro: não opina, não elogia nem critica políticos e não recomenda voto. Fato e dado só com fonte; sem fonte, diz que não encontrou evidência (decisão do grupo, 23 nov. 2026).
 
 ## Visual (decisões do Luiz)
 - **Mudança de visual = só aparência:** manter todo o conteúdo e todas as funções que já existem (perfil, stories, publicar, feed, memes, enquetes, lateral etc.). Nada some sem o Luiz pedir. O Fato Real é uma **rede social**: o visual tem que lembrar isso.

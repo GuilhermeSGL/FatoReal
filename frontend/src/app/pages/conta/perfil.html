@@ -170,6 +170,7 @@
       <nav class="ficha-abas pp-abas" role="tablist" aria-label="Feed">
         <button type="button" role="tab" [attr.aria-selected]="aba() === 'publicacoes'" (click)="aba.set('publicacoes')"><app-icone nome="dynamic_feed" /> Publicações</button>
         @if (ehMeu()) { <button type="button" role="tab" [attr.aria-selected]="aba() === 'curtidas'" (click)="aba.set('curtidas')"><app-icone nome="thumb_up" /> Curtidas</button> }
+        @if (ehMeu()) { <button type="button" role="tab" [attr.aria-selected]="aba() === 'salvos'" (click)="aba.set('salvos')"><app-icone nome="star" /> Salvos ({{ favoritos.lista().length }})</button> }
       </nav>
 
       @if (aba() === 'publicacoes') {
@@ -193,6 +194,21 @@
             @else { <strong>{{ primeiroNome() }} ainda não publicou</strong> }
           </div>
         }
+      } @else if (aba() === 'salvos') {
+        <ul class="salvos-lista">
+          @for (f of favoritos.lista(); track f.tipo + f.ref_id) {
+            <li class="card">
+              <span class="salvos-tipo"><app-icone [nome]="iconeSalvo[f.tipo]" /> {{ nomeSalvo[f.tipo] }}</span>
+              @if (rotaSalvo(f); as rota) { <a [routerLink]="rota"><strong>{{ f.titulo || f.ref_id }}</strong></a> }
+              @else if (f.url) { <a [href]="f.url" target="_blank" rel="noopener noreferrer"><strong>{{ f.titulo || f.ref_id }}</strong> <app-icone nome="open_in_new" /></a> }
+              @else { <strong>{{ f.titulo || f.ref_id }}</strong> }
+              <small class="texto-suave">Salvo em {{ f.criado_em | date: 'dd/MM/yyyy' }}</small>
+              <app-favoritar [tipo]="f.tipo" [refId]="f.ref_id" [titulo]="f.titulo" [url]="f.url" [compacto]="true" />
+            </li>
+          } @empty {
+            <li class="card vazio perfil-x-vazio"><app-icone nome="star" /><strong>Nada salvo ainda</strong><span>Toque na estrela de um político ou projeto para guardar aqui. Só você vê esta aba.</span></li>
+          }
+        </ul>
       } @else {
         @for (pub of curtidas(); track pub.id) {
           <app-publicacao [pub]="pub" [mostrarComunidade]="true" (mudou)="recarregar()" />
