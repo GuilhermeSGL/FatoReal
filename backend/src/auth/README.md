@@ -17,8 +17,11 @@ Authorization: Bearer <token>
 - `supabase-usuario.js` → cria o cliente do Supabase **com a chave pública + o token da pessoa**.
   Assim as regras de segurança do banco (RLS do `supabase/schema.sql`) valem: cada um só vê e
   altera o que tem permissão. A API **nunca** usa a `service_role`.
-- Todas as rotas desta área têm o mesmo limite contra abuso do resto da API (60 pedidos/min por IP).
-- Nada de token, senha ou e-mail em `console.log`.
+- `limite.js` → limite contra abuso com **contador próprio**: 60 pedidos/min por IP (ajuste com
+  `LIMITE_CONTA_POR_IP_MIN`). É separado do contador do FatoBot de propósito: numa sala de aula todos
+  saem pelo mesmo IP, e a área de conta não pode gastar o limite do FatoBot (nem o contrário).
+- Quando o Supabase falha, a rota responde `502` e registra no log da Vercel só a mensagem do erro
+  (`Auth (<função>): <mensagem>`). **Nunca** token, e-mail, cabeçalhos ou `req.usuario` (LGPD).
 
 ## Rotas
 
@@ -32,10 +35,10 @@ Erros (sempre `{ erro: "mensagem em português" }`):
 
 | Código | Quando |
 |---|---|
-| `401` | sem token, token mal escrito ou sessão vencida |
+| `401` | sem token, token mal escrito ou sessão vencida (token inválido) |
 | `403` | rota de moderador acessada por quem não é moderador |
 | `429` | muitos pedidos em pouco tempo (limite por IP) |
-| `502` | o Supabase não respondeu ou deu erro (nada é apagado pela metade) |
+| `502` | o Supabase não respondeu, está fora do ar (5xx) ou deu erro de rede — inclusive ao conferir o login (não é "sessão expirada") |
 | `503` | a API está sem `SUPABASE_URL` / `SUPABASE_ANON_KEY` configuradas |
 
 Observações:

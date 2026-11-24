@@ -33,7 +33,8 @@ export async function metricas(req, res) {
       totais[nomes[i]] = count ?? 0;
     });
     return res.json({ metricas: totais, geradoEm: new Date().toISOString() });
-  } catch {
+  } catch (err) {
+    console.error(`Auth (metricas): ${err?.message ?? err}`);
     return res.status(502).json({ erro: 'Não foi possível carregar as métricas agora. Tente de novo em instantes.' });
   }
 }
