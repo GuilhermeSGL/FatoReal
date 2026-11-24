@@ -319,3 +319,32 @@ main#conteudo > *:nth-child(3) { animation-delay: 80ms; }
 /* Listas longas: o navegador só desenha o que está perto da tela */
 app-publicacao { display: block; }
 app-publicacao, .nt-post { content-visibility: auto; contain-intrinsic-size: auto 420px; }
+
+/* =========================================================
+   Perfil do político: agenda da semana e patrimônio (24 nov. 2026)
+   ========================================================= */
+.ag-resumo { margin: 0 0 8px; strong { font-family: var(--titulo); font-size: 1.6rem; font-weight: 900; color: var(--ec-verde); } }
+.ag-mini { list-style: none; margin: 0 0 6px; padding: 0; display: grid; gap: 6px;
+  li { display: flex; gap: 10px; align-items: baseline; font-size: 0.9rem; padding-bottom: 6px; border-bottom: 1px solid var(--borda); }
+  b { flex: none; min-width: 92px; font-family: var(--titulo); font-weight: 800; text-transform: capitalize; } }
+.ag-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.ag-semana { display: flex; align-items: center; gap: 8px; strong { font-family: var(--titulo); font-weight: 800; } }
+.ag-dia { margin: 18px 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--ec-regua); font-family: var(--titulo); font-size: 0.95rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.02em; }
+.ag-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px;
+  li { display: grid; grid-template-columns: 78px 1fr auto; gap: 14px; align-items: start; padding: 12px 14px; border-radius: 8px; background: var(--superficie-2); border-left: 5px solid var(--ec-azul); }
+  li.ag-plenario { border-left-color: var(--ec-verde); }
+  li.ag-cancelado { opacity: 0.6; strong { text-decoration: line-through; } }
+  strong { display: block; } p { margin: 4px 0; font-size: 0.92rem; } small { display: inline-flex; align-items: center; gap: 3px; } .icone { font-size: 1rem; } }
+.ag-hora { font-family: var(--titulo); font-size: 1.25rem; font-weight: 900; line-height: 1.1; small { display: block; font-family: var(--fonte); font-size: 0.72rem; font-weight: 600; color: var(--texto-suave); } }
+.pt-total { margin: 0; font-family: var(--titulo); font-size: 2rem; font-weight: 900; color: var(--ec-verde); line-height: 1.1; }
+.pt-cabeca { display: grid; grid-template-columns: 2fr 1fr 1fr; margin: 14px 0 4px; border: 2px solid var(--ec-regua); border-radius: 8px; overflow: hidden;
+  > div { padding: 10px 16px; display: grid; } > div + div { border-left: 2px solid var(--ec-regua); }
+  small { color: var(--texto-suave); font-size: 0.8rem; } strong { font-family: var(--titulo); font-size: 1.3rem; font-weight: 900; } .pt-total { font-size: 1.6rem; } }
+.pt-grupos { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px;
+  li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 0.92rem; }
+  i { grid-column: 1 / -1; display: block; height: 8px; border-radius: 4px; background: var(--ec-amarelo); } }
+:root[data-tema='escuro'] .pt-grupos i { background: var(--lima); }
+.pt-bens { list-style: none; margin: 0 0 12px; padding: 0;
+  li { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--borda); }
+  span { display: grid; gap: 2px; min-width: 0; } small { overflow-wrap: anywhere; } b { flex: none; font-family: var(--titulo); } }
+@media (max-width: 760px) { .ag-lista li { grid-template-columns: 64px 1fr; > a { grid-column: 2; justify-self: start; } } .pt-cabeca { grid-template-columns: 1fr 1fr; } }

@@ -228,7 +228,7 @@ export class GastosPage implements OnDestroy {
 
 function lerCache(uf: string): Linha[] | null {
   try {
-    const bruto = JSON.parse(localStorage.getItem('fatoreal-cache:gastos-' + uf) ?? 'null');
+    const bruto = JSON.parse(localStorage.getItem('fatoreal-cache:gastos-v2-' + uf) ?? 'null');
     return bruto && Date.now() - bruto.em < VALIDADE ? bruto.linhas : null;
   } catch {
     return null;
@@ -236,7 +236,7 @@ function lerCache(uf: string): Linha[] | null {
 }
 function salvarCache(uf: string, linhas: Linha[]) {
   try {
-    localStorage.setItem('fatoreal-cache:gastos-' + uf, JSON.stringify({ em: Date.now(), linhas }));
+    localStorage.setItem('fatoreal-cache:gastos-v2-' + uf, JSON.stringify({ em: Date.now(), linhas }));
   } catch {
     /* sem espaço */
   }

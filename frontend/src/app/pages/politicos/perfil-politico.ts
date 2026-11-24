@@ -1,3 +1,4 @@
+import { EventoAgenda, Patrimonio, agendaDaSemana, bensPorTipo, inicioDaSemana, patrimonioDe, tipoCurto } from '../../core/patrimonio-agenda';
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PerguntarFatobot } from '../../shared/fatobot-bolha';
@@ -19,7 +20,7 @@ import { nomeEstado } from '../../shared/mapa-brasil';
 import { Avatar, Campo, FonteDado, Icone } from '../../shared/componentes';
 import { ProjetoAcoes } from '../../shared/projeto-acoes';
 
-type Aba = 'geral' | 'projetos' | 'votacoes' | 'gastos' | 'discursos' | 'carreira';
+type Aba = 'geral' | 'projetos' | 'votacoes' | 'gastos' | 'agenda' | 'patrimonio' | 'discursos' | 'carreira';
 
 @Component({
   selector: 'app-perfil-politico',
@@ -129,6 +130,8 @@ export class PerfilPoliticoPage implements OnInit {
     { id: 'projetos', nome: 'Projetos', icone: 'description' },
     { id: 'votacoes', nome: 'Votações', icone: 'how_to_vote' },
     ...(this.casa() !== 'senado' ? [{ id: 'gastos' as Aba, nome: 'Gastos', icone: 'payments' }] : []),
+    ...(this.casa() !== 'senado' ? [{ id: 'agenda' as Aba, nome: 'Agenda', icone: 'calendar_month' }] : []),
+    { id: 'patrimonio', nome: 'Patrimônio', icone: 'savings' },
     { id: 'discursos', nome: 'Discursos', icone: 'record_voice_over' },
     { id: 'carreira', nome: 'Carreira', icone: 'timeline' },
   ]);
@@ -179,6 +182,58 @@ export class PerfilPoliticoPage implements OnInit {
     if (a === 'votacoes') this.carregarVotacoes();
     if (a === 'gastos') this.carregarGastos();
     if (a === 'discursos') this.carregarDiscursos();
+  }
+
+  // ---------------- Patrimônio declarado ao TSE ----------------
+  protected readonly patrimonio = signal<Patrimonio | null>(null);
+  protected readonly carregandoPatrimonio = signal(true);
+  protected readonly gruposBens = computed(() => {
+    const p = this.patrimonio();
+    if (!p || !p.total) return [];
+    return bensPorTipo(p).map((g) => ({ ...g, pct: Math.max(2, Math.round((g.total / p.total) * 100)) }));
+  });
+  protected readonly todosBens = signal(false);
+  protected readonly tipoCurto = tipoCurto;
+
+  // ---------------- Agenda da semana na Câmara ----------------
+  protected readonly semana = signal(inicioDaSemana());
+  protected readonly agenda = signal<EventoAgenda[]>([]);
+  protected readonly carregandoAgenda = signal(true);
+  protected readonly erroAgenda = signal(false);
+  protected readonly fimSemana = computed(() => { const d = new Date(this.semana()); d.setDate(d.getDate() + 6); return d; });
+  protected readonly semanaAtual = computed(() => this.semana().getTime() === inicioDaSemana().getTime());
+  /** Eventos agrupados por dia, para a lista da semana. */
+  protected readonly agendaPorDia = computed(() => {
+    const dias = new Map<string, EventoAgenda[]>();
+    for (const e of this.agenda()) {
+      const dia = e.inicio.slice(0, 10);
+      dias.set(dia, [...(dias.get(dia) ?? []), e]);
+    }
+    return [...dias.entries()].map(([dia, eventos]) => ({ dia, eventos }));
+  });
+  /** Reuniões de comissão e audiências (sem contar as sessões do plenário). */
+  protected readonly reunioesSemana = computed(() => this.agenda().filter((e) => !e.orgaos.some((o) => o.sigla === 'PLEN')).length);
+
+  protected async carregarAgenda(semana = this.semana()) {
+    this.semana.set(semana);
+    this.carregandoAgenda.set(true);
+    this.erroAgenda.set(false);
+    try {
+      this.agenda.set(await agendaDaSemana(Number(this.id()), semana));
+    } catch {
+      this.agenda.set([]);
+      this.erroAgenda.set(true);
+    } finally {
+      this.carregandoAgenda.set(false);
+    }
+  }
+
+  protected hojeSemana = () => inicioDaSemana();
+
+  protected mudarSemana(passo: number) {
+    const d = new Date(this.semana());
+    d.setDate(d.getDate() + 7 * passo);
+    this.carregarAgenda(d);
   }
 
   protected async carregarProjetos(pagina = 1) {
@@ -583,11 +638,15 @@ export class PerfilPoliticoPage implements OnInit {
       this.carregarDiscursos(1);
       totalDiscursos(id).then((t) => this.discursosTotal.set(t)).catch(() => {});
       leisDoAutor(id).then((n) => this.leis.set(n)).catch(() => {});
+      this.carregarAgenda();
       detalhesCamara(id)
         .then((d) => this.detalhes.set(d))
         .catch(() => this.detalhes.set(null))
         .finally(() => this.carregandoDetalhes.set(false));
     }
+    patrimonioDe(senado ? 'senado' : 'camara', id)
+      .then((pt) => this.patrimonio.set(pt))
+      .finally(() => this.carregandoPatrimonio.set(false));
     try {
       const p = senado ? await obterSenador(id) : await this.service.obter(id);
       this.politico.set(p);

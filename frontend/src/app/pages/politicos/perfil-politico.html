@@ -263,6 +263,48 @@
           </section>
         </div>
 
+        <!-- Agenda da semana e patrimônio declarado -->
+        <div class="ps-grade2">
+          @if (!sen) {
+            <section class="card ps-cartao">
+              <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="calendar_month" /></span> Agenda desta semana</h2>
+              @if (carregandoAgenda()) {
+                <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+              } @else if (erroAgenda()) {
+                <p class="texto-suave">A agenda da Câmara não respondeu agora. Tente de novo em instantes.</p>
+              } @else if (agenda().length) {
+                <p class="ag-resumo"><strong>{{ agenda().length }}</strong> compromisso(s) de {{ semana() | date: "d 'de' MMM" : undefined : 'pt-BR' }} a {{ fimSemana() | date: "d 'de' MMM" : undefined : 'pt-BR' }}
+                  · {{ reunioesSemana() }} em comissões e audiências</p>
+                <ul class="ag-mini">
+                  @for (e of agenda().slice(0, 3); track e.id) {
+                    <li><b>{{ e.inicio | date: 'EEE d, HH:mm' : undefined : 'pt-BR' }}</b><span>{{ e.orgaos[0]?.sigla || e.tipo }} · {{ e.tipo }}</span></li>
+                  }
+                </ul>
+              } @else {
+                <p class="texto-suave">Nenhum compromisso registrado na Câmara nesta semana.</p>
+              }
+              <button type="button" class="ps-ver" (click)="abrirAba('agenda')">Ver a agenda da semana <app-icone nome="arrow_forward" /></button>
+            </section>
+          }
+          <section class="card ps-cartao">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="savings" /></span> Patrimônio declarado</h2>
+            @if (carregandoPatrimonio()) {
+              <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+            } @else if (patrimonio(); as pt) {
+              @if (pt.quantidade) {
+                <p class="pt-total">{{ pt.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</p>
+                <p class="texto-suave">{{ pt.quantidade }} bem(ns) declarado(s) ao TSE na eleição de {{ pt.ano }}</p>
+              } @else {
+                <p class="texto-suave">Não declarou bens ao TSE na eleição de {{ pt.ano }}.</p>
+              }
+              <app-fonte [fonte]="pt.fonte" />
+            } @else {
+              <p class="texto-suave">Sem dados de patrimônio para esta pessoa.</p>
+            }
+            <button type="button" class="ps-ver" (click)="abrirAba('patrimonio')">Ver os bens declarados <app-icone nome="arrow_forward" /></button>
+          </section>
+        </div>
+
         <div class="ps-grade2">
           <!-- Pontos de atenção -->
           <section class="card ps-cartao ps-atencao">
@@ -627,6 +669,89 @@
             <p class="texto-suave">Nenhum gasto registrado em {{ anoGastos() }}.</p>
           }
           <app-fonte [fonte]="fonteCamara()" rotulo="consultado em" />
+        </section>
+      }
+
+      <!-- ================= AGENDA DA SEMANA ================= -->
+      @case ('agenda') {
+        <section class="card">
+          <div class="ag-topo">
+            <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="calendar_month" /></span> Agenda na Câmara</h2>
+            <div class="ag-semana">
+              <button type="button" class="botao-icone" (click)="mudarSemana(-1)" aria-label="Semana anterior"><app-icone nome="chevron_left" /></button>
+              <strong>{{ semanaAtual() ? 'Esta semana' : 'Semana' }} · {{ semana() | date: "d 'de' MMM" : undefined : 'pt-BR' }} a {{ fimSemana() | date: "d 'de' MMM" : undefined : 'pt-BR' }}</strong>
+              <button type="button" class="botao-icone" (click)="mudarSemana(1)" aria-label="Próxima semana"><app-icone nome="chevron_right" /></button>
+              @if (!semanaAtual()) { <button type="button" class="botao botao-fantasma botao-p" (click)="carregarAgenda(hojeSemana())">Hoje</button> }
+            </div>
+          </div>
+          <p class="texto-suave">Reuniões de comissões, audiências públicas e sessões do plenário em que {{ p.nome }} está inscrito(a). Estar na agenda não garante presença.</p>
+          @if (carregandoAgenda()) {
+            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span><span class="esqueleto"></span></div>
+          } @else if (erroAgenda()) {
+            <p class="alerta-erro"><app-icone nome="error" /> A agenda da Câmara não respondeu agora. <button type="button" class="link-discreto" (click)="carregarAgenda()">Tentar de novo</button></p>
+          } @else if (agendaPorDia().length) {
+            @for (d of agendaPorDia(); track d.dia) {
+              <h3 class="ag-dia">{{ d.dia + 'T12:00' | date: "EEEE, d 'de' MMMM" : undefined : 'pt-BR' }}</h3>
+              <ul class="ag-lista">
+                @for (e of d.eventos; track e.id) {
+                  <li [class.ag-plenario]="e.orgaos[0]?.sigla === 'PLEN'" [class.ag-cancelado]="e.situacao.toLowerCase().includes('cancel')">
+                    <span class="ag-hora">{{ e.inicio | date: 'HH:mm' }}@if (e.fim) { <small>até {{ e.fim | date: 'HH:mm' }}</small> }</span>
+                    <div>
+                      <strong>{{ e.tipo }}@if (e.orgaos.length) { · {{ e.orgaos[0].sigla }} }</strong>
+                      @if (e.orgaos.length) { <small class="texto-suave">{{ e.orgaos[0].nome }}</small> }
+                      <p>{{ e.descricao }}</p>
+                      <small class="texto-suave">@if (e.local) { <app-icone nome="location_on" /> {{ e.local }} · }{{ e.situacao }}</small>
+                    </div>
+                    <a [href]="e.url" target="_blank" rel="noopener noreferrer" class="botao botao-fantasma botao-p">Ver na Câmara <app-icone nome="open_in_new" /></a>
+                  </li>
+                }
+              </ul>
+            }
+          } @else {
+            <p class="texto-suave">Nenhum compromisso registrado na Câmara nesta semana.</p>
+          }
+          <app-fonte [fonte]="{ titulo: 'Câmara dos Deputados · Dados Abertos (eventos do deputado)', url: 'https://www.camara.leg.br/deputados/' + p.id, data: agora }" rotulo="consultado em" />
+        </section>
+      }
+
+      <!-- ================= PATRIMÔNIO ================= -->
+      @case ('patrimonio') {
+        <section class="card">
+          <h2 class="ps-titulo"><span class="ps-icone"><app-icone nome="savings" /></span> Patrimônio declarado ao TSE</h2>
+          @if (carregandoPatrimonio()) {
+            <div class="esqueleto-linhas"><span class="esqueleto"></span><span class="esqueleto"></span></div>
+          } @else if (patrimonio(); as pt) {
+            <p class="texto-suave">Bens que {{ p.nome }} informou à Justiça Eleitoral ao se candidatar em {{ pt.ano }}
+              ({{ pt.cargo_disputado }}@if (pt.situacao) { · {{ pt.situacao }} }). É o valor declarado pela própria pessoa, sem correção; não mostra dívidas nem bens de parentes.</p>
+            @if (pt.quantidade) {
+              <div class="pt-cabeca">
+                <div><small>Total declarado</small><strong class="pt-total">{{ pt.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</strong></div>
+                <div><small>Bens</small><strong>{{ pt.quantidade }}</strong></div>
+                <div><small>Eleição</small><strong>{{ pt.ano }}</strong></div>
+              </div>
+              <h3 class="ag-dia">Por tipo de bem</h3>
+              <ul class="pt-grupos">
+                @for (g of gruposBens(); track g.tipo) {
+                  <li><span>{{ g.tipo }} <small class="texto-suave">({{ g.quantidade }})</small></span><b>{{ g.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</b>
+                    <i [style.width.%]="g.pct"></i></li>
+                }
+              </ul>
+              <h3 class="ag-dia">Lista de bens</h3>
+              <ul class="pt-bens">
+                @for (b of (todosBens() ? pt.bens : pt.bens.slice(0, 8)); track $index) {
+                  <li><span><strong>{{ tipoCurto(b.tipo) }}</strong><small class="texto-suave">{{ b.descricao || b.tipo }}</small></span><b>{{ b.valor | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</b></li>
+                }
+              </ul>
+              @if (pt.bens.length > 8) {
+                <button type="button" class="botao botao-fantasma botao-p" (click)="todosBens.set(!todosBens())">{{ todosBens() ? 'Mostrar menos' : 'Ver todos os ' + pt.bens.length + ' bens' }}</button>
+              }
+            } @else {
+              <p>Não declarou bens ao TSE na eleição de {{ pt.ano }}.</p>
+            }
+            <app-fonte [fonte]="pt.fonte" />
+          } @else {
+            <p class="texto-suave">Sem dados de patrimônio para esta pessoa.</p>
+          }
         </section>
       }
 

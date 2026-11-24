@@ -2,7 +2,7 @@
  * Ficha completa de deputados (API da Câmara) e senadores (API do Senado).
  * Cada parte é buscada separadamente: se uma falhar, o resto continua aparecendo.
  */
-import { inicioLegislatura, jsonCamara } from './politicos.service';
+import { inicioLegislatura, jsonCamara, valorDespesa } from './politicos.service';
 
 const SENADO_API = 'https://legis.senado.leg.br/dadosabertos';
 
@@ -296,7 +296,7 @@ export interface GastosAno {
 }
 
 interface DespesaCompleta {
-  ano: number; mes: number; tipoDespesa: string; dataDocumento?: string; valorLiquido: number; nomeFornecedor?: string; urlDocumento?: string | null;
+  ano: number; mes: number; tipoDespesa: string; dataDocumento?: string; valorLiquido: number; valorDocumento?: number; valorGlosa?: number; nomeFornecedor?: string; urlDocumento?: string | null;
 }
 
 export async function gastosDoAno(id: number, ano: number): Promise<GastosAno | null> {
@@ -314,7 +314,7 @@ export async function gastosDoAno(id: number, ano: number): Promise<GastosAno | 
   const porTipo = new Map<string, number>();
   const forn = new Map<string, { valor: number; vezes: number }>();
   for (const i of itens) {
-    const v = i.valorLiquido ?? 0;
+    const v = valorDespesa(i);
     if (i.mes >= 1 && i.mes <= 12) porMes[i.mes - 1] += v;
     const t = tipoLegivel(i.tipoDespesa);
     porTipo.set(t, (porTipo.get(t) ?? 0) + v);
@@ -324,7 +324,7 @@ export async function gastosDoAno(id: number, ano: number): Promise<GastosAno | 
   }
   return {
     ano,
-    total: itens.reduce((t, i) => t + (i.valorLiquido ?? 0), 0),
+    total: itens.reduce((t, i) => t + valorDespesa(i), 0),
     lancamentos: itens.length,
     parcial: !!url,
     porMes,
@@ -334,7 +334,7 @@ export async function gastosDoAno(id: number, ano: number): Promise<GastosAno | 
       data: i.dataDocumento ?? `${i.ano}-${String(i.mes).padStart(2, '0')}-01`,
       tipo: tipoLegivel(i.tipoDespesa),
       fornecedor: i.nomeFornecedor ?? 'Não informado',
-      valor: i.valorLiquido ?? 0,
+      valor: valorDespesa(i),
       url: i.urlDocumento && /^https?:\/\//.test(i.urlDocumento) ? i.urlDocumento.replace(/^http:/, 'https:') : null,
     })),
   };
