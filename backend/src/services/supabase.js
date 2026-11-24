@@ -83,3 +83,17 @@ export async function contarPoliticos(cargo = CARGO_DEPUTADO) {
   if (error) throw new Error(`Supabase: ${error.message}`);
   return count ?? 0;
 }
+
+// Políticos de outros cargos (Senado e TSE) para o FatoBot. Supabase devolve no máximo 1000 linhas
+// por pedido; aqui sempre pedimos bem menos (`limite`).
+export async function consultarPoliticos({ cargos, uf, municipioBusca, limite = 200 }) {
+  let q = getClient()
+    .from('politicos')
+    .select('id, nome, partido, uf, cargo, municipio, situacao, fonte_url, data_coleta')
+    .in('cargo', cargos);
+  if (uf) q = q.eq('uf', uf);
+  if (municipioBusca) q = q.eq('municipio_busca', municipioBusca);
+  const { data, error } = await q.order('nome').limit(limite);
+  if (error) throw new Error(`Supabase: ${error.message}`);
+  return data ?? [];
+}

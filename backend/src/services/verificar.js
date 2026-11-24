@@ -6,7 +6,8 @@
 // - Sem IA disponível → "Em análise" (não confirma nem nega sozinho).
 // - O link enviado NÃO é acessado nem usado como fonte (só fontes oficiais contam).
 // - Anexos NÃO são analisados nem guardados (análise de mídia precisa de revisão humana).
-import { buscarEvidencias, AVISO, LIMITES_FATOBOT } from './fatobot.js';
+import { buscarEvidencias, AVISO, LIMITES_FATOBOT, textoOndeConferir } from './fatobot.js';
+import { sugerirFontes } from '../data/fontes-oficiais.js';
 import { classificarComIA } from './gemini.js';
 
 export const ESTADOS = {
@@ -19,7 +20,8 @@ export const ESTADOS = {
 
 const TEXTO_INSUFICIENTE =
   'Não encontrei nas fontes oficiais que consulto informação suficiente para confirmar ou negar essa afirmação. ' +
-  'Por enquanto, a verificação automática cobre dados dos deputados federais em exercício e regras básicas da Constituição. ' +
+  'Por enquanto, a verificação automática cobre deputados federais e senadores em exercício, presidente, governadores, ' +
+  'prefeitos e vereadores eleitos e regras básicas da Constituição. ' +
   'Ausência de evidência não é prova de falsidade.';
 
 // J13: texto honesto sobre anexos. Eles NÃO são analisados nem guardados, então não
@@ -55,7 +57,10 @@ export async function verificar({ afirmacao, link = null, anexos = 0, anexosAcim
 
   // Deputados citados + Constituição (J11), as mesmas fontes do FatoBot.
   const { evidencias, fontes } = await buscarEvidencias(afirmacao);
-  if (evidencias.length === 0) return montar('insuficiente', TEXTO_INSUFICIENTE);
+  if (evidencias.length === 0) {
+    const sugestoes = sugerirFontes(afirmacao);
+    return { ...montar('insuficiente', TEXTO_INSUFICIENTE + textoOndeConferir(sugestoes)), onde_conferir: sugestoes };
+  }
 
   const resultado = await classificarComIA(afirmacao, evidencias, { prazo });
   if (!resultado && !process.env.GEMINI_API_KEY) {

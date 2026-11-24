@@ -35,3 +35,14 @@ export function idsEmConflito(deputados, senadores) {
   const ids = new Set(deputados.map((d) => Number(d.id)));
   return senadores.filter((s) => ids.has(Number(s.id))).map((s) => s.id);
 }
+
+export const FONTE_SENADO_NOME = 'Senado Federal — Dados Abertos';
+
+// Lista atual direto da API do Senado (reserva quando o Supabase não tem senadores).
+export async function buscarSenadoresDaApi(ms = 4_000) {
+  const res = await fetch(SENADO_LISTA, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(ms) });
+  if (!res.ok) throw new Error(`Senado respondeu ${res.status}`);
+  const lista = senadoresDaLista(await res.json());
+  if (!lista.length) throw new Error('O Senado devolveu a lista vazia');
+  return lista;
+}

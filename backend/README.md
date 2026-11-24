@@ -37,7 +37,8 @@ backend/
 ├── api/index.js          → entrada da Vercel (serverless)
 ├── scripts/
 │   ├── atualizar-deputados.js → npm run atualizar-deputados (cópia de reserva)
-│   └── importar-deputados.js  → npm run importar (Câmara → Supabase)
+│   ├── importar-deputados.js  → npm run importar (Câmara e Senado → Supabase)
+│   └── importar-tse.js        → npm run importar-tse (eleitos do TSE → Supabase)
 ├── src/
 │   ├── app.js            → configura o Express (CORS, JSON, rotas, erros)
 │   ├── server.js         → sobe o servidor localmente
@@ -158,11 +159,39 @@ Sem essas variáveis, tudo continua funcionando direto pela Câmara.
 3. Rode:
 
 ```bash
-npm run importar -- 20   # teste rápido com 20 deputados
-npm run importar         # todos os deputados em exercício (~513, alguns minutos)
+npm run importar -- 20   # teste rápido com 20 deputados (+ senadores)
+npm run importar         # deputados (~513) e senadores (~81) em exercício
 ```
 
 Pode rodar de novo quando quiser: atualiza os dados e a data da coleta. O CPF não é salvo (LGPD).
+
+#### Importar os outros cargos (TSE): presidente, governadores, deputados estaduais, prefeitos e vereadores
+
+Fonte: arquivos oficiais "Candidatos" do Portal de Dados Abertos do TSE. Entram só os **eleitos**
+(eleição de 2022 para presidente, governador e deputado estadual; 2024 para prefeito e vereador).
+O FatoBot diz "foi eleito(a) em ...", porque o TSE não mostra quem está no cargo hoje.
+
+1. Uma vez por banco (dev e prod): rode `supabase/politicos-todos-os-cargos.sql` no SQL Editor.
+2. Baixe no navegador e extraia (botão direito → *Extrair tudo*):
+   - https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2022.zip
+   - https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2024.zip
+3. Rode, com o caminho das pastas extraídas:
+
+```bash
+npm run importar-tse -- C:\Users\voce\Downloads\consulta_cand_2022 C:\Users\voce\Downloads\consulta_cand_2024
+```
+
+São ~65 mil eleitos (só vereadores são ~58 mil). Não salva CPF, título, e-mail nem data de nascimento.
+
+### `GET /api/fontes` (catálogo de fontes oficiais)
+
+Lista as fontes oficiais do Fato Real (`src/data/fontes-oficiais.js`):
+
+- `tipo: "integrada"`: o FatoBot e o Fato ou Fake leem os dados e citam como evidência
+  (Câmara, Senado, TSE e Constituição).
+- `tipo: "consulta"`: só indicamos o link quando não há evidência (Portal da Transparência, TCU,
+  STF, CNJ, Diário Oficial, IBGE, Banco Central, Fato ou Boato do TSE, agências públicas...).
+  Aparecem no campo `onde_conferir` das respostas sem evidência. **Nunca** viram evidência.
 
 > ⚠️ A `service_role` ignora as regras de segurança do banco. Use **só** no seu computador,
 > para importar. **Nunca** na Vercel, no Angular ou no GitHub.
