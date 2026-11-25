@@ -8,6 +8,7 @@ import cepRouter from './routes/cep.js';
 import whatsappRouter from './routes/whatsapp.js';
 import traduzirRouter from './routes/traduzir.js';
 import camaraRouter from './routes/camara.js';
+import fontesRouter from './routes/fontes.js';
 import authRouter from './auth/index.js'; // autenticação, área do Gustavo (ver DIVISAO.md)
 import { CamaraError, MSG_CAMARA_FORA } from './services/camara.js';
 
@@ -29,6 +30,7 @@ app.use('/api/cep', cepRouter);
 app.use('/api/whatsapp', whatsappRouter);
 app.use('/api/traduzir', traduzirRouter);
 app.use('/api/camara', camaraRouter); // repasse para a Câmara quando o CORS dela falha
+app.use('/api/fontes', fontesRouter); // catálogo de fontes oficiais
 
 // Autenticação (área do Gustavo): /api/auth, /api/conta e /api/admin. As rotas são registradas em src/auth/index.js.
 app.use('/api', authRouter);

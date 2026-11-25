@@ -3,6 +3,7 @@
 // Nunca devolve chaves: só se cada coisa está configurada e respondendo.
 import { pingCamara, infoCopia } from './camara.js';
 import { supabaseConfigurado, contarPoliticos, projetoSupabase } from './supabase.js';
+import { CARGO_SENADOR } from './senado.js';
 import { infoIa, testarIa } from './gemini.js';
 import { usoCotaIa } from '../utils/limite.js';
 import { comPrazo } from '../utils/prazo.js';
@@ -24,13 +25,19 @@ async function verificarSupabase() {
   if (!supabaseConfigurado()) return { status: 'nao_configurado' };
   const inicio = Date.now();
   try {
-    const deputados = await comPrazo(contarPoliticos(), PRAZO_SUPABASE_MS, 'Supabase não respondeu a tempo');
+    const [deputados, senadores] = await comPrazo(
+      Promise.all([contarPoliticos(), contarPoliticos(CARGO_SENADOR)]),
+      PRAZO_SUPABASE_MS,
+      'Supabase não respondeu a tempo'
+    );
     return {
       status: deputados > 0 ? 'ok' : 'vazio',
       projeto: projetoSupabase(),
       deputados,
+      senadores,
       ms: Date.now() - inicio,
-      ...(deputados === 0 && { detalhe: 'Tabela politicos vazia: rode npm run importar.' }),
+      ...(deputados === 0 && { detalhe: 'Tabela politicos sem deputados: rode npm run importar.' }),
+      ...(deputados > 0 && senadores === 0 && { detalhe: 'Sem senadores no banco: rode npm run importar (no Brasil).' }),
     };
   } catch (err) {
     return { status: 'fora', projeto: projetoSupabase(), detalhe: err.message };

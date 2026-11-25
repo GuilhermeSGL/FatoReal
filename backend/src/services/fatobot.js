@@ -12,6 +12,8 @@ import { listarDeputados, obterDeputado } from './camara.js';
 import { sintetizarComIA } from './gemini.js';
 import { buscarNaBase, evidenciasDaBase, fontesDaBase } from './base.js';
 import { normalizar } from '../utils/texto.js';
+import { evidenciasDeOutrosPoliticos } from './outros-politicos.js';
+import { sugerirFontes } from '../data/fontes-oficiais.js';
 
 export const AVISO =
   'O FatoBot pode errar. Confira sempre as fontes oficiais. ' +
@@ -100,13 +102,16 @@ const EXPLICACAO_PADRAO = 'Encontrei estas informações nas fontes oficiais:';
 // J11 — "Quantos deputados existem?": o número vem da lista oficial, não de memória.
 const PERGUNTA_TOTAL = /\b(quantos|numero de|total de|quantidade de) deputad/;
 
-// Etapas 2 e 3 completas: deputados citados + total de deputados + Constituição.
-// Se a Câmara estiver fora e sem cópia, a pergunta ainda pode ser respondida pela
-// Constituição; só falha (503) se não houver NENHUMA evidência.
+// Etapas 2 e 3 completas: deputados citados + total de deputados + outros políticos
+// (senadores, presidente, governadores, prefeitos e vereadores) + Constituição.
+// Se a Câmara estiver fora e sem cópia, a pergunta ainda pode ser respondida pelas outras
+// fontes; só falha (503) se não houver NENHUMA evidência.
 export async function buscarEvidencias(texto) {
   const itensBase = buscarNaBase(texto);
+  const outros = evidenciasDeOutrosPoliticos(texto); // roda junto com a Câmara
   const evidencias = [];
   const fontes = [];
+  let erroCamara = null;
 
   try {
     const lista = await listarDeputados();
@@ -127,8 +132,16 @@ export async function buscarEvidencias(texto) {
       fontes.push({ titulo: `${fonte.nome}: deputados em exercício`, url: fonte.url, data: fonte.consultadoEm });
     }
   } catch (err) {
-    if (itensBase.length === 0) throw err;
-    console.warn(`FatoBot: sem dados da Câmara agora (${err.message}); usando só a Constituição.`);
+    erroCamara = err;
+  }
+
+  const op = await outros;
+  evidencias.push(...op.evidencias);
+  fontes.push(...op.fontes);
+
+  if (erroCamara) {
+    if (itensBase.length === 0 && op.evidencias.length === 0) throw erroCamara;
+    console.warn(`FatoBot: sem dados da Câmara agora (${erroCamara.message}); usando as outras fontes.`);
   }
 
   evidencias.push(...evidenciasDaBase(itensBase));
@@ -136,23 +149,35 @@ export async function buscarEvidencias(texto) {
   return { evidencias, fontes };
 }
 
+export const TEXTO_SEM_EVIDENCIA =
+  'Não encontrei evidência nas fontes oficiais que consulto para responder a essa pergunta. ' +
+  'Consigo responder sobre deputados federais e senadores em exercício, presidente, governadores, ' +
+  'prefeitos e vereadores eleitos (ex.: "Quem é Tabata Amaral?", "Quem é o prefeito de Campinas?", ' +
+  '"Quem são os senadores de Minas Gerais?") e sobre regras básicas da Constituição ' +
+  '(ex.: "O que são os Três Poderes?").';
+
+// "Você pode conferir em: Portal da Transparência (https://...), TCU (https://...)."
+export function textoOndeConferir(sugestoes) {
+  if (!sugestoes.length) return '';
+  return ` Você pode conferir em: ${sugestoes.map((f) => `${f.nome} (${f.url})`).join('; ')}.`;
+}
+
 export async function responder(pergunta) {
   const prazo = Date.now() + LIMITES_FATOBOT.totalMs;
   const { evidencias, fontes } = await buscarEvidencias(pergunta);
 
-  // Sem documento relacionado → declara incerteza em vez de especular (RN04).
+  // Sem documento relacionado → declara incerteza em vez de especular (RN04)
+  // e indica onde a pessoa pode conferir (links oficiais, NÃO usados como evidência).
   if (evidencias.length === 0) {
+    const sugestoes = sugerirFontes(pergunta);
     return {
       pergunta,
       tipo: 'sem_evidencia',
       modo: 'somente_fontes',
-      resposta:
-        'Não encontrei evidência nas fontes oficiais que consulto para responder a essa pergunta. ' +
-        'Por enquanto consigo responder sobre deputados federais em exercício (use o nome parlamentar ' +
-        'completo, ex.: "Quem é Tabata Amaral?") e sobre regras básicas da Constituição ' +
-        '(ex.: "O que são os Três Poderes?").',
+      resposta: TEXTO_SEM_EVIDENCIA + textoOndeConferir(sugestoes),
       evidencias: [],
       fontes: [],
+      onde_conferir: sugestoes,
       consultado_em: new Date().toISOString(),
       sem_evidencia: true,
       aviso: AVISO,

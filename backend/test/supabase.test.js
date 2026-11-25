@@ -6,18 +6,13 @@ import { _resetPausa } from '../src/services/camara.js';
 import { _zerarLimites } from '../src/utils/limite.js';
 import { _setClient } from '../src/services/supabase.js';
 
-// Cliente falso do Supabase: imita .from().select().order() e .eq().maybeSingle()
+import { clienteFalso } from './supabase-falso.js';
+import { CARGO_DEPUTADO, CARGO_SENADOR } from '../src/services/senado.js';
+
+// A tabela tem deputados E senadores; a busca de deputados só pode ver os deputados.
+const SENADOR = { id: 5012, nome: 'Senador Teste (exemplo)', partido: 'X', uf: 'DF', cargo: CARGO_SENADOR };
 function supabaseFalso(linhas) {
-  _setClient({
-    from: () => ({
-      select: () => ({
-        order: async () => ({ data: linhas, error: null }),
-        eq: (_col, id) => ({
-          maybeSingle: async () => ({ data: linhas.find((l) => String(l.id) === String(id)) ?? null, error: null }),
-        }),
-      }),
-    }),
-  });
+  _setClient(clienteFalso([...linhas.map((l) => ({ cargo: CARGO_DEPUTADO, ...l })), SENADOR]));
 }
 
 const LINHA = {
@@ -99,4 +94,10 @@ test('FatoBot funciona com a Câmara fora do ar, usando o Supabase', async () =>
 test('sem Supabase, Câmara fora e deputado fora da cópia → 503', async () => {
   const res = await fetch(`${base}/api/deputados/1`);
   assert.equal(res.status, 503);
+});
+
+test('Kelly: senadores da tabela não aparecem na busca nem no perfil de deputado', async () => {
+  supabaseFalso([LINHA]);
+  const lista = await (await fetch(`${base}/api/deputados`)).json();
+  assert.ok(lista.dados.every((d) => d.id !== SENADOR.id));
 });
