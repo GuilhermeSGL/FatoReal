@@ -197,6 +197,7 @@ export class PerfilTsePage implements OnInit {
   protected readonly gravidade: Record<TipoAlerta, 'alta' | 'media' | 'neutra'> = {
     'Condenação': 'alta', 'Inelegibilidade': 'alta', 'Cassação': 'alta',
     'Processo em andamento': 'media', 'Investigação': 'media', 'Sanção administrativa': 'media', 'Polêmica': 'media',
+    'Absolvição ou arquivamento': 'neutra',
   };
   protected readonly tipos = Object.keys(this.gravidade) as TipoAlerta[];
 
